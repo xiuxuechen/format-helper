@@ -1,6 +1,6 @@
 ---
 name: format-helper
-description: v3 DOCX 格式治理唯一外部入口。用于编排标准 Word 建规、规则选择、待处理 Word 审计、语义策略、修复计划、安全写回、二轮复核、报告生成和 run_id 恢复；普通用户只应调用本技能，内部 docx-* 技能由本技能按 Gate 编排。
+description: 使用时机：当用户请求 Word/DOCX 格式治理、标准文档建规、规则选择、待处理文档审计、自动修复、二轮复核、报告生成、run_id 恢复，或明确提到 format-helper、$format-helper 时使用。本技能是 v3 唯一外部入口，负责按 Gate 编排内部 docx-* 技能；普通用户不应直接调用内部 docx-* 技能。
 ---
 
 # Format Helper
