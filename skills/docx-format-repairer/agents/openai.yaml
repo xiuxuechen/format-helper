@@ -1,0 +1,6 @@
+interface:
+  display_name: "DOCX Format Repairer"
+  short_description: "按修复计划安全写回 Word 格式副本并保留原件"
+  default_prompt: "Use $docx-format-repairer to apply an approved repair_plan.yaml to a DOCX working copy."
+policy:
+  allow_implicit_invocation: true

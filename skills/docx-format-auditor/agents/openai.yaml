@@ -1,0 +1,6 @@
+interface:
+  display_name: "DOCX Format Auditor"
+  short_description: "按规则审计 Word 结构、目录、样式与格式问题"
+  default_prompt: "Use $docx-format-auditor to audit a DOCX snapshot against a confirmed format rule profile."
+policy:
+  allow_implicit_invocation: true

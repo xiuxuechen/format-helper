@@ -1,0 +1,6 @@
+interface:
+  display_name: "DOCX Format Reporter"
+  short_description: "生成 Word 格式治理报告、确认项与最终验收摘要"
+  default_prompt: "Use $docx-format-reporter to build human-readable reports from audit, repair, and review artifacts."
+policy:
+  allow_implicit_invocation: true
