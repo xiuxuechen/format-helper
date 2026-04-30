@@ -1,6 +1,0 @@
-interface:
-  display_name: "DOCX Rule Extractor"
-  short_description: "从标准 Word 文件抽取可确认的格式规则版本草案"
-  default_prompt: "Use $docx-rule-extractor to inspect a standard DOCX and draft a reusable format rule profile."
-policy:
-  allow_implicit_invocation: true

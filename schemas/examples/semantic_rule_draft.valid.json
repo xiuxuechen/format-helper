@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "20260430-153700-official-report",
+  "created_at": "2026-04-30T16:30:00+08:00",
+  "generated_by": "codex",
+  "rule_id": "official-report-v1",
+  "source_snapshot": "snapshots/standard_snapshot.json",
+  "source": {
+    "standard_docx": "input/standard.docx",
+    "snapshot": "snapshots/standard_snapshot.json",
+    "document_hash": "sha256:example"
+  },
+  "document_type": "正式材料",
+  "description": "从标准 Word 样例归纳出的格式规则草案。",
+  "roles": [
+    {
+      "role": "heading-level-1",
+      "description": "一级标题",
+      "evidence": [
+        "文本以中文数字加顿号开头，例如“一、”",
+        "使用黑体，约 16pt，加粗",
+        "位于正文结构关键位置，后续有大量从属段落"
+      ],
+      "confidence": 0.92,
+      "format": {
+        "font_east_asia": "黑体",
+        "font_size_pt": 16,
+        "bold": true,
+        "outline_level": 1
+      },
+      "write_strategy": "style-definition",
+      "word_style_id": "Heading1",
+      "localized_style_candidates": [
+        "标题 1",
+        "Heading 1"
+      ],
+      "applies_to": [
+        "paragraph"
+      ],
+      "examples": [
+        {
+          "element_id": "p-00012",
+          "text_preview": "一、总体要求",
+          "page": 2
+        }
+      ],
+      "requires_user_confirmation": false
+    },
+    {
+      "role": "complex-table",
+      "description": "复杂表格",
+      "evidence": [
+        "标准文档中只有少量复杂表格样例",
+        "跨页表头和行高策略无法稳定归纳"
+      ],
+      "confidence": 0.74,
+      "format": {
+        "font_east_asia": "宋体",
+        "font_size_pt": 10.5
+      },
+      "write_strategy": "audit-only",
+      "applies_to": [
+        "table"
+      ],
+      "requires_user_confirmation": true,
+      "manual_confirmation_reason": "置信度低于 0.85，且复杂表格策略需要人工确认。"
+    }
+  ],
+  "manual_confirmation": [
+    {
+      "item": "复杂表格跨页规则",
+      "reason": "标准文档样例不足，无法确定表头重复、跨页标题和行高策略。",
+      "affected_roles": [
+        "complex-table"
+      ],
+      "required_decision": "是否仅审计复杂表格，或允许后续人工确认后修复。",
+      "default_option": "audit-only"
+    }
+  ],
+  "validation": {
+    "status": "valid_with_warnings",
+    "warnings": [
+      "complex-table 需要人工确认"
+    ],
+    "blockers": []
+  }
+}

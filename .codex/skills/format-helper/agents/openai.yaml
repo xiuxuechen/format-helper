@@ -1,0 +1,4 @@
+interface:
+  display_name: "格式治理主控"
+  short_description: "编排 DOCX 格式治理闭环"
+  default_prompt: "编排 DOCX 建规、审计、修复计划、安全写回、复核、报告和恢复流程。"

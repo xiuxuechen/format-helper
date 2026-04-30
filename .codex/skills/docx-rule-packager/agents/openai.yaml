@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 规则打包"
+  short_description: "打包 DOCX 语义规则"
+  default_prompt: "将语义规则草案打包为规则包和 RULE_SUMMARY.md，不自行创造规则。"

@@ -1,6 +1,0 @@
-interface:
-  display_name: "Format Helper"
-  short_description: "编排正式文档格式治理、规则选择、审计、修复与验收"
-  default_prompt: "Use $format-helper to manage document format governance, rule selection, DOCX audit, repair, and acceptance."
-policy:
-  allow_implicit_invocation: true

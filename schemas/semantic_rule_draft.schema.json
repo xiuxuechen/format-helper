@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/semantic_rule_draft.schema.json",
+  "title": "Semantic Rule Draft",
+  "description": "format-helper v3 语义规则草案契约。该产物由 Codex 主控根据标准 Word 事实快照生成，供规则打包和人工确认使用。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at",
+    "rule_id",
+    "source_snapshot",
+    "source",
+    "document_type",
+    "roles",
+    "manual_confirmation",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "契约版本，第一阶段固定为 1.0.0。"
+    },
+    "run_id": {
+      "$ref": "#/$defs/non_empty_string",
+      "description": "本次 format_runs/{run_id} 的运行 ID。"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "产物创建时间，使用 ISO 8601。"
+    },
+    "generated_by": {
+      "type": "string",
+      "enum": [
+        "codex"
+      ],
+      "description": "第一阶段仅允许由 Codex 主控生成。"
+    },
+    "rule_id": {
+      "$ref": "#/$defs/rule_id",
+      "description": "规则草案 ID，后续用于生成 format_rules/{rule_id}/。"
+    },
+    "source_snapshot": {
+      "$ref": "#/$defs/path_string",
+      "description": "标准文档事实快照路径，例如 snapshots/standard_snapshot.json。"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot"
+      ],
+      "properties": {
+        "standard_docx": {
+          "$ref": "#/$defs/path_string",
+          "description": "标准 Word 文件路径，可为运行目录内相对路径。"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/path_string",
+          "description": "用于生成草案的事实快照路径，应与 source_snapshot 保持一致。"
+        },
+        "document_hash": {
+          "$ref": "#/$defs/non_empty_string",
+          "description": "原始标准文档或快照哈希，用于恢复校验。"
+        },
+        "upstream_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path_string"
+          },
+          "uniqueItems": true,
+          "description": "参与生成本草案的其他上游产物。"
+        }
+      }
+    },
+    "document_type": {
+      "$ref": "#/$defs/non_empty_string",
+      "description": "规则适用的文档类型中文描述。"
+    },
+    "description": {
+      "$ref": "#/$defs/non_empty_string",
+      "description": "规则草案的人类可读说明。"
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/semantic_role_rule"
+      },
+      "description": "从标准文档归纳出的语义角色规则。"
+    },
+    "manual_confirmation": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/manual_confirmation_item"
+      },
+      "description": "规则级人工确认项。低置信度角色也必须在角色项中标记 requires_user_confirmation。"
+    },
+    "validation": {
+      "$ref": "#/$defs/validation_result",
+      "description": "schema、置信度、人工确认和安全边界校验结果。"
+    }
+  },
+  "$defs": {
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "path_string": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!.*\\u0000).+$"
+    },
+    "rule_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "semantic_role": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "evidence_list": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "write_strategy": {
+      "type": "string",
+      "enum": [
+        "style-definition",
+        "direct-format",
+        "audit-only"
+      ]
+    },
+    "semantic_role_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "description",
+        "evidence",
+        "confidence",
+        "format",
+        "write_strategy",
+        "requires_user_confirmation"
+      ],
+      "properties": {
+        "role": {
+          "$ref": "#/$defs/semantic_role",
+          "description": "内部语义角色，例如 heading-level-1、body-paragraph。"
+        },
+        "description": {
+          "$ref": "#/$defs/non_empty_string",
+          "description": "角色中文说明。"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence_list",
+          "description": "角色归纳证据，不允许为空。"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence",
+          "description": "语义规则置信度。低于 0.85 必须人工确认。"
+        },
+        "format": {
+          "$ref": "#/$defs/format_rule",
+          "description": "可验证的目标格式或格式事实。"
+        },
+        "write_strategy": {
+          "$ref": "#/$defs/write_strategy",
+          "description": "建议写入策略。"
+        },
+        "word_style_id": {
+          "$ref": "#/$defs/non_empty_string",
+          "description": "Word 原生样式 ID，只作为写回候选，不作为语义判断唯一依据。"
+        },
+        "word_style_name": {
+          "$ref": "#/$defs/non_empty_string",
+          "description": "Word 样式显示名。"
+        },
+        "localized_style_candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/non_empty_string"
+          },
+          "uniqueItems": true,
+          "description": "本地化样式名候选，仅用于审计和兼容匹配。"
+        },
+        "applies_to": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "paragraph",
+              "run",
+              "table",
+              "table-row",
+              "table-cell",
+              "section",
+              "toc"
+            ]
+          },
+          "uniqueItems": true,
+          "description": "规则适用的 OOXML 元素类型。"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example_ref"
+          },
+          "description": "来自标准快照的代表性元素。"
+        },
+        "requires_user_confirmation": {
+          "type": "boolean",
+          "description": "是否必须进入人工确认 Gate。"
+        },
+        "manual_confirmation_reason": {
+          "$ref": "#/$defs/non_empty_string",
+          "description": "需要人工确认时的原因。"
+        },
+        "risk_notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/non_empty_string"
+          },
+          "description": "风险说明或边界条件。"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "confidence"
+            ],
+            "properties": {
+              "confidence": {
+                "exclusiveMaximum": 0.85
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "requires_user_confirmation",
+              "manual_confirmation_reason"
+            ],
+            "properties": {
+              "requires_user_confirmation": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "write_strategy"
+            ],
+            "properties": {
+              "write_strategy": {
+                "const": "audit-only"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "requires_user_confirmation": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "format_rule": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "font_east_asia": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "font_ascii": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "font_size_pt": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "bold": {
+          "type": "boolean"
+        },
+        "italic": {
+          "type": "boolean"
+        },
+        "underline": {
+          "type": "boolean"
+        },
+        "alignment": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right",
+            "justify",
+            "distributed"
+          ]
+        },
+        "outline_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9
+        },
+        "first_line_indent_cm": {
+          "type": "number"
+        },
+        "left_indent_cm": {
+          "type": "number"
+        },
+        "right_indent_cm": {
+          "type": "number"
+        },
+        "line_spacing_multiple": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "space_before_pt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "space_after_pt": {
+          "type": "number",
+          "minimum": 0
+        },
+        "numbering_pattern": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "toc_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9
+        },
+        "page_orientation": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape"
+          ]
+        },
+        "shading_fill": {
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]{6}$"
+        },
+        "border": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/format_value"
+          }
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/format_value"
+      }
+    },
+    "format_value": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/format_value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/format_value"
+          }
+        }
+      ]
+    },
+    "example_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "element_id",
+        "text_preview"
+      ],
+      "properties": {
+        "element_id": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "text_preview": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "manual_confirmation_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "reason"
+      ],
+      "properties": {
+        "item": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "reason": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "affected_roles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semantic_role"
+          },
+          "uniqueItems": true
+        },
+        "required_decision": {
+          "$ref": "#/$defs/non_empty_string"
+        },
+        "default_option": {
+          "$ref": "#/$defs/non_empty_string"
+        }
+      }
+    },
+    "validation_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "warnings",
+        "blockers"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "valid",
+            "valid_with_warnings",
+            "invalid"
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/non_empty_string"
+          }
+        },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/non_empty_string"
+          }
+        }
+      }
+    }
+  }
+}

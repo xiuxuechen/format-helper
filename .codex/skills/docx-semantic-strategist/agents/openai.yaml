@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 语义策略"
+  short_description: "生成可追溯的 DOCX 语义 JSON"
+  default_prompt: "基于 DOCX 事实快照生成语义规则、角色映射或语义审计 JSON，不修改文件。"

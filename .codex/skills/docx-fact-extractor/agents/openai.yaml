@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 事实抽取"
+  short_description: "抽取客观 DOCX 结构事实"
+  default_prompt: "从 DOCX 生成客观结构快照，不做语义判断，也不修改 Word 文件。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 格式审计"
+  short_description: "审计 DOCX 真实格式"
+  default_prompt: "基于快照、语义角色和规则包审计 DOCX 真实格式，不修改 Word 文件。"

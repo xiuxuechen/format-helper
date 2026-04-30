@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 安全写回"
+  short_description: "安全修复 DOCX 工作副本"
+  default_prompt: "仅对工作副本执行已校验的白名单 DOCX 修复动作。"

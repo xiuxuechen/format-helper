@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/semantic_audit.schema.json",
+  "title": "Semantic Audit",
+  "description": "format-helper v3 语义审计结果契约，用于生成 repair_plan.yaml。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_snapshot",
+    "rule_profile_id",
+    "generated_by",
+    "generated_at",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "source_snapshot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_by": {
+      "type": "string",
+      "const": "codex"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/audit_item"
+      }
+    }
+  },
+  "$defs": {
+    "audit_item": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "issue_id",
+        "element_id",
+        "semantic_role",
+        "current_problem",
+        "expected_role",
+        "confidence",
+        "evidence",
+        "recommended_action",
+        "risk_level"
+      ],
+      "properties": {
+        "issue_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "element_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "semantic_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "current_problem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "recommended_action": {
+          "$ref": "#/$defs/recommended_action"
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        }
+      }
+    },
+    "recommended_action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "action_type",
+        "auto_fix_policy"
+      ],
+      "properties": {
+        "action_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "auto_fix_policy": {
+          "type": "string",
+          "enum": [
+            "auto-fix",
+            "manual-review",
+            "audit-only"
+          ]
+        },
+        "before": {
+          "type": "object"
+        },
+        "after": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

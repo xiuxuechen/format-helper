@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 报告生成"
+  short_description: "生成 DOCX 治理中文报告"
+  default_prompt: "从运行产物生成中文审计、修复、复核、人工确认、差异和验收报告。"

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/document_snapshot.schema.json",
+  "title": "Document Snapshot",
+  "description": "format-helper v3 DOCX 客观事实快照契约。",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "snapshot_kind",
+    "source_docx",
+    "document_hash",
+    "created_at",
+    "paragraph_count",
+    "table_count",
+    "section_count",
+    "paragraphs",
+    "tables",
+    "sections"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "snapshot_kind": {
+      "type": "string",
+      "enum": [
+        "standard",
+        "before",
+        "after"
+      ]
+    },
+    "source_docx": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document_hash": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "paragraph_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "table_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "section_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "paragraphs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "element_id",
+          "paragraph_index",
+          "text_preview"
+        ]
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "element_id",
+          "table_index",
+          "row_count",
+          "column_count"
+        ]
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "section_index"
+        ]
+      }
+    }
+  }
+}

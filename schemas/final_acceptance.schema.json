@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/final_acceptance.schema.json",
+  "title": "Final Acceptance",
+  "description": "format-helper v3 最终验收产物契约。",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "accepted",
+    "status",
+    "created_at",
+    "open_blockers",
+    "manual_items_remaining",
+    "output_docx_valid",
+    "reports",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "blocked"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "open_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "manual_items_remaining": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "output_docx_valid": {
+      "type": "boolean"
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

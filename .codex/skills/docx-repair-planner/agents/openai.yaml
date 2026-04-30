@@ -1,0 +1,4 @@
+interface:
+  display_name: "DOCX 修复计划"
+  short_description: "生成安全 DOCX 修复计划"
+  default_prompt: "根据语义审计和格式审计生成可追溯 repair_plan.yaml，并应用置信度和风险 Gate。"
