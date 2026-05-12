@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import load_yaml, write_yaml
-from scripts.validation.check_final_acceptance import validate_final_acceptance
+from scripts.validation.final_acceptance import validate_final_acceptance_v4
 
 
 TZ = timezone(timedelta(hours=8))
@@ -215,7 +215,7 @@ def render_reports(run_dir: Path) -> dict[str, Any]:
 
     final_path = run_dir / "logs" / "final_acceptance.json"
     final_path.write_text(json.dumps(final, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    errors = validate_final_acceptance(final)
+    errors = validate_final_acceptance_v4(final)
     if errors:
         raise SystemExit("\n".join(errors))
     write_yaml(

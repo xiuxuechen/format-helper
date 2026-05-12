@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""执行 repair_plan.yaml 中允许的 v3 白名单修复动作。"""
+"""执行 repair_plan.yaml 中允许的白名单修复动作。"""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import load_yaml
-from scripts.validation.check_repair_plan import validate_repair_plan
+from scripts.validation.manual_review_repair import validate_repair_plan_v4
 
 
 TZ = timezone(timedelta(hours=8))
@@ -29,6 +29,8 @@ ET.register_namespace("w", W)
 EXECUTABLE_ACTIONS = {
     "map_heading_native_style",
     "apply_body_direct_format",
+    "apply_table_cell_format",
+    "insert_or_replace_toc_field",
 }
 
 
@@ -164,25 +166,199 @@ def apply_run_format(paragraph: ET.Element, values: dict[str, Any]) -> None:
             bool_run_prop(rpr, "bCs", bool(bold))
 
 
+def build_cell_by_paragraph_id(document_root: ET.Element) -> dict[int, ET.Element]:
+    """建立段落对象到表格单元格的映射。"""
+    cell_by_paragraph_id: dict[int, ET.Element] = {}
+    for cell in document_root.findall(".//w:tc", NS):
+        for paragraph in cell.findall(".//w:p", NS):
+            cell_by_paragraph_id[id(paragraph)] = cell
+    return cell_by_paragraph_id
+
+
+def apply_table_cell_format(paragraph: ET.Element, cell_by_paragraph_id: dict[int, ET.Element], values: dict[str, Any]) -> None:
+    """应用表格单元格内段落和垂直对齐格式。"""
+    apply_paragraph_format(paragraph, values)
+    apply_run_format(paragraph, values)
+    cell = cell_by_paragraph_id.get(id(paragraph))
+    if cell is None:
+        return
+    vertical = values.get("vertical_alignment")
+    if vertical:
+        tcpr = get_or_create(cell, "tcPr", prepend=True)
+        set_attr(get_or_create(tcpr, "vAlign"), "val", vertical)
+
+
+def paragraph_text(paragraph: ET.Element) -> str:
+    """提取段落文本。"""
+    return "".join(text.text or "" for text in paragraph.findall(".//w:t", NS)).strip()
+
+
+def run_with_text(text: str, values: dict[str, Any] | None = None) -> ET.Element:
+    """创建文本 run。"""
+    run = ET.Element(f"{{{W}}}r")
+    if values:
+        rpr = ET.SubElement(run, f"{{{W}}}rPr")
+        font = values.get("font_east_asia") or values.get("font_ascii")
+        if font:
+            fonts = ET.SubElement(rpr, f"{{{W}}}rFonts")
+            set_attr(fonts, "eastAsia", font)
+            set_attr(fonts, "ascii", values.get("font_ascii") or font)
+            set_attr(fonts, "hAnsi", values.get("font_ascii") or font)
+        size = half_points(values.get("font_size_pt"))
+        if size:
+            set_attr(ET.SubElement(rpr, f"{{{W}}}sz"), "val", size)
+            set_attr(ET.SubElement(rpr, f"{{{W}}}szCs"), "val", size)
+        if values.get("bold") is not None:
+            bool_run_prop(rpr, "b", bool(values["bold"]))
+            bool_run_prop(rpr, "bCs", bool(values["bold"]))
+    text_node = ET.SubElement(run, f"{{{W}}}t")
+    text_node.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    text_node.text = text
+    return run
+
+
+def page_break_paragraph() -> ET.Element:
+    """创建分页段落。"""
+    paragraph = ET.Element(f"{{{W}}}p")
+    run = ET.SubElement(paragraph, f"{{{W}}}r")
+    ET.SubElement(run, f"{{{W}}}br", {f"{{{W}}}type": "page"})
+    return paragraph
+
+
+def toc_title_paragraph() -> ET.Element:
+    """创建目录标题段落。"""
+    paragraph = ET.Element(f"{{{W}}}p")
+    ppr = ET.SubElement(paragraph, f"{{{W}}}pPr")
+    set_attr(ET.SubElement(ppr, f"{{{W}}}jc"), "val", "center")
+    paragraph.append(
+        run_with_text(
+            "目    录",
+            {
+                "font_east_asia": "黑体",
+                "font_ascii": "黑体",
+                "font_size_pt": 16,
+                "bold": True,
+            },
+        )
+    )
+    return paragraph
+
+
+def toc_field_paragraph(max_level: int = 3) -> ET.Element:
+    """创建待 Word 刷新的自动目录字段段落。"""
+    paragraph = ET.Element(f"{{{W}}}p")
+    begin_run = ET.SubElement(paragraph, f"{{{W}}}r")
+    begin = ET.SubElement(begin_run, f"{{{W}}}fldChar")
+    set_attr(begin, "fldCharType", "begin")
+    set_attr(begin, "dirty", "true")
+
+    instr_run = ET.SubElement(paragraph, f"{{{W}}}r")
+    instr = ET.SubElement(instr_run, f"{{{W}}}instrText")
+    instr.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    instr.text = f' TOC \\o "1-{max_level}" \\h \\z \\u '
+
+    separate_run = ET.SubElement(paragraph, f"{{{W}}}r")
+    separate = ET.SubElement(separate_run, f"{{{W}}}fldChar")
+    set_attr(separate, "fldCharType", "separate")
+
+    paragraph.append(run_with_text("请在 Word 中更新域以生成目录"))
+
+    end_run = ET.SubElement(paragraph, f"{{{W}}}r")
+    end = ET.SubElement(end_run, f"{{{W}}}fldChar")
+    set_attr(end, "fldCharType", "end")
+    return paragraph
+
+
+def is_toc_paragraph(paragraph: ET.Element) -> bool:
+    """判断段落是否属于目录或目录字段。"""
+    style = paragraph.find("./w:pPr/w:pStyle", NS)
+    style_id = w_attr(style, "val")
+    if style_id and style_id.upper().startswith("TOC"):
+        return True
+    instruction = "".join(node.text or "" for node in paragraph.findall(".//w:instrText", NS))
+    if "TOC" in instruction:
+        return True
+    return paragraph_text(paragraph).replace(" ", "") == "目录"
+
+
+def remove_existing_toc(body: ET.Element) -> None:
+    """移除正文直接子级中的旧目录段落。"""
+    for child in list(body):
+        if child.tag != f"{{{W}}}p":
+            continue
+        if is_toc_paragraph(child):
+            body.remove(child)
+
+
+def first_heading_one_position(body: ET.Element) -> int:
+    """查找首个一级标题的插入位置。"""
+    children = list(body)
+    for index, child in enumerate(children):
+        if child.tag != f"{{{W}}}p":
+            continue
+        style = child.find("./w:pPr/w:pStyle", NS)
+        if w_attr(style, "val") == "1":
+            return index
+    for index, child in enumerate(children):
+        if child.tag == f"{{{W}}}sectPr":
+            return index
+    return len(children)
+
+
+def ensure_update_fields(settings_root: ET.Element | None) -> None:
+    """设置 Word 打开时更新域。"""
+    if settings_root is None:
+        return
+    set_attr(get_or_create(settings_root, "updateFields"), "val", "true")
+
+
+def insert_or_replace_toc(document_root: ET.Element, settings_root: ET.Element | None, values: dict[str, Any]) -> None:
+    """插入或替换自动目录字段。"""
+    body = document_root.find("./w:body", NS)
+    if body is None:
+        raise ValueError("document.xml 缺少 w:body")
+    max_level = int(values.get("max_level") or 3)
+    remove_existing_toc(body)
+    insert_at = first_heading_one_position(body)
+    for offset, paragraph in enumerate(
+        [
+            page_break_paragraph(),
+            toc_title_paragraph(),
+            toc_field_paragraph(max_level),
+            page_break_paragraph(),
+        ]
+    ):
+        body.insert(insert_at + offset, paragraph)
+    ensure_update_fields(settings_root)
+
+
 def apply_action(
     action: dict[str, Any],
+    document_root: ET.Element,
     paragraphs: list[ET.Element],
     available_style_ids: set[str],
+    settings_root: ET.Element | None,
+    cell_by_paragraph_id: dict[int, ET.Element],
 ) -> tuple[str, str]:
     """执行单个动作，返回状态和说明。"""
     action_type = action.get("action_type")
     if action_type not in EXECUTABLE_ACTIONS:
         return "skipped", "首阶段修复器尚未实现该白名单动作的写回逻辑"
 
+    after = action.get("after") or {}
+
+    if action_type == "insert_or_replace_toc_field":
+        insert_or_replace_toc(document_root, settings_root, after)
+        return "executed", "已插入自动目录字段并标记打开时更新域"
+
     element_id = action.get("target", {}).get("element_id", "")
     index = paragraph_index(element_id)
     if index < 0 or index >= len(paragraphs):
         return "rejected", "目标段落不存在"
     paragraph = paragraphs[index]
-    after = action.get("after") or {}
 
     if action_type == "map_heading_native_style":
-        style_id = after.get("style_id") or after.get("style")
+        style_id = after.get("style_id") or after.get("style") or after.get("word_style_id")
         if not style_id:
             return "rejected", "缺少 after.style_id"
         if style_id not in available_style_ids:
@@ -194,6 +370,10 @@ def apply_action(
         apply_paragraph_format(paragraph, after)
         apply_run_format(paragraph, after)
         return "executed", "已应用段落直接格式"
+
+    if action_type == "apply_table_cell_format":
+        apply_table_cell_format(paragraph, cell_by_paragraph_id, after)
+        return "executed", "已应用表格单元格格式"
 
     return "skipped", "未处理动作"
 
@@ -226,8 +406,10 @@ def apply_plan(plan: dict[str, Any], plan_path: Path, log_path: Path) -> dict[st
 
     document_root = ET.fromstring(entries["word/document.xml"])
     styles_root = ET.fromstring(entries["word/styles.xml"]) if "word/styles.xml" in entries else None
+    settings_root = ET.fromstring(entries["word/settings.xml"]) if "word/settings.xml" in entries else None
     paragraphs = document_root.findall(".//w:p", NS)
     available_style_ids = style_ids(styles_root)
+    cell_by_paragraph_id = build_cell_by_paragraph_id(document_root)
 
     action_results: list[dict[str, Any]] = []
     for action in plan.get("actions", []):
@@ -241,7 +423,14 @@ def apply_plan(plan: dict[str, Any], plan_path: Path, log_path: Path) -> dict[st
             )
             continue
         try:
-            status, reason = apply_action(action, paragraphs, available_style_ids)
+            status, reason = apply_action(
+                action,
+                document_root,
+                paragraphs,
+                available_style_ids,
+                settings_root,
+                cell_by_paragraph_id,
+            )
         except (ValueError, IndexError) as exc:
             status, reason = "rejected", str(exc)
         action_results.append(
@@ -255,6 +444,8 @@ def apply_plan(plan: dict[str, Any], plan_path: Path, log_path: Path) -> dict[st
         )
 
     entries["word/document.xml"] = ET.tostring(document_root, encoding="utf-8", xml_declaration=True)
+    if settings_root is not None:
+        entries["word/settings.xml"] = ET.tostring(settings_root, encoding="utf-8", xml_declaration=True)
     temp_output = output_docx.with_suffix(".tmp.docx")
     with zipfile.ZipFile(temp_output, "w", zipfile.ZIP_DEFLATED) as archive:
         for name, content in entries.items():
@@ -289,7 +480,7 @@ def main_from_args(argv: list[str] | None = None) -> int:
     if not isinstance(plan, dict):
         print("repair_plan 根节点必须是对象")
         return 1
-    errors = validate_repair_plan(plan)
+    errors = validate_repair_plan_v4(plan)
     if errors:
         for error in errors:
             print(error)

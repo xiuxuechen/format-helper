@@ -17,7 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import load_yaml
-from scripts.validation.check_document_snapshot import validate_document_snapshot
+from scripts.validation.validate_schema_contract import validate_schema_contract
 
 
 TZ = timezone(timedelta(hours=8))
@@ -102,9 +102,9 @@ def build_reviews(run_dir: Path) -> list[dict[str, Any]]:
         )
     )
 
-    before_errors = validate_document_snapshot(before_snapshot)
-    after_errors = validate_document_snapshot(after_snapshot)
-    snapshot_status = "passed" if not before_errors and not after_errors else "blocked"
+    before_result = validate_schema_contract(before_snapshot, "document-snapshot")
+    after_result = validate_schema_contract(after_snapshot, "document-snapshot")
+    snapshot_status = "passed" if before_result.valid and after_result.valid else "blocked"
     reviews.append(
         make_result(
             "T02",

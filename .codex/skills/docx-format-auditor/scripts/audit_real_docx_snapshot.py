@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[4]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.validation.check_semantic_audit import validate_semantic_audit
+from scripts.validation.validate_schema_contract import validate_schema_contract
 
 
 TZ = timezone(timedelta(hours=8))
@@ -352,9 +352,9 @@ def main() -> int:
         rule_profile_id=args.rule_profile_id,
         now=now,
     )
-    errors = validate_semantic_audit(audit)
-    if errors:
-        for error in errors:
+    result = validate_schema_contract(audit, "semantic-audit")
+    if not result.valid:
+        for error in result.errors:
             print(error)
         return 1
 

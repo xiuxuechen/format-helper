@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -17,6 +18,34 @@ TZ = timezone(timedelta(hours=8))
 NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 W = NS["w"]
 FORMAT_EMPTY_VALUES = {None, ""}
+SOURCE_CONFIDENCE = {
+    "direct": 0.98,
+    "style_inherit": 0.9,
+    "doc_defaults": 0.85,
+    "theme": 0.75,
+    "word_ui_default": 0.6,
+    "unresolved": 0.0,
+    "legacy": 0.5,
+}
+PARAGRAPH_SOURCE_SLOTS = {
+    "alignment",
+    "outline_level",
+    "first_line_indent_cm",
+    "left_indent_cm",
+    "right_indent_cm",
+    "line_spacing_raw",
+    "line_spacing_rule",
+    "line_spacing_multiple",
+    "line_spacing_pt",
+    "space_before_pt",
+    "space_after_pt",
+}
+RUN_SOURCE_SLOTS = {
+    "font_east_asia",
+    "font_ascii",
+    "font_size_pt",
+    "bold",
+}
 
 
 def w_attr(node: ET.Element | None, name: str) -> str | None:
@@ -91,6 +120,7 @@ def paragraph_format_from_ppr(ppr: ET.Element | None) -> dict[str, Any]:
         result["space_before_pt"] = before / 20
     if after is not None:
         result["space_after_pt"] = after / 20
+    apply_line_spacing_derived_slots(result)
     return result
 
 
@@ -137,6 +167,49 @@ def merge_formats(*formats: dict[str, Any]) -> dict[str, Any]:
     for item in formats:
         merged.update(non_empty_format(item))
     return merged
+
+
+def source_value(value: Any, source: str) -> dict[str, Any]:
+    """构造带来源的槽位值对象。"""
+    return {"value": value, "source": source, "confidence": SOURCE_CONFIDENCE[source]}
+
+
+def non_empty_source_format(data: dict[str, Any], source: str) -> dict[str, dict[str, Any]]:
+    """把裸格式值转成带 source 的非空格式。"""
+    return {key: source_value(value, source) for key, value in data.items() if value not in FORMAT_EMPTY_VALUES}
+
+
+def merge_source_formats(*formats: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """按来源优先级合并格式对象，后者覆盖前者。"""
+    merged: dict[str, dict[str, Any]] = {}
+    for item in formats:
+        merged.update(item)
+    return merged
+
+
+def ensure_source_slots(data: dict[str, dict[str, Any]], slot_names: set[str]) -> dict[str, dict[str, Any]]:
+    """确保所有登记槽位显式存在，缺失时标为 unresolved。"""
+    result = dict(data)
+    for slot_name in sorted(slot_names):
+        if slot_name not in result:
+            result[slot_name] = source_value(None, "unresolved")
+    return result
+
+
+def apply_line_spacing_derived_slots(data: dict[str, Any]) -> None:
+    """从 line + lineRule 推导倍数或固定磅值行距。"""
+    raw = data.get("line_spacing_raw")
+    if raw in FORMAT_EMPTY_VALUES:
+        return
+    try:
+        line_value = float(raw)
+    except (TypeError, ValueError):
+        return
+    rule = data.get("line_spacing_rule") or "auto"
+    if rule == "auto":
+        data["line_spacing_multiple"] = round(line_value / 240.0, 3)
+    elif rule in {"exact", "atLeast"}:
+        data["line_spacing_pt"] = round(line_value / 20.0, 3)
 
 
 class StyleResolver:
@@ -189,11 +262,35 @@ class StyleResolver:
             merge_formats(base_r, item.get("run_format", {})),
         )
 
+    def resolve_style_with_source(
+        self, style_id: str | None, seen: set[str] | None = None
+    ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+        """解析样式继承链，并保留 style_inherit 来源。"""
+        if not style_id or style_id not in self.styles:
+            return {}, {}
+        seen = seen or set()
+        if style_id in seen:
+            return {}, {}
+        seen.add(style_id)
+        item = self.styles[style_id]
+        base_p, base_r = self.resolve_style_with_source(item.get("based_on"), seen)
+        return (
+            merge_source_formats(base_p, non_empty_source_format(item.get("paragraph_format", {}), "style_inherit")),
+            merge_source_formats(base_r, non_empty_source_format(item.get("run_format", {}), "style_inherit")),
+        )
+
     def resolved_paragraph_format(self, paragraph: ET.Element) -> dict[str, Any]:
         """解析段落最终有效格式。"""
         style_p, _ = self.resolve_style(paragraph_style(paragraph))
         direct_p = paragraph_format(paragraph)
         return merge_formats(self.default_paragraph_format, style_p, direct_p)
+
+    def resolved_paragraph_format_with_source(self, paragraph: ET.Element) -> dict[str, dict[str, Any]]:
+        """解析段落最终格式，并为每个槽位写明来源。"""
+        style_p, _ = self.resolve_style_with_source(paragraph_style(paragraph))
+        direct_p = non_empty_source_format(paragraph_format(paragraph), "direct")
+        defaults = non_empty_source_format(self.default_paragraph_format, "doc_defaults")
+        return ensure_source_slots(merge_source_formats(defaults, style_p, direct_p), PARAGRAPH_SOURCE_SLOTS)
 
     def resolved_run_format(self, paragraph: ET.Element, run: ET.Element | None = None) -> dict[str, Any]:
         """解析 run 最终有效格式。"""
@@ -203,6 +300,18 @@ class StyleResolver:
         _, run_style_r = self.resolve_style(run_style(run))
         direct_r = run_format_from_rpr(run.find("./w:rPr", NS) if run is not None else None)
         return merge_formats(self.default_run_format, paragraph_style_r, run_style_r, direct_r)
+
+    def resolved_run_format_with_source(
+        self, paragraph: ET.Element, run: ET.Element | None = None
+    ) -> dict[str, dict[str, Any]]:
+        """解析 run 最终格式，并为每个槽位写明来源。"""
+        if run is None:
+            run = paragraph.find("./w:r", NS)
+        _, paragraph_style_r = self.resolve_style_with_source(paragraph_style(paragraph))
+        _, run_style_r = self.resolve_style_with_source(run_style(run))
+        direct_r = non_empty_source_format(run_format_from_rpr(run.find("./w:rPr", NS) if run is not None else None), "direct")
+        defaults = non_empty_source_format(self.default_run_format, "doc_defaults")
+        return ensure_source_slots(merge_source_formats(defaults, paragraph_style_r, run_style_r, direct_r), RUN_SOURCE_SLOTS)
 
 
 def table_cell_role(row_index: int, column_index: int) -> str:
@@ -214,13 +323,17 @@ def table_cell_role(row_index: int, column_index: int) -> str:
     return "value-cell"
 
 
-def run_items(paragraph: ET.Element, resolver: StyleResolver) -> list[dict[str, Any]]:
+def run_items(paragraph: ET.Element, resolver: StyleResolver, with_source: bool = True) -> list[dict[str, Any]]:
     """抽取段落下所有 run 的文本和格式。"""
     items: list[dict[str, Any]] = []
     for index, run in enumerate(paragraph.findall("./w:r", NS), start=1):
         text = text_of(run).strip()
         direct = run_format_from_rpr(run.find("./w:rPr", NS))
-        resolved = resolver.resolved_run_format(paragraph, run)
+        resolved = (
+            resolver.resolved_run_format_with_source(paragraph, run)
+            if with_source
+            else resolver.resolved_run_format(paragraph, run)
+        )
         items.append(
             {
                 "run_index": index,
@@ -242,10 +355,12 @@ def cell_format_summary(paragraphs: list[dict[str, Any]]) -> dict[str, Any]:
         for run in paragraph.get("runs", []):
             resolved = run.get("resolved_run_format") or {}
             direct = run.get("run_format") or {}
-            if resolved.get("bold") is True or direct.get("bold") is True:
+            resolved_bold = format_slot_value(resolved.get("bold"))
+            direct_bold = format_slot_value(direct.get("bold"))
+            if resolved_bold is True or direct_bold is True:
                 has_bold = True
-            font = resolved.get("font_east_asia") or direct.get("font_east_asia")
-            size = resolved.get("font_size_pt") or direct.get("font_size_pt")
+            font = format_slot_value(resolved.get("font_east_asia")) or format_slot_value(direct.get("font_east_asia"))
+            size = format_slot_value(resolved.get("font_size_pt")) or format_slot_value(direct.get("font_size_pt"))
             if font:
                 fonts.add(str(font))
             if isinstance(size, (int, float)):
@@ -257,7 +372,20 @@ def cell_format_summary(paragraphs: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def table_info(table: ET.Element, index: int, paragraph_index_by_id: dict[int, int], resolver: StyleResolver) -> dict[str, Any]:
+def format_slot_value(value: Any) -> Any:
+    """兼容读取裸值和 {value, source, confidence} 槽位对象。"""
+    if isinstance(value, dict) and "value" in value:
+        return value.get("value")
+    return value
+
+
+def table_info(
+    table: ET.Element,
+    index: int,
+    paragraph_index_by_id: dict[int, int],
+    resolver: StyleResolver,
+    with_source: bool = True,
+) -> dict[str, Any]:
     """抽取表格基础事实。"""
     rows = table.findall("./w:tr", NS)
     column_count = 0
@@ -276,10 +404,18 @@ def table_info(table: ET.Element, index: int, paragraph_index_by_id: dict[int, i
                         "style_id": paragraph_style(paragraph),
                         "style_name": resolver.style_name(paragraph_style(paragraph)),
                         "paragraph_format": paragraph_format(paragraph),
-                        "resolved_paragraph_format": resolver.resolved_paragraph_format(paragraph),
+                        "resolved_paragraph_format": (
+                            resolver.resolved_paragraph_format_with_source(paragraph)
+                            if with_source
+                            else resolver.resolved_paragraph_format(paragraph)
+                        ),
                         "run_format": run_format(paragraph),
-                        "resolved_run_format": resolver.resolved_run_format(paragraph),
-                        "runs": run_items(paragraph, resolver),
+                        "resolved_run_format": (
+                            resolver.resolved_run_format_with_source(paragraph)
+                            if with_source
+                            else resolver.resolved_run_format(paragraph)
+                        ),
+                        "runs": run_items(paragraph, resolver, with_source=with_source),
                     }
                 )
             cells.append(
@@ -331,13 +467,30 @@ def section_info(root: ET.Element) -> list[dict[str, Any]]:
     return result
 
 
-def extract_snapshot(docx_path: Path, snapshot_kind: str) -> dict[str, Any]:
-    """提取 DOCX 快照。"""
-    digest = hashlib.sha256(docx_path.read_bytes()).hexdigest()
-    with zipfile.ZipFile(docx_path, "r") as archive:
-        document_xml = archive.read("word/document.xml")
-        styles_xml = archive.read("word/styles.xml") if "word/styles.xml" in archive.namelist() else None
-        archive.testzip()
+def extract_snapshot(docx_path: Path, snapshot_kind: str, with_source: bool = True) -> dict[str, Any]:
+    """提取 DOCX 快照。
+
+    Raises:
+        FileNotFoundError: docx_path 不存在
+        zipfile.BadZipFile: 文件不是合法 ZIP/OOXML 格式
+        ValueError: ZIP 内缺少 word/document.xml
+    """
+    if not docx_path.exists():
+        raise FileNotFoundError(f"DOCX 文件不存在: {docx_path}")
+    try:
+        digest = hashlib.sha256(docx_path.read_bytes()).hexdigest()
+    except PermissionError as exc:
+        raise PermissionError(f"无法读取 DOCX 文件: {docx_path}") from exc
+    try:
+        with zipfile.ZipFile(docx_path, "r") as archive:
+            namelist = archive.namelist()
+            if "word/document.xml" not in namelist:
+                raise ValueError(f"DOCX 缺少 word/document.xml: {docx_path}")
+            document_xml = archive.read("word/document.xml")
+            styles_xml = archive.read("word/styles.xml") if "word/styles.xml" in namelist else None
+            archive.testzip()
+    except zipfile.BadZipFile:
+        raise zipfile.BadZipFile(f"文件不是合法 ZIP/OOXML 格式: {docx_path}")
     root = ET.fromstring(document_xml)
     styles_root = ET.fromstring(styles_xml) if styles_xml else None
     resolver = StyleResolver(styles_root)
@@ -356,12 +509,23 @@ def extract_snapshot(docx_path: Path, snapshot_kind: str) -> dict[str, Any]:
                 "style_id": style_id,
                 "style_name": resolver.style_name(style_id),
                 "paragraph_format": paragraph_format(paragraph),
-                "resolved_paragraph_format": resolver.resolved_paragraph_format(paragraph),
+                "resolved_paragraph_format": (
+                    resolver.resolved_paragraph_format_with_source(paragraph)
+                    if with_source
+                    else resolver.resolved_paragraph_format(paragraph)
+                ),
                 "run_format": run_format(paragraph),
-                "resolved_run_format": resolver.resolved_run_format(paragraph),
+                "resolved_run_format": (
+                    resolver.resolved_run_format_with_source(paragraph)
+                    if with_source
+                    else resolver.resolved_run_format(paragraph)
+                ),
             }
         )
-    table_items = [table_info(table, index, paragraph_index_by_id, resolver) for index, table in enumerate(tables, start=1)]
+    table_items = [
+        table_info(table, index, paragraph_index_by_id, resolver, with_source=with_source)
+        for index, table in enumerate(tables, start=1)
+    ]
     sections = section_info(root)
     return {
         "schema_version": "1.0.0",
@@ -373,6 +537,7 @@ def extract_snapshot(docx_path: Path, snapshot_kind: str) -> dict[str, Any]:
         "table_count": len(table_items),
         "section_count": len(sections),
         "style_count": len(resolver.styles),
+        "resolved_format_with_source": with_source,
         "paragraphs": paragraph_items,
         "tables": table_items,
         "sections": sections,
@@ -385,10 +550,14 @@ def main() -> int:
     parser.add_argument("docx_path", type=Path)
     parser.add_argument("--snapshot-kind", required=True, choices=["standard", "before", "after"])
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--without-source", action="store_true", help="输出旧版裸 resolved_* 格式")
     args = parser.parse_args()
-    snapshot = extract_snapshot(args.docx_path, args.snapshot_kind)
+    snapshot = extract_snapshot(args.docx_path, args.snapshot_kind, with_source=not args.without_source)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    content = json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n"
+    temp_path = args.output.with_suffix(args.output.suffix + ".tmp")
+    temp_path.write_text(content, encoding="utf-8")
+    os.replace(temp_path, args.output)
     print(args.output)
     return 0
 

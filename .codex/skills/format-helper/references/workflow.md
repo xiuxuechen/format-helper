@@ -1,4 +1,4 @@
-# format-helper v3 工作流
+# format-helper 工作流
 
 ## 运行模式
 

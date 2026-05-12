@@ -16,8 +16,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import write_yaml
-from scripts.validation.check_semantic_audit import validate_semantic_audit
-from scripts.validation.check_repair_plan import WHITELIST_ACTIONS, validate_repair_plan
+from scripts.validation.manual_review_repair import WHITELIST_ACTIONS, validate_repair_plan_v4
+from scripts.validation.validate_schema_contract import validate_schema_contract
 
 
 TZ = timezone(timedelta(hours=8))
@@ -183,9 +183,9 @@ def main_from_args(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     semantic_audit = load_json(args.semantic_audit)
-    semantic_errors = validate_semantic_audit(semantic_audit)
-    if semantic_errors:
-        for error in semantic_errors:
+    semantic_result = validate_schema_contract(semantic_audit, "semantic-audit")
+    if not semantic_result.valid:
+        for error in semantic_result.errors:
             print(error)
         return 1
 
@@ -201,7 +201,7 @@ def main_from_args(argv: list[str] | None = None) -> int:
         rule_version=args.rule_version,
         now=now,
     )
-    plan_errors = validate_repair_plan(plan)
+    plan_errors = validate_repair_plan_v4(plan)
     if plan_errors:
         for error in plan_errors:
             print(error)

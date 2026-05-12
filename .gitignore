@@ -7,6 +7,7 @@ format_runs/
 
 # Generated rule profiles may contain customer/project-specific metadata.
 format_rules/
+format-rules/
 
 # Local OS/editor noise.
 .DS_Store
@@ -14,3 +15,6 @@ Thumbs.db
 
 # Local analysis notes.
 WORD_FORMAT_SKILL_ANALYSIS*.md
+docs/
+fixtures/
+tests/
