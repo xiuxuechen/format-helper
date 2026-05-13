@@ -346,7 +346,7 @@ def run_items(paragraph: ET.Element, resolver: StyleResolver, with_source: bool 
     return items
 
 
-def cell_format_summary(paragraphs: list[dict[str, Any]]) -> dict[str, Any]:
+def cell_format_summary(paragraphs: list[dict[str, Any]], vertical_alignment: str | None = None) -> dict[str, Any]:
     """汇总单元格格式，用于表格正文审计。"""
     fonts: set[str] = set()
     sizes: set[float] = set()
@@ -369,6 +369,7 @@ def cell_format_summary(paragraphs: list[dict[str, Any]]) -> dict[str, Any]:
         "has_bold": has_bold,
         "font_east_asia_values": sorted(fonts),
         "font_size_pt_values": sorted(sizes),
+        "vertical_alignment": vertical_alignment,
     }
 
 
@@ -395,11 +396,22 @@ def table_info(
         column_count = max(column_count, len(row_cells))
         for column_index, cell in enumerate(row_cells, start=1):
             paragraph_items: list[dict[str, Any]] = []
-            for paragraph in cell.findall(".//w:p", NS):
+            cell_id = f"table-{index:04d}-r{row_index:03d}-c{column_index:03d}"
+            vertical_alignment = w_attr(cell.find("./w:tcPr/w:vAlign", NS), "val")
+            for paragraph_offset, paragraph in enumerate(cell.findall(".//w:p", NS), start=1):
                 text = text_of(paragraph).strip()
+                paragraph_index = paragraph_index_by_id.get(id(paragraph))
                 paragraph_items.append(
                     {
-                        "paragraph_index": paragraph_index_by_id.get(id(paragraph)),
+                        "fact_id": f"{cell_id}-p{paragraph_offset:03d}",
+                        "fact_kind": "table_cell_paragraph",
+                        "locator": {
+                            "table_index": index,
+                            "row_index": row_index,
+                            "column_index": column_index,
+                            "paragraph_index": paragraph_index,
+                        },
+                        "paragraph_index": paragraph_index,
                         "text_preview": text[:120],
                         "style_id": paragraph_style(paragraph),
                         "style_name": resolver.style_name(paragraph_style(paragraph)),
@@ -420,13 +432,14 @@ def table_info(
                 )
             cells.append(
                 {
-                    "cell_id": f"table-{index:04d}-r{row_index:03d}-c{column_index:03d}",
+                    "cell_id": cell_id,
                     "row_index": row_index,
                     "column_index": column_index,
                     "cell_role_candidate": table_cell_role(row_index, column_index),
+                    "vertical_alignment": vertical_alignment,
                     "text_preview": text_of(cell).strip()[:120],
                     "paragraphs": paragraph_items,
-                    "format_summary": cell_format_summary(paragraph_items),
+                    "format_summary": cell_format_summary(paragraph_items, vertical_alignment),
                 }
             )
     for row in rows:
@@ -441,6 +454,34 @@ def table_info(
     }
 
 
+def page_number_format(section: ET.Element | None) -> str:
+    """抽取 sectPr/w:pgNumType 页码格式；缺失时显式标为 none。"""
+    if section is None:
+        return "unresolved"
+    page_number = section.find("./w:pgNumType", NS)
+    if page_number is None:
+        return "none"
+    return w_attr(page_number, "fmt") or "unresolved"
+
+
+def page_setup_from_section(section: ET.Element | None) -> dict[str, Any]:
+    """抽取分节页面设置事实，不解析 header/footer relationship。"""
+    page_size = section.find("./w:pgSz", NS) if section is not None else None
+    margin = section.find("./w:pgMar", NS) if section is not None else None
+    return {
+        "page_orientation": w_attr(page_size, "orient") or "portrait",
+        "page_width_twips": int_attr(page_size, "w"),
+        "page_height_twips": int_attr(page_size, "h"),
+        "margin_top_cm": twips_to_cm(int_attr(margin, "top")),
+        "margin_bottom_cm": twips_to_cm(int_attr(margin, "bottom")),
+        "margin_left_cm": twips_to_cm(int_attr(margin, "left")),
+        "margin_right_cm": twips_to_cm(int_attr(margin, "right")),
+        "header_distance_cm": twips_to_cm(int_attr(margin, "header")),
+        "footer_distance_cm": twips_to_cm(int_attr(margin, "footer")),
+        "page_number_format": page_number_format(section),
+    }
+
+
 def section_info(root: ET.Element) -> list[dict[str, Any]]:
     """抽取节信息。"""
     sections = root.findall(".//w:sectPr", NS)
@@ -448,22 +489,33 @@ def section_info(root: ET.Element) -> list[dict[str, Any]]:
         sections = []
     result: list[dict[str, Any]] = []
     for index, section in enumerate(sections, start=1):
-        page_size = section.find("./w:pgSz", NS)
-        margin = section.find("./w:pgMar", NS)
+        page_setup = page_setup_from_section(section)
         result.append(
             {
+                "fact_id": f"section-{index:04d}-page-setup",
+                "fact_kind": "page_setup",
                 "section_index": index,
-                "page_width_twips": int_attr(page_size, "w"),
-                "page_height_twips": int_attr(page_size, "h"),
-                "orientation": w_attr(page_size, "orient") or "portrait",
-                "margin_top_cm": twips_to_cm(int_attr(margin, "top")),
-                "margin_bottom_cm": twips_to_cm(int_attr(margin, "bottom")),
-                "margin_left_cm": twips_to_cm(int_attr(margin, "left")),
-                "margin_right_cm": twips_to_cm(int_attr(margin, "right")),
+                "locator": {"section_index": index},
+                "page_setup": page_setup,
+                "page_width_twips": page_setup["page_width_twips"],
+                "page_height_twips": page_setup["page_height_twips"],
+                "orientation": page_setup["page_orientation"],
+                "margin_top_cm": page_setup["margin_top_cm"],
+                "margin_bottom_cm": page_setup["margin_bottom_cm"],
+                "margin_left_cm": page_setup["margin_left_cm"],
+                "margin_right_cm": page_setup["margin_right_cm"],
             }
         )
     if not result:
-        result.append({"section_index": 1})
+        result.append(
+            {
+                "fact_id": "section-0001-page-setup",
+                "fact_kind": "page_setup",
+                "section_index": 1,
+                "locator": {"section_index": 1},
+                "page_setup": page_setup_from_section(None),
+            }
+        )
     return result
 
 

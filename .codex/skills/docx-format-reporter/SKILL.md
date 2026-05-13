@@ -20,16 +20,26 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 
 ## 输出
 
-- `reports/AUDIT_REPORT.md`
-- `reports/REVIEW_REPORT.md`
-- `reports/MANUAL_CONFIRMATION.md`
-- `reports/DIFF_SUMMARY.md`
-- `reports/REPAIR_LOG.md`
-- `reports/FINAL_ACCEPTANCE_REPORT.md`
-- `logs/reporting_result.json`（报告阶段后置引用）
-- `logs/evidence_manifest.reporting.json`（报告阶段证据索引）
+### 主报告（必需）
+- `reports/REVIEW_REPORT.md`（**唯一综合性报告**，取代原有的审计报告、复核报告、修复日志等多份独立报告；涵盖审计发现、修复执行、复核结果、对比分析、风险警示、最终验收）
+
+### 衍生/引用产物（可选/由主报告驱动）
+- `logs/reporting_result.json`（报告阶段后置引用，由主报告生成）
+- `logs/evidence_manifest.reporting.json`（报告阶段证据索引，由主报告生成）
 - `logs/final_acceptance.json`（**只读引用**，不得修改）
-- 可复用脚本：`scripts/render_final_reports.py`
+- `scripts/render_final_reports.py`（可复用报告生成脚本）
+
+## REVIEW_REPORT.md 内容结构
+
+`reports/REVIEW_REPORT.md` 必须包含以下 7 个章节：
+
+1. **基本信息**（运行ID、规则包、文档信息）
+2. **审计发现明细**（每个发现：元素ID、当前值、期望值、严重程度、修复动作）
+3. **修复执行明细**（每项修复：目标元素数、执行结果、跳过/失败说明）
+4. **二轮复核逐项结果**（每项检查的通过/失败状态和证据）
+5. **修复前后对比**（关键指标的 before/after 数值对比表）
+6. **风险与警示项**（未修复项、需人工处理项、环境限制说明）
+7. **最终验收结论**
 
 ## 强制边界
 
@@ -46,11 +56,11 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 
 1. 读取最终验收 JSON（`logs/final_acceptance.json`）
 2. 按 acceptance_type/workflow_mode 选择报告分支（`final_delivery`/`audit_only_terminal`/`build_rules_terminal`/`blocked_terminal`）
-3. 生成中文最终验收报告
-4. 校验本分支 required 产物；非本分支产物不作为失败条件
+3. 生成综合中文报告（reports/REVIEW_REPORT.md，7节结构）
+4. 校验本分支 required 产物（综合报告已涵盖审计发现、修复执行、复核结果、验收结论）；非本分支产物不作为失败条件
 5. 写入 reporting result 后置引用
 6. 写入双通道输出：
-   - 业务产物：`reports/*.md` + `logs/reporting_result.json`
+   - 业务产物：`reports/REVIEW_REPORT.md`（唯一综合报告） + `logs/reporting_result.json`
    - 状态信封：`logs/skill_results/{seq}_docx-format-reporter.result.json`
 
 ## final_acceptance 不可变边界（参考 40-§6.16, 41-§11.8, 41-§11.8.1）
@@ -80,12 +90,7 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 每次执行必须同时输出：
 
 1. **业务产物**（机器权威）：
-   - `reports/FINAL_ACCEPTANCE_REPORT.md`（主报告）
-   - `reports/AUDIT_REPORT.md`（审计报告）
-   - `reports/REVIEW_REPORT.md`（复核报告）
-   - `reports/MANUAL_CONFIRMATION.md`（人工确认）
-   - `reports/DIFF_SUMMARY.md`（差异摘要）
-   - `reports/REPAIR_LOG.md`（修复日志）
+   - `reports/REVIEW_REPORT.md`（唯一综合报告，取代多份独立报告：审计报告 + 复核报告 + 修复日志 + 差异摘要 + 人工确认 + 最终验收）
    - `logs/reporting_result.json`（报告阶段后置引用）
    - `logs/evidence_manifest.reporting.json`（报告阶段证据索引）
 
@@ -121,11 +126,11 @@ reporting
 - 警示项：{warning_summary}
 
 交付物
-- 最终验收报告：reports/FINAL_ACCEPTANCE_REPORT.md
-- final_delivery：最终 Word output/{原文件名}{yyyyMMddHHmm}(_r[0-9]{2})?.docx、复核报告、修复摘要
-- audit_only_terminal：审计报告、审计证据、规则引用；不要求最终 Word
-- build_rules_terminal：规则包摘要、规则引用、规则包 manifest；不要求最终 Word
-- blocked_terminal：阻断报告、可恢复入口和 blockers；不要求补齐非适用分支产物
+- 综合报告：reports/REVIEW_REPORT.md（涵盖审计发现、修复执行、复核结果、对比分析、风险警示、最终验收）
+- final_delivery：综合报告 + 最终 Word output/{原文件名}{yyyyMMddHHmm}(_r[0-9]{2})?.docx
+- audit_only_terminal：综合报告（含审计发现明细、风险警示、验收结论）；不要求最终 Word
+- build_rules_terminal：综合报告（含规则包摘要、风险警示、验收结论）；不要求最终 Word
+- blocked_terminal：综合报告（含阻断分析、风险警示、可恢复入口）；不要求补齐非适用分支产物
 - 报告结果：logs/reporting_result.json
 - 状态信封：logs/skill_results/{seq}_docx-format-reporter.result.json
 

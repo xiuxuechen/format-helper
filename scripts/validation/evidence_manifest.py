@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.validation.skill_result_io import (
+    FH_RULE_EXPECTED_FORMAT_UNREGISTERED,
     canonical_json,
     compute_file_sha256,
     resolve_run_relative_path,
@@ -66,6 +67,25 @@ POST_ACCEPTANCE_FORBIDDEN_ARTIFACT_KINDS = {
 REPORTING_REQUIRED_ARTIFACT_KINDS = {
     "report",
     "reporting_result",
+}
+
+RULE_PACKAGING_REQUIRED_ARTIFACTS = {
+    "document_snapshot": {
+        "schema_id": "document-snapshot",
+        "path": "snapshots/standard_snapshot.json",
+    },
+    "semantic_role_map": {
+        "schema_id": "semantic-role-map",
+        "path": "semantic/semantic_role_map.before.json",
+    },
+    "role_format_slot_facts": {
+        "schema_id": "role-format-slot-facts",
+        "path": "semantic/role_format_slot_facts.json",
+    },
+    "rule_confirmation_gate": {
+        "schema_id": "rule-confirmation-gate",
+        "path": "logs/rule_confirmation_gate.json",
+    },
 }
 
 EVIDENCE_REDUNDANT_FIELDS = [
@@ -134,6 +154,38 @@ def _blocker(code: str, message: str, evidence_refs: list[str] | None = None) ->
         "recovery": None,
         "evidence_refs": evidence_refs or [],
     }
+
+
+def validate_rule_packaging_expected_artifacts(manifest: dict[str, Any]) -> ManifestValidationResult:
+    """校验 rule_packaging 期望格式产物已完整登记到 evidence manifest。"""
+    result = validate_evidence_manifest(manifest)
+    errors = list(result.errors)
+    artifacts = manifest.get("artifacts") if isinstance(manifest, dict) else None
+    if not isinstance(artifacts, list):
+        return ManifestValidationResult(False, "broken", errors or ["artifacts must be array"])
+
+    by_kind = {
+        artifact.get("kind"): artifact
+        for artifact in artifacts
+        if isinstance(artifact, dict) and artifact.get("kind")
+    }
+    for kind, expected in RULE_PACKAGING_REQUIRED_ARTIFACTS.items():
+        artifact = by_kind.get(kind)
+        if not isinstance(artifact, dict):
+            errors.append(f"{FH_RULE_EXPECTED_FORMAT_UNREGISTERED}: missing artifact kind {kind}")
+            continue
+        if artifact.get("schema_id") != expected["schema_id"]:
+            errors.append(
+                f"{FH_RULE_EXPECTED_FORMAT_UNREGISTERED}: artifact kind {kind} schema_id must be {expected['schema_id']}"
+            )
+        if artifact.get("path") != expected["path"]:
+            errors.append(f"{FH_RULE_EXPECTED_FORMAT_UNREGISTERED}: artifact kind {kind} path must be {expected['path']}")
+        if artifact.get("path_kind") != "run_relative":
+            errors.append(f"{FH_RULE_EXPECTED_FORMAT_UNREGISTERED}: artifact kind {kind} path_kind must be run_relative")
+        if artifact.get("required") is not True:
+            errors.append(f"{FH_RULE_EXPECTED_FORMAT_UNREGISTERED}: artifact kind {kind} must be required=true")
+
+    return ManifestValidationResult(not errors, "broken" if errors else result.status, errors)
 
 
 def compute_manifest_sha256(manifest: dict[str, Any]) -> str:
@@ -444,10 +496,12 @@ def write_evidence_manifest(
 __all__ = [
     "GENERATION_PATHS",
     "ManifestValidationResult",
+    "RULE_PACKAGING_REQUIRED_ARTIFACTS",
     "artifact_from_file",
     "build_evidence_manifest",
     "compute_manifest_sha256",
     "evidence_from_artifact",
+    "validate_rule_packaging_expected_artifacts",
     "validate_evidence_manifest",
     "write_evidence_manifest",
 ]

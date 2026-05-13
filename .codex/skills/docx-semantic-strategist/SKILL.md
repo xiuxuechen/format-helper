@@ -63,7 +63,7 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
 2. 读取规则上下文（如适用）
 3. 生成语义产物（rule-draft/role-map/audit）
 4. 执行语义产物 schema 校验
-5. 若 `mode=rule-draft`，执行槽位事实校验：`role_slot_contract` 覆盖、`role_format_slot_facts` schema、`FH-SLOT-FACTS-UNRESOLVED`/`FH-SLOT-FACTS-CONFLICT` blocker
+5. 若 `mode=rule-draft`，执行样式元素事实校验：`role_slot_contract` 覆盖、`role_format_slot_facts` schema、`FH-SLOT-FACTS-UNRESOLVED`/`FH-SLOT-FACTS-CONFLICT` blocker
 6. 写入双通道输出：
    - 业务产物：`semantic/*.json`
    - 状态信封：`logs/skill_results/{seq}_docx-semantic-strategist.result.json`

@@ -24,6 +24,8 @@ def write_yaml(path: Path, data: Any) -> None:
 
 def load_yaml(path: Path) -> Any:
     """读取受限 YAML 文件。"""
+    if isinstance(path, str):
+        path = Path(path)
     lines = _prepare_lines(path.read_text(encoding="utf-8"))
     if not lines:
         return None

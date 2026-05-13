@@ -1,13 +1,13 @@
 ---
 name: docx-rule-packager
-description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helper 已获得 semantic_rule_draft.json、role_format_slot_facts.json、role_slot_contract.yaml，并需要生成 format-rules/{rule_id}/ 规则包、style-map.yaml、risk-policy.yaml 或 RULE_SUMMARY.md 时使用；只消费语义规则草案和槽位事实，不自行推断新规则。
+description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helper 已获得 semantic_rule_draft.json、role_format_slot_facts.json、role_slot_contract.yaml，并需要生成 format-rules/{rule_id}/ 规则包、style-map.yaml、risk-policy.yaml 或 RULE_SUMMARY.md 时使用；只消费语义规则草案和样式元素事实，不自行推断新规则。
 ---
 
 # DOCX Rule Packager
 
 ## 定位
 
-内部能力。把已生成并通过校验的 `semantic_rule_draft.json`、`role_format_slot_facts.json` 与 `role_slot_contract.yaml` 落成可确认的规则包和中文规则摘要。`RULE_SUMMARY.md` 只是人类阅读视图，不作为机器权威；规则值权威来自槽位事实、`slot_facts_ref` 与结构化规则包。
+内部能力。把已生成并通过校验的 `semantic_rule_draft.json`、`role_format_slot_facts.json` 与 `role_slot_contract.yaml` 落成可确认的规则包和中文规则摘要。`RULE_SUMMARY.md` 只是人类阅读视图，不作为机器权威；规则值权威来自样式元素事实、`slot_facts_ref` 与结构化规则包。
 
 ## 输入
 
@@ -41,26 +41,27 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 - 不把内部样式 ID 作为规则摘要的唯一说明。
 - 低置信度、`audit-only` 和人工确认项必须保留到规则包与 `RULE_SUMMARY.md`。
 - 新规则默认 `status: draft`，不得自动升级为 `active`。
+- `RULE_SUMMARY.md` 是面向用户的中文可读摘要。渲染时必须将 role_kind、slot_name 等机器内部标识符转换为中文自然语言描述，禁止直接输出驼峰式 ID 或 OOXML 技术字段名。转换根据语义上下文自行完成。`required_slots`/`optional_slots` 等契约元信息不得暴露给用户。
 
 ## 工作流
 
 1. 读取并校验 `semantic_rule_draft.json`。
 2. 读取并校验 `role_format_slot_facts.json`，确认 `slot_facts_ref`、hash、role/fact 绑定和 Gate 状态可追溯。
-3. 读取并校验 `role_slot_contract.yaml`，确认 required_slots / optional_slots 与槽位事实一致。
-4. 将语义角色和槽位事实映射为规则包文件；所有 `expected_format` 只允许使用 `slot_summary.mode_value` 或用户确认值。
-5. 从槽位事实生成用户可读 `RULE_SUMMARY.md`，固定输出来源范围、已确定规则、未确定属性、冲突属性、人工确认清单和规则证据 6 节。
+3. 读取并校验 `role_slot_contract.yaml`，确认 required_slots / optional_slots 与样式元素事实一致。
+4. 将语义角色和样式元素事实映射为规则包文件；所有 `expected_format` 只允许使用 `slot_summary.mode_value` 或用户确认值。
+5. 从样式元素事实生成用户可读 `RULE_SUMMARY.md`，固定输出来源范围、已确定规则、未确定属性、冲突属性、人工确认清单和规则证据 6 节。可读渲染由 AI 完成，脚本仅提供结构化数据作为渲染源。
 6. 输出人工确认项和 metrics，等待 `format-helper` 展示和记录用户决定。
 
 ## 脚本
 
-- `scripts/render_rule_summary.py`：优先从 `role_format_slot_facts.json` + `role_slot_contract.yaml` 生成用户可读 `RULE_SUMMARY.md`，并返回 `resolved_slot_count`、`unresolved_slot_count`、`conflict_slot_count`、`user_confirmed_slot_count`、`resolved_rule_row_count`、`blocking_conflict_count`、`warning_conflict_count`、`gate_blocker_count`；保留 `semantic_rule_draft.json` 旧入口用于历史测试兼容。
+- `scripts/render_rule_summary.py`：只能从 `role_format_slot_facts.json` + `role_slot_contract.yaml` 生成用户可读 `RULE_SUMMARY.md`，并返回 `resolved_slot_count`、`unresolved_slot_count`、`conflict_slot_count`、`user_confirmed_slot_count`、`resolved_rule_row_count`、`blocking_conflict_count`、`warning_conflict_count`、`gate_blocker_count`；禁止使用 `semantic_rule_draft.json` 直出规则摘要。
 
 ## 固定执行步骤（参考 40-§6.12）
 
 1. 读取并校验 semantic_rule_draft.json
 2. 读取并校验 role_format_slot_facts.json 与 role_slot_contract.yaml
 3. 确认规则 ID 和目标目录
-4. 校验目标目录（必须是 format-rules/{rule_id}/，禁止 format_runs/*/rules）
+4. 校验目标目录（必须是 format-rules/{rule_id}/，禁止 format_runs/\*/rules）
 5. 生成规则包文件和用户可读摘要；RULE_SUMMARY.md 必须从 slot facts 渲染，固定 6 节
 6. 写入双通道输出：
    - 业务产物：`format-rules/{rule_id}/*.yaml` + `RULE_SUMMARY.md`
@@ -95,8 +96,8 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 ```text
 任务清单
 1. ✅ 已读取语义规则草案：{semantic_rule_draft}
-2. ✅ 已读取槽位事实：{role_format_slot_facts}
-3. ✅ 已读取槽位契约：{role_slot_contract}
+2. ✅ 已读取样式元素事实：{role_format_slot_facts}
+3. ✅ 已读取样式元素契约：{role_slot_contract}
 4. ✅ 已确认规则 ID：{rule_id}
 5. ✅ 已校验目标目录：format-rules/{rule_id}/
 6. ✅ 已生成规则包和用户可读摘要
@@ -109,10 +110,10 @@ rule_packaging
 - 规则包状态：{draft|pending_confirmation}
 - 规则版本：{rule_version}
 - 待确认规则：{manual_review_count}
-- 已确定槽位：{resolved_slot_count}
-- 未确定槽位：{unresolved_slot_count}
-- 冲突槽位：{conflict_slot_count}
-- 用户确认槽位：{user_confirmed_slot_count}
+- 已确定样式元素：{resolved_slot_count}
+- 未确定样式元素：{unresolved_slot_count}
+- 冲突样式元素：{conflict_slot_count}
+- 用户确认样式元素：{user_confirmed_slot_count}
 - 风险策略：{risk_policy_summary}
 
 交付物
@@ -126,7 +127,7 @@ rule_packaging
 - 表格规则：format-rules/{rule_id}/table-rules.yaml
 - 页面规则：format-rules/{rule_id}/page-rules.yaml
 - 语义草案归档：format-rules/{rule_id}/semantic_rule_draft.json
-- 槽位事实引用：{slot_facts_ref}
+- 样式元素事实引用：{slot_facts_ref}
 - 规则引用：logs/rule_ref.json
 - 状态信封：logs/skill_results/{seq}_docx-rule-packager.result.json
 
@@ -183,4 +184,4 @@ rule_packaging
 
 ## 后续实现
 
-当前脚本已支持 CODE-015 槽位事实驱动的 RULE_SUMMARY 渲染，并保留 CODE-004 旧草案入口兼容；完整规则包 YAML 写入仍由后续链路继续补齐。
+当前脚本已支持 CODE-015 样式元素事实驱动的 RULE_SUMMARY 渲染，并保留 CODE-004 旧草案入口兼容；完整规则包 YAML 写入仍由后续链路继续补齐。
