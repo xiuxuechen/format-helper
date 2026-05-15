@@ -1,3 +1,7 @@
+<p align="right">
+  <img src="cutting-mask-logo-cropped.png" alt="format-helper logo" width="132">
+</p>
+
 # format-helper
 
 `format-helper` 是一套面向 Word/DOCX 的格式治理框架：它可以从一份“格式正确的标准 Word”中提炼规则，再用这套规则去审计、修复、复核另一份 Word，并生成可读的中文报告。
