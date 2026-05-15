@@ -1,5 +1,5 @@
 <p align="right">
-  <img src="cutting-mask-logo-cropped.png" alt="format-helper logo" width="132">
+  <img src="happyPeople-logo.png" alt="format-helper logo" width="132">
 </p>
 
 # format-helper
