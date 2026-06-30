@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/toc-acceptance.schema.json",
+  "title": "toc-acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "run_id",
+    "required", "status", "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "toc-acceptance" },
+    "schema_version": { "const": "2.0.0" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "required": { "type": "boolean" },
+    "status": { "enum": ["not_required", "passed", "blocked"] },
+    "viewer": { "type": ["string", "null"] },
+    "viewer_version": { "type": ["string", "null"] },
+    "platform": { "type": ["string", "null"] },
+    "input_ref": {
+      "oneOf": [{ "$ref": "#/$defs/ArtifactRef" }, { "type": "null" }]
+    },
+    "output_ref": {
+      "oneOf": [{ "$ref": "#/$defs/ArtifactRef" }, { "type": "null" }]
+    },
+    "before_sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "after_sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "field_update_count": { "type": ["integer", "null"], "minimum": 0 },
+    "toc_update_count": { "type": ["integer", "null"], "minimum": 0 },
+    "page_count": { "type": ["integer", "null"], "minimum": 1 },
+    "visible_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["level", "text", "page_number"],
+        "properties": {
+          "level": { "type": "integer", "minimum": 1 },
+          "text": { "type": "string" },
+          "page_number": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "error": {
+      "oneOf": [{ "$ref": "#/$defs/TocError" }, { "type": "null" }]
+    },
+    "gate_check": { "$ref": "#/$defs/GateCheck" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "passed" } }, "required": ["status"] },
+      "then": {
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "required": ["code", "reason_code", "message"],
+                "properties": {
+                  "code": { "const": "NONE" },
+                  "reason_code": { "const": "none" },
+                  "message": { "const": "" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes"],
+      "properties": {
+        "artifact_id": { "type": "string" },
+        "kind": { "enum": ["lock","capability","snapshot","plan","request","result","log","review","evidence","toc_acceptance","final_acceptance","docx","html","png","raw_xml","executable","license"] },
+        "relative_path": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string", "null"] },
+        "schema_version": { "type": ["string", "null"] }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes"],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "status": { "enum": ["passed", "failed", "blocked"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "failed_codes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "TocError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "reason_code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "reason_code": { "enum": [
+          "none",
+          "viewer_unavailable", "api_incompatible", "document_corrupt",
+          "viewer_busy", "temporary_file_lock", "process_start_failed",
+          "page_mismatch", "field_update_failed", "protected_view",
+          "password_required", "revision_protected", "write_protected",
+          "macro_prompt", "link_update_prompt", "conversion_prompt",
+          "document_protected", "readonly_recommended"
+        ] },
+        "message": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "viewer": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

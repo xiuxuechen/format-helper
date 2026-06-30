@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/officecli-capability-manifest.schema.json",
+  "title": "officecli-capability-manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "officecli_version",
+    "source_commit",
+    "generated_at",
+    "generator_version",
+    "global_commands",
+    "view_modes",
+    "elements",
+    "raw_read_allowed",
+    "raw_write_policy",
+    "aggregate_sha256"
+  ],
+  "properties": {
+    "schema_id": { "const": "officecli-capability-manifest" },
+    "schema_version": { "const": "1.0.0" },
+    "officecli_version": { "const": "1.0.113" },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "global_commands": {
+      "type": "array",
+      "minItems": 29,
+      "maxItems": 29,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "docx_supported",
+          "automation_surface",
+          "risk_class",
+          "production_policy",
+          "reason"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "add",
+              "add-part",
+              "batch",
+              "close",
+              "create",
+              "dump",
+              "get",
+              "goto",
+              "import",
+              "mark",
+              "mcp",
+              "merge",
+              "move",
+              "open",
+              "plugins",
+              "query",
+              "raw",
+              "raw-set",
+              "refresh",
+              "remove",
+              "save",
+              "set",
+              "skills",
+              "swap",
+              "uninstall",
+              "update",
+              "validate",
+              "view",
+              "watch"
+            ]
+          },
+          "docx_supported": { "type": "boolean" },
+          "automation_surface": { "const": "cli-json" },
+          "risk_class": {
+            "enum": ["L2", "L3_WRITE", "DENY"]
+          },
+          "production_policy": {
+            "enum": ["allow", "conditional", "deny"]
+          },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "view_modes": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mode", "docx_supported", "output_type", "production_policy"],
+        "properties": {
+          "mode": {
+            "enum": [
+              "annotated",
+              "forms",
+              "html",
+              "issues",
+              "outline",
+              "pdf",
+              "screenshot",
+              "stats",
+              "svg",
+              "text"
+            ]
+          },
+          "docx_supported": { "type": "boolean" },
+          "output_type": { "type": "string" },
+          "production_policy": {
+            "enum": ["allow", "deny"]
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "minItems": 40,
+      "maxItems": 40,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "element",
+          "help_target",
+          "elementAliases",
+          "operations",
+          "allowed_operations",
+          "properties",
+          "children",
+          "note",
+          "raw_help_sha256"
+        ],
+        "properties": {
+          "element": {
+            "enum": [
+              "abstractNum",
+              "body",
+              "bookmark",
+              "chart-axis",
+              "chart-series",
+              "chart",
+              "comment",
+              "document",
+              "endnote",
+              "equation",
+              "field",
+              "fieldChar",
+              "footer",
+              "footnote",
+              "formfield",
+              "header",
+              "hyperlink",
+              "instrText",
+              "level",
+              "num",
+              "numbering",
+              "ole",
+              "pagebreak",
+              "paragraph",
+              "permStart",
+              "picture",
+              "ptab",
+              "raw",
+              "revision",
+              "run",
+              "sdt",
+              "section",
+              "style",
+              "styles",
+              "cell",
+              "column",
+              "row",
+              "table",
+              "toc",
+              "watermark"
+            ]
+          },
+          "help_target": {
+            "enum": [
+              "abstractNum",
+              "body",
+              "bookmark",
+              "chart-axis",
+              "chart-series",
+              "chart",
+              "comment",
+              "document",
+              "endnote",
+              "equation",
+              "field",
+              "fieldchar",
+              "footer",
+              "footnote",
+              "formfield",
+              "header",
+              "hyperlink",
+              "instrtext",
+              "level",
+              "num",
+              "numbering",
+              "ole",
+              "pagebreak",
+              "paragraph",
+              "permStart",
+              "picture",
+              "ptab",
+              "raw",
+              "revision",
+              "run",
+              "sdt",
+              "section",
+              "style",
+              "styles",
+              "table-cell",
+              "table-column",
+              "table-row",
+              "table",
+              "toc",
+              "watermark"
+            ]
+          },
+          "elementAliases": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "operations": {
+            "type": ["object", "array"]
+          },
+          "allowed_operations": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": ["add", "set", "get", "query", "remove"]
+            }
+          },
+          "properties": {
+            "type": ["object", "array"]
+          },
+          "children": {
+            "type": ["object", "array"]
+          },
+          "note": {
+            "type": ["string", "null"]
+          },
+          "raw_help_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "raw_read_allowed": {
+      "const": true
+    },
+    "raw_write_policy": {
+      "const": "manual_confirmation_required"
+    },
+    "aggregate_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/review-result.schema.json",
+  "title": "review-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "created_at", "extensions", "review_id", "run_id", "plan_ref", "before_snapshot_ref", "after_snapshot_ref", "action_results", "summary", "gate_check"],
+  "properties": {
+    "schema_id": {"const": "review-result"},
+    "schema_version": {"const": "2.0.0"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "extensions": {"type": "object", "additionalProperties": false},
+    "review_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "plan_ref": {"$ref": "#/$defs/ArtifactRef"},
+    "before_snapshot_ref": {"$ref": "#/$defs/ArtifactRef"},
+    "after_snapshot_ref": {"$ref": "#/$defs/ArtifactRef"},
+    "action_results": {"type": "array", "items": {"$ref": "#/$defs/ActionResult"}},
+    "summary": {"$ref": "#/$defs/Summary"},
+    "gate_check": {"$ref": "#/$defs/GateCheck"}
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes", "schema_id", "schema_version"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["lock", "capability", "snapshot", "plan", "request", "result", "log", "review", "evidence", "toc_acceptance", "final_acceptance", "docx", "html", "png", "raw_xml", "executable", "license"]},
+        "relative_path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:|\\.\\.)"}},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "schema_id": {"type": ["string", "null"]},
+        "schema_version": {"type": ["string", "null"]}
+      }
+    },
+    "ActionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "status", "before_node_ref", "after_node_ref", "expected_changes", "observed_changes", "unexpected_changes", "evidence_refs", "failure_codes"],
+      "properties": {
+        "action_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["passed", "failed", "not_executed", "manual_required"]},
+        "before_node_ref": {"type": ["string", "null"]},
+        "after_node_ref": {"type": ["string", "null"]},
+        "expected_changes": {"type": "array", "items": {"type": "string"}},
+        "observed_changes": {"type": "array", "items": {"type": "string"}},
+        "unexpected_changes": {"type": "array", "items": {"type": "string"}},
+        "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/ArtifactRef"}},
+        "failure_codes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "Summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_actions", "passed_count", "failed_count", "not_executed_count", "manual_required_count", "render_page_count"],
+      "properties": {
+        "total_actions": {"type": "integer", "minimum": 0},
+        "passed_count": {"type": "integer", "minimum": 0},
+        "failed_count": {"type": "integer", "minimum": 0},
+        "not_executed_count": {"type": "integer", "minimum": 0},
+        "manual_required_count": {"type": "integer", "minimum": 0},
+        "render_page_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes"],
+      "properties": {
+        "gate_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["passed", "failed", "blocked"]},
+        "checked_at": {"type": "string", "format": "date-time"},
+        "predicate_version": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "failed_codes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

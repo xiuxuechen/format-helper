@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/repair-execution-log.schema.json",
+  "title": "repair-execution-log",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "created_at", "extensions", "run_id", "plan_ref", "request_ref", "result_refs", "attempts", "current_status", "resume_policy", "gate_check"],
+  "properties": {
+    "schema_id": {"const": "repair-execution-log"},
+    "schema_version": {"const": "2.0.0"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "completed_batch_ids": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "run_id": {"type": "string", "minLength": 1},
+    "plan_ref": {"$ref": "#/$defs/ArtifactRef"},
+    "request_ref": {"$ref": "#/$defs/ArtifactRef"},
+    "result_refs": {"type": "array", "items": {"$ref": "#/$defs/ArtifactRef"}},
+    "attempts": {"type": "array", "items": {"$ref": "#/$defs/Attempt"}},
+    "current_status": {"$ref": "#/$defs/RunStatus"},
+    "resume_policy": {"$ref": "#/$defs/ResumePolicy"},
+    "gate_check": {"$ref": "#/$defs/GateCheck"}
+  },
+  "$defs": {
+    "RunStatus": {
+      "enum": ["preflight_pending", "snapshot_ready", "plan_finalized", "execution_in_progress", "execution_failed_retryable", "execution_failed_final", "executed_ready", "blocked_waiting_native_toc", "toc_refresh_in_progress", "toc_refresh_failed_final", "review_ready", "accepted", "blocked"]
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes", "schema_id", "schema_version"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["lock", "capability", "snapshot", "plan", "request", "result", "log", "review", "evidence", "toc_acceptance", "final_acceptance", "docx", "html", "png", "raw_xml", "executable", "license"]},
+        "relative_path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:|\\.\\.)"}},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "schema_id": {"type": ["string", "null"]},
+        "schema_version": {"type": ["string", "null"]}
+      }
+    },
+    "Attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_no", "started_at", "finished_at", "checkpoint_ref", "request_ref", "result_ref", "outcome", "retry_reason_code", "source_status", "target_status"],
+      "properties": {
+        "attempt_no": {"type": "integer", "minimum": 1},
+        "started_at": {"type": "string", "format": "date-time"},
+        "finished_at": {"type": "string", "format": "date-time"},
+        "checkpoint_ref": {"oneOf": [{"$ref": "#/$defs/ArtifactRef"}, {"type": "null"}]},
+        "request_ref": {"$ref": "#/$defs/ArtifactRef"},
+        "result_ref": {"$ref": "#/$defs/ArtifactRef"},
+        "outcome": {"enum": ["done", "failed", "blocked"]},
+        "retry_reason_code": {"type": ["string", "null"]},
+        "source_status": {"$ref": "#/$defs/RunStatus"},
+        "target_status": {"$ref": "#/$defs/RunStatus"}
+      }
+    },
+    "ResumePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resume_allowed", "allowed_platforms", "required_artifact_refs", "max_additional_attempts", "blocked_reason_code"],
+      "properties": {
+        "resume_allowed": {"type": "boolean"},
+        "allowed_platforms": {"type": "array", "items": {"enum": ["win-x64", "win-arm64", "linux-x64-gnu", "linux-arm64-gnu", "linux-x64-musl", "linux-arm64-musl", "osx-x64", "osx-arm64"]}},
+        "required_artifact_refs": {"type": "array", "items": {"$ref": "#/$defs/ArtifactRef"}},
+        "max_additional_attempts": {"type": "integer", "minimum": 0},
+        "blocked_reason_code": {"type": ["string", "null"]}
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes"],
+      "properties": {
+        "gate_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["passed", "failed", "blocked"]},
+        "checked_at": {"type": "string", "format": "date-time"},
+        "predicate_version": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "failed_codes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

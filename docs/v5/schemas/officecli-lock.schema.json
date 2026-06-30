@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/officecli-lock.schema.json",
+  "title": "officecli-lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "officecli_version",
+    "release_tag",
+    "source_commit",
+    "released_at",
+    "license",
+    "primary_base_url",
+    "mirror_base_url",
+    "auto_update_disabled",
+    "assets"
+  ],
+  "properties": {
+    "schema_id": { "const": "officecli-lock" },
+    "schema_version": { "const": "1.0.0" },
+    "officecli_version": { "const": "1.0.113" },
+    "release_tag": { "const": "v1.0.113" },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "license": { "const": "Apache-2.0" },
+    "primary_base_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "mirror_base_url": {
+      "type": "null"
+    },
+    "auto_update_disabled": {
+      "const": true
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "runtime_id",
+          "os",
+          "arch",
+          "libc",
+          "asset_name",
+          "sha256",
+          "size_bytes",
+          "primary_url",
+          "mirror_url",
+          "executable_name"
+        ],
+        "properties": {
+          "runtime_id": {
+            "enum": [
+              "win-x64",
+              "win-arm64",
+              "linux-x64-gnu",
+              "linux-arm64-gnu",
+              "linux-x64-musl",
+              "linux-arm64-musl",
+              "osx-x64",
+              "osx-arm64"
+            ]
+          },
+          "os": {
+            "enum": ["windows", "linux", "macos"]
+          },
+          "arch": {
+            "enum": ["x64", "arm64"]
+          },
+          "libc": {
+            "type": ["string", "null"],
+            "enum": ["glibc", "musl", null]
+          },
+          "asset_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "primary_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "mirror_url": {
+            "type": "null"
+          },
+          "executable_name": {
+            "enum": ["officecli", "officecli.exe"]
+          }
+        }
+      }
+    }
+  }
+}

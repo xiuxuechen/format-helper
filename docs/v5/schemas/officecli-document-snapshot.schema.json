@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/officecli-document-snapshot.schema.json",
+  "title": "officecli-document-snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "snapshot_id",
+    "kind",
+    "run_id",
+    "officecli_version",
+    "created_at",
+    "extensions",
+    "source_docx_ref",
+    "officecli_executable_ref",
+    "capability_manifest_ref",
+    "snapshot_source_hash",
+    "document",
+    "nodes",
+    "parts",
+    "indexes",
+    "warnings",
+    "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "officecli-document-snapshot" },
+    "schema_version": { "const": "2.0.0" },
+    "contract_version": { "const": "v5" },
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^S-[a-f0-9]{24}$"
+    },
+    "kind": {
+      "enum": ["standard", "before", "after", "post_toc"]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "officecli_version": { "const": "1.0.113" },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "source_docx_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "officecli_executable_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "capability_manifest_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "snapshot_source_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "root_path",
+        "node_count",
+        "part_count",
+        "has_toc",
+        "has_forms",
+        "has_revisions",
+        "has_protection"
+      ],
+      "properties": {
+        "format": { "const": "docx" },
+        "root_path": { "const": "/document" },
+        "node_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "part_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "has_toc": { "type": "boolean" },
+        "has_forms": { "type": "boolean" },
+        "has_revisions": { "type": "boolean" },
+        "has_protection": { "type": "boolean" }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Node" }
+    },
+    "parts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Part" }
+    },
+    "indexes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["by_type", "by_style_id", "by_native_id", "by_logical_identity"],
+      "properties": {
+        "by_type": { "$ref": "#/$defs/StringArrayMap" },
+        "by_style_id": { "$ref": "#/$defs/StringArrayMap" },
+        "by_native_id": { "$ref": "#/$defs/StringArrayMap" },
+        "by_logical_identity": { "$ref": "#/$defs/StringArrayMap" }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Warning" }
+    },
+    "gate_check": { "$ref": "#/$defs/GateCheck" }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "kind",
+        "relative_path",
+        "sha256",
+        "size_bytes",
+        "schema_id",
+        "schema_version"
+      ],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": [
+            "lock",
+            "capability",
+            "snapshot",
+            "plan",
+            "request",
+            "result",
+            "log",
+            "review",
+            "evidence",
+            "toc_acceptance",
+            "final_acceptance",
+            "docx",
+            "html",
+            "png",
+            "raw_xml",
+            "executable",
+            "license"
+          ]
+        },
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "not": { "pattern": "(^/|^[A-Za-z]:|\\.\\.)" }
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schema_id": {
+          "type": ["string", "null"]
+        },
+        "schema_version": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_id",
+        "status",
+        "checked_at",
+        "predicate_version",
+        "evidence_refs",
+        "failed_codes"
+      ],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "status": {
+          "enum": ["passed", "failed", "blocked"]
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ArtifactRef" }
+        },
+        "failed_codes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "Warning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message", "json_pointer", "source_command"],
+      "properties": {
+        "code": { "type": "string" },
+        "severity": {
+          "enum": ["info", "warning", "blocking"]
+        },
+        "message": { "type": "string" },
+        "json_pointer": {
+          "type": ["string", "null"]
+        },
+        "source_command": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node_id",
+        "officecli_path",
+        "node_type",
+        "parent_path",
+        "ordinal",
+        "part_name",
+        "text",
+        "text_sha256",
+        "attributes",
+        "effective_format",
+        "effective_sources",
+        "child_paths",
+        "stable_selector",
+        "raw_evidence_ref",
+        "logical_identity",
+        "parent_logical_identity",
+        "native_identity"
+      ],
+      "properties": {
+        "node_id": {
+          "type": "string",
+          "pattern": "^N-[a-f0-9]{24}$"
+        },
+        "officecli_path": {
+          "type": "string",
+          "pattern": "^/[^\\r\\n]*$"
+        },
+        "node_type": { "type": "string" },
+        "parent_path": {
+          "type": ["string", "null"]
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "part_name": { "type": "string" },
+        "text": {
+          "type": ["string", "null"]
+        },
+        "text_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "attributes": {
+          "type": "object"
+        },
+        "effective_format": {
+          "type": "object"
+        },
+        "effective_sources": {
+          "type": "object"
+        },
+        "child_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^/[^\\r\\n]*$"
+          }
+        },
+        "stable_selector": { "$ref": "#/$defs/StableSelector" },
+        "raw_evidence_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/ArtifactRef" },
+            { "type": "null" }
+          ]
+        },
+        "logical_identity": {
+          "type": ["string", "null"]
+        },
+        "parent_logical_identity": {
+          "type": ["string", "null"]
+        },
+        "native_identity": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "StableSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value", "rebindable", "content_fingerprint"],
+      "properties": {
+        "kind": {
+          "enum": ["native_id", "semantic_key", "positional"]
+        },
+        "value": { "type": "string" },
+        "rebindable": { "type": "boolean" },
+        "content_fingerprint": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["part_name", "package_uri", "sha256", "size_bytes", "required", "evidence_ref"],
+      "properties": {
+        "part_name": { "type": "string" },
+        "package_uri": {
+          "type": ["string", "null"]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required": { "type": "boolean" },
+        "evidence_ref": { "$ref": "#/$defs/ArtifactRef" }
+      }
+    },
+    "StringArrayMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    }
+  }
+}

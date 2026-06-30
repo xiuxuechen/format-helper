@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/v5/officecli-execution-request.schema.json",
+  "title": "officecli-execution-request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "request_id", "run_id", "created_at", "extensions",
+    "plan_ref", "plan_sha256", "plan_revision",
+    "working_docx_before_ref", "snapshot_ref", "lock_ref", "capability_manifest_ref",
+    "runtime_id", "officecli_executable_ref", "environment",
+    "batches", "request_sha256", "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "officecli-execution-request" },
+    "schema_version": { "const": "2.0.0" },
+    "request_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "extensions": { "type": "object", "additionalProperties": false },
+    "plan_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "plan_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "plan_revision": { "type": "string", "minLength": 1 },
+    "working_docx_before_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "snapshot_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "lock_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "capability_manifest_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "runtime_id": {
+      "enum": ["win-x64","win-arm64","linux-x64-gnu","linux-arm64-gnu","linux-x64-musl","linux-arm64-musl","osx-x64","osx-arm64"]
+    },
+    "officecli_executable_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "environment": { "$ref": "#/$defs/ExecutionEnvironment" },
+    "batches": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/Batch" }
+    },
+    "request_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "gate_check": { "$ref": "#/$defs/GateCheck" }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes", "schema_id", "schema_version"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["lock","capability","snapshot","plan","request","result","log","review","evidence","toc_acceptance","final_acceptance","docx","html","png","raw_xml","executable","license"] },
+        "relative_path": { "type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:|\\.\\.)"} },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string", "null"] },
+        "schema_version": { "type": ["string", "null"] }
+      }
+    },
+    "ExecutionEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["OFFICECLI_SKIP_UPDATE", "OFFICECLI_NO_AUTO_RESIDENT", "locale", "timezone"],
+      "properties": {
+        "OFFICECLI_SKIP_UPDATE": { "const": "1" },
+        "OFFICECLI_NO_AUTO_RESIDENT": { "const": "1" },
+        "locale": { "const": "C.UTF-8" },
+        "timezone": { "const": "UTC" }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes"],
+      "properties": {
+        "gate_id": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["passed", "failed", "blocked"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "failed_codes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "TargetBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_id", "path", "fingerprint"],
+      "properties": {
+        "node_id": { "type": "string", "pattern": "^N-[a-f0-9]{24}$" },
+        "path": { "type": "string", "pattern": "^/.*" },
+        "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "Predicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicate_id", "type", "target_ref", "json_pointer", "expected", "failure_code"],
+      "properties": {
+        "predicate_id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["hash_equals","target_fresh","manual_confirmation","property_equals","artifact_exists","validate_clean","issues_nonblocking"] },
+        "target_ref": { "type": "string" },
+        "json_pointer": { "type": ["string", "null"] },
+        "expected": { "type": ["string", "number", "integer", "boolean", "null"] },
+        "failure_code": { "type": "string" }
+      }
+    },
+    "Operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "source_action_id", "command", "path", "element_type", "risk_class", "properties", "target_binding", "expected_result", "index", "destination_path", "raw", "manual_confirmation_ref", "idempotency_key"],
+      "properties": {
+        "operation_id": { "type": "string", "minLength": 1 },
+        "source_action_id": { "type": "string", "minLength": 1 },
+        "command": { "enum": ["set", "add", "remove", "move", "swap", "raw-set"] },
+        "path": { "type": "string", "pattern": "^/.*" },
+        "element_type": { "type": ["string", "null"] },
+        "risk_class": { "enum": ["L1", "L2", "L3_READ", "L3_WRITE"] },
+        "properties": { "type": "object" },
+        "target_binding": { "$ref": "#/$defs/TargetBinding" },
+        "expected_result": { "$ref": "#/$defs/Predicate" },
+        "index": { "type": ["integer", "null"], "minimum": 0 },
+        "destination_path": { "type": ["string", "null"] },
+        "raw": { "oneOf": [{"$ref": "#/$defs/RawAction"}, {"type": "null"}] },
+        "manual_confirmation_ref": { "oneOf": [{"$ref": "#/$defs/ArtifactRef"}, {"type": "null"}] },
+        "idempotency_key": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "Batch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch_id", "sequence", "atomicity", "timeout_seconds", "max_operations", "preconditions", "operations", "postconditions", "officecli_batch_ref", "checkpoint_ref"],
+      "properties": {
+        "batch_id": { "type": "string", "minLength": 1 },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "atomicity": { "const": "stop_on_first_error" },
+        "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 900 },
+        "max_operations": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "preconditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Predicate" }
+        },
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/Operation" }
+        },
+        "postconditions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Predicate" }
+        },
+        "officecli_batch_ref": { "$ref": "#/$defs/ArtifactRef" },
+        "checkpoint_ref": { "type": "null" }
+      }
+    },
+    "RawAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["part", "xpath", "action", "xml", "xml_sha256", "expected_match_count", "precondition_raw_sha256", "manual_review_id", "decision_snapshot_sha256"],
+      "properties": {
+        "part": {"type": "string", "minLength": 1},
+        "xpath": {"type": "string", "minLength": 1},
+        "action": {"enum": ["append", "prepend", "insertbefore", "insertafter", "replace", "remove", "setattr"]},
+        "xml": {"type": "string"},
+        "xml_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "expected_match_count": {"const": 1},
+        "precondition_raw_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "manual_review_id": {"type": "string", "minLength": 1},
+        "decision_snapshot_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

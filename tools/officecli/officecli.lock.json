@@ -1,0 +1,110 @@
+{
+  "schema_id": "officecli-lock",
+  "schema_version": "1.0.0",
+  "officecli_version": "1.0.113",
+  "release_tag": "v1.0.113",
+  "source_commit": "8e5b17977493de1b46536561a50971799c4fc665",
+  "released_at": "2026-06-15T05:23:48Z",
+  "license": "Apache-2.0",
+  "primary_base_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113",
+  "mirror_base_url": null,
+  "auto_update_disabled": true,
+  "assets": [
+    {
+      "runtime_id": "win-x64",
+      "os": "windows",
+      "arch": "x64",
+      "libc": null,
+      "asset_name": "officecli-win-x64.exe",
+      "sha256": "15d29f3a04e6ad00503de178f98dae872b47ef71f09fac3c614212b209c4d229",
+      "size_bytes": 31997816,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-win-x64.exe",
+      "mirror_url": null,
+      "executable_name": "officecli.exe"
+    },
+    {
+      "runtime_id": "win-arm64",
+      "os": "windows",
+      "arch": "arm64",
+      "libc": null,
+      "asset_name": "officecli-win-arm64.exe",
+      "sha256": "94fa5101b94f2fe59c1458688bbc3ddcde4f244afe204143b7eac9bb5089f784",
+      "size_bytes": 32448388,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-win-arm64.exe",
+      "mirror_url": null,
+      "executable_name": "officecli.exe"
+    },
+    {
+      "runtime_id": "linux-x64-gnu",
+      "os": "linux",
+      "arch": "x64",
+      "libc": "glibc",
+      "asset_name": "officecli-linux-x64",
+      "sha256": "ffe09f5f8ec76240e44ff431b802b8a4466775afda328f1f7b606e3a79807311",
+      "size_bytes": 33950776,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-linux-x64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    },
+    {
+      "runtime_id": "linux-arm64-gnu",
+      "os": "linux",
+      "arch": "arm64",
+      "libc": "glibc",
+      "asset_name": "officecli-linux-arm64",
+      "sha256": "893874471e6830d29580ba9cab0a5834eab80278092f77edb31292bffff1f9fd",
+      "size_bytes": 33369562,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-linux-arm64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    },
+    {
+      "runtime_id": "linux-x64-musl",
+      "os": "linux",
+      "arch": "x64",
+      "libc": "musl",
+      "asset_name": "officecli-linux-alpine-x64",
+      "sha256": "5579d760de781781c7a05e32774bea0bdd091ad3ba3d013129a35e2c837a09be",
+      "size_bytes": 33968418,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-linux-alpine-x64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    },
+    {
+      "runtime_id": "linux-arm64-musl",
+      "os": "linux",
+      "arch": "arm64",
+      "libc": "musl",
+      "asset_name": "officecli-linux-alpine-arm64",
+      "sha256": "a18f81e2a4f9cbc8bbec80fc305b20aec1352327094bdff1b48fdc13da3dddba",
+      "size_bytes": 33410098,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-linux-alpine-arm64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    },
+    {
+      "runtime_id": "osx-x64",
+      "os": "macos",
+      "arch": "x64",
+      "libc": null,
+      "asset_name": "officecli-mac-x64",
+      "sha256": "62ad1b63ec1b833efe01a51d3564238ce274b51a785b1a2fc91880c66381b0d2",
+      "size_bytes": 33330224,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-mac-x64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    },
+    {
+      "runtime_id": "osx-arm64",
+      "os": "macos",
+      "arch": "arm64",
+      "libc": null,
+      "asset_name": "officecli-mac-arm64",
+      "sha256": "35a733b598cb32a57d4edc1217a5edfcf63aa9c141916b0b4ef54aa37e4c30ba",
+      "size_bytes": 32587584,
+      "primary_url": "https://github.com/iOfficeAI/OfficeCLI/releases/download/v1.0.113/officecli-mac-arm64",
+      "mirror_url": null,
+      "executable_name": "officecli"
+    }
+  ]
+}
