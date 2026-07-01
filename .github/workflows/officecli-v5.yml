@@ -5,8 +5,11 @@ on:
   pull_request:
     paths:
       - "scripts/officecli/**"
+      - ".codex/skills/**"
       - "tools/officecli/**"
       - "docs/v5/**"
+      - "tests/validation/test_officecli_*.py"
+      - "tests/validation/test_repair_plan_v5.py"
       - ".github/workflows/officecli-v5.yml"
   push:
     branches: [main]
@@ -30,6 +33,7 @@ jobs:
           tests.validation.test_officecli_runtime_resolver
           tests.validation.test_officecli_platform_evidence
           tests.validation.test_officecli_v5_release_gate
+          tests.validation.test_repair_plan_v5
 
   platform-evidence:
     needs: platform-contract-validation

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""从 DOCX 提取客观 OOXML 事实快照。"""
+# v4 historical reference; non-executable — not a v5 production entrypoint; replaced by scripts/officecli/snapshot_adapter.py (V5-004)
+"""从 DOCX 提取客观 OOXML 事实快照。（v4 历史参考，不得由 v5 生产流程调用）"""
 
 from __future__ import annotations
 

@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -17,9 +16,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import load_yaml
-from scripts.validation.validate_schema_contract import validate_schema_contract
-
-
 TZ = timezone(timedelta(hours=8))
 REVIEW_TASKS = [
     ("T01", "输出 DOCX OOXML 完整性复核"),
@@ -37,14 +33,28 @@ def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def docx_valid(path: Path) -> bool:
-    """检查 DOCX 是否可作为 OOXML 打开。"""
-    try:
-        with zipfile.ZipFile(path, "r") as archive:
-            archive.getinfo("word/document.xml")
-            return archive.testzip() is None
-    except (KeyError, zipfile.BadZipFile, FileNotFoundError):
-        return False
+def latest_finalized_plan(run_dir: Path) -> Path:
+    """返回最新 finalized revision，禁止静默读取 repair_plan.yaml 别名。"""
+    candidates = sorted(run_dir.glob("plans/repair_plan.finalized.r*.yaml"))
+    if not candidates:
+        raise FileNotFoundError("缺少 plans/repair_plan.finalized.rNNN.yaml")
+    return candidates[-1]
+
+
+def snapshot_v2_errors(snapshot: dict[str, Any], expected_kind: str) -> list[str]:
+    """校验二轮复核所需的 OfficeCLI snapshot v2 最小 Gate。"""
+    errors: list[str] = []
+    if snapshot.get("schema_id") != "officecli-document-snapshot":
+        errors.append("schema_id 必须为 officecli-document-snapshot")
+    if snapshot.get("schema_version") != "2.0.0" or snapshot.get("contract_version") != "v5":
+        errors.append("snapshot 必须为 v5/2.0.0")
+    if snapshot.get("kind") != expected_kind:
+        errors.append(f"snapshot.kind 必须为 {expected_kind}")
+    if snapshot.get("gate_check", {}).get("status") != "passed":
+        errors.append("snapshot gate_check 未通过")
+    if not isinstance(snapshot.get("nodes"), list) or not isinstance(snapshot.get("indexes"), dict):
+        errors.append("snapshot nodes/indexes 缺失")
+    return errors
 
 
 def select_render_pages(run_dir: Path) -> tuple[Path, list[Path]]:
@@ -79,41 +89,41 @@ def make_result(task_id: str, task_name: str, status: str, evidence: list[str], 
 
 def build_reviews(run_dir: Path) -> list[dict[str, Any]]:
     """基于运行目录生成 T01-T06 复核结果。"""
-    repair_plan_path = run_dir / "plans" / "repair_plan.yaml"
+    repair_plan_path = latest_finalized_plan(run_dir)
     execution_log_path = run_dir / "logs" / "repair_execution.json"
-    before_snapshot_path = run_dir / "snapshots" / "document_snapshot.before.json"
-    after_snapshot_path = run_dir / "snapshots" / "document_snapshot.after.json"
+    before_snapshot_path = run_dir / "snapshots" / "officecli-document-snapshot.before.json"
+    after_snapshot_path = run_dir / "snapshots" / "officecli-document-snapshot.after.json"
     repair_plan = load_yaml(repair_plan_path)
     execution_log = load_json(execution_log_path)
     before_snapshot = load_json(before_snapshot_path)
     after_snapshot = load_json(after_snapshot_path)
-    output_docx = Path(repair_plan["output_docx"])
+    output_docx = Path(execution_log.get("output_docx") or execution_log.get("working_docx") or "")
 
     reviews: list[dict[str, Any]] = []
 
-    valid_docx = docx_valid(output_docx)
+    valid_docx = bool(execution_log.get("output_docx_valid")) and output_docx.is_file()
     reviews.append(
         make_result(
             "T01",
             "输出 DOCX OOXML 完整性复核",
             "passed" if valid_docx else "blocked",
-            [f"输出文件：{output_docx}", f"OOXML 可打开：{valid_docx}"],
-            [] if valid_docx else [{"issue_id": "T01-I001", "severity": "blocker", "description": "输出 DOCX 无法作为 OOXML 打开"}],
+            [f"输出文件：{output_docx}", f"OfficeCLI validate 通过：{valid_docx}"],
+            [] if valid_docx else [{"issue_id": "T01-I001", "severity": "blocker", "description": "输出 DOCX 未通过 OfficeCLI 写后校验"}],
         )
     )
 
-    before_result = validate_schema_contract(before_snapshot, "document-snapshot")
-    after_result = validate_schema_contract(after_snapshot, "document-snapshot")
-    snapshot_status = "passed" if before_result.valid and after_result.valid else "blocked"
+    before_errors = snapshot_v2_errors(before_snapshot, "before")
+    after_errors = snapshot_v2_errors(after_snapshot, "after")
+    snapshot_status = "passed" if not before_errors and not after_errors else "blocked"
     reviews.append(
         make_result(
             "T02",
             "before/after 快照完整性复核",
             snapshot_status,
             [
-                f"before 段落数：{before_snapshot.get('paragraph_count')}",
-                f"after 段落数：{after_snapshot.get('paragraph_count')}",
-                f"after 快照类型：{after_snapshot.get('snapshot_kind')}",
+                f"before 节点数：{before_snapshot.get('document', {}).get('node_count')}",
+                f"after 节点数：{after_snapshot.get('document', {}).get('node_count')}",
+                f"after 快照类型：{after_snapshot.get('kind')}",
             ],
             [
                 {"issue_id": f"T02-I{index:03d}", "severity": "blocker", "description": error}
@@ -215,18 +225,18 @@ def build_reviews(run_dir: Path) -> list[dict[str, Any]]:
 
 
 def main() -> int:
-    """命令行入口。"""
-    parser = argparse.ArgumentParser(description="生成 T01-T06 二轮复核 JSON")
+    """兼容旧入口，实际执行统一的 v5 review-result 构建器。"""
+    from scripts.officecli.review_builder import main as review_main
+
+    parser = argparse.ArgumentParser(description="生成 review-result 2.0.0")
     parser.add_argument("--run-dir", required=True, type=Path)
     parser.add_argument("--output-dir", type=Path)
     args = parser.parse_args()
-    output_dir = args.output_dir or args.run_dir / "review_results"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    for review in build_reviews(args.run_dir):
-        path = output_dir / f"{review['task_id']}.review.json"
-        path.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(output_dir)
-    return 0
+    output = (args.output_dir / "final_review.json") if args.output_dir else None
+    argv = ["--run-dir", str(args.run_dir)]
+    if output is not None:
+        argv.extend(["--output", str(output)])
+    return review_main(argv)
 
 
 if __name__ == "__main__":

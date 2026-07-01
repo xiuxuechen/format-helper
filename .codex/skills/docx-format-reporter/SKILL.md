@@ -12,7 +12,9 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 ## 输入
 
 - `plans/PLAN.yaml`
-- `plans/repair_plan.yaml`
+- `plans/repair_plan.finalized.rNNN.yaml`
+- `snapshots/officecli-document-snapshot.before.json`
+- `snapshots/officecli-document-snapshot.after.json`
 - `audit_results/*.audit.json`
 - `review_results/*.review.json`
 - `logs/state.yaml`

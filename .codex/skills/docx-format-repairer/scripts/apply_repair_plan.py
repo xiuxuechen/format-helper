@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
-"""执行 repair_plan.yaml 中允许的白名单修复动作。"""
+# v4 historical reference; non-executable — replaced by scripts/officecli/runtime_adapter.py (V5-008)
+"""执行 repair_plan.yaml 中允许的白名单修复动作。（v4 历史参考，已退役）"""
 
 from __future__ import annotations
+
+# V5-013: 禁止生产路径导入
+import sys as _sys
+if "__test__" not in " ".join(_sys.argv) and "unittest" not in " ".join(_sys.argv) and "pytest" not in str(_sys.modules):
+    raise ImportError("V5 DEPRECATED: this module is retired. Use scripts/officecli/runtime_adapter.py")
 
 import argparse
 import json
@@ -499,4 +505,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    import sys as _sys
+    _sys.exit("V5 DEPRECATED: this script is retired. Use scripts/officecli/runtime_adapter.py instead.")
