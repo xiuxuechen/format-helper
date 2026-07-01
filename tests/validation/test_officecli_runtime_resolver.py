@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -19,13 +20,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.officecli.runtime_resolver import (  # noqa: E402
     EXPECTED_RUNTIME_IDS,
     FH_OFFICECLI_CACHE_INVALID,
+    FH_OFFICECLI_DOWNLOAD_FAILED,
     FH_OFFICECLI_OFFLINE_CACHE_MISS,
     FH_OFFICECLI_PLATFORM_UNSUPPORTED,
     OfficeCliRuntimeError,
     cache_executable_path,
     detect_runtime_id,
     is_exact_version_output,
+    install_downloaded_asset,
     load_lock,
+    materialize_asset,
     parse_args,
     runtime_file_lock,
     select_asset,
@@ -35,6 +39,12 @@ from scripts.officecli.runtime_resolver import (  # noqa: E402
 
 
 LOCK_PATH = Path(__file__).parent.parent.parent / "tools" / "officecli" / "officecli.lock.json"
+
+
+class FakeWindowsFileInUseError(PermissionError):
+    """测试用 WinError 32 异常，避免依赖不同平台的 OSError 构造语义。"""
+
+    winerror = 32
 
 
 class TestOfficeCliLock(unittest.TestCase):
@@ -173,6 +183,82 @@ class TestCacheValidation(unittest.TestCase):
 
         self.assertEqual(result["size_bytes"], len(content))
         self.assertEqual(result["sha256"], fake_asset["sha256"])
+
+    def test_install_downloaded_asset_reuses_valid_locked_target(self):
+        """Windows 目标文件被占用但缓存合法时必须复用，避免误报下载失败。"""
+        content = b"officecli"
+        fake_asset = {
+            "runtime_id": "win-x64",
+            "size_bytes": len(content),
+            "sha256": hashlib.sha256(content).hexdigest(),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "officecli.exe"
+            temp_path = Path(tmp) / ".download.tmp"
+            target.write_bytes(content)
+            temp_path.write_bytes(content)
+            file_info = verify_file_hash_and_size(temp_path, fake_asset)
+            replace_error = FakeWindowsFileInUseError(13, "文件正由另一进程使用", str(target))
+
+            with mock.patch(
+                "scripts.officecli.runtime_resolver.Path.replace",
+                side_effect=replace_error,
+            ):
+                result = install_downloaded_asset(temp_path, target, fake_asset, file_info)
+
+            self.assertEqual(result["status"], "cached")
+            self.assertEqual(result["size_bytes"], len(content))
+            self.assertEqual(result["sha256"], fake_asset["sha256"])
+
+    def test_install_downloaded_asset_blocks_unexpected_replace_error(self):
+        """非 WinError 32 的替换失败不得被合法旧缓存掩盖。"""
+        content = b"officecli"
+        fake_asset = {
+            "runtime_id": "win-x64",
+            "size_bytes": len(content),
+            "sha256": hashlib.sha256(content).hexdigest(),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "officecli.exe"
+            temp_path = Path(tmp) / ".download.tmp"
+            target.write_bytes(content)
+            temp_path.write_bytes(content)
+            file_info = verify_file_hash_and_size(temp_path, fake_asset)
+
+            with mock.patch(
+                "scripts.officecli.runtime_resolver.Path.replace",
+                side_effect=OSError(13, "权限被拒绝", str(target), 5),
+            ):
+                with self.assertRaises(OfficeCliRuntimeError) as ctx:
+                    install_downloaded_asset(temp_path, target, fake_asset, file_info)
+
+            self.assertEqual(ctx.exception.code, FH_OFFICECLI_DOWNLOAD_FAILED)
+
+    def test_materialize_asset_cleans_temp_when_reusing_locked_target(self):
+        """下载调用链复用被占用目标缓存后仍必须清理当前临时文件。"""
+        content = b"officecli"
+        fake_asset = {
+            "runtime_id": "win-x64",
+            "size_bytes": len(content),
+            "sha256": hashlib.sha256(content).hexdigest(),
+        }
+        fake_lock = {"officecli_version": "1.0.113"}
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "officecli.exe"
+
+            def fake_download(_asset, destination):
+                destination.write_bytes(content)
+                target.write_bytes(content)
+
+            with mock.patch("scripts.officecli.runtime_resolver.download_asset", side_effect=fake_download):
+                with mock.patch(
+                    "scripts.officecli.runtime_resolver.Path.replace",
+                    side_effect=FakeWindowsFileInUseError(13, "文件正由另一进程使用", str(target)),
+                ):
+                    result = materialize_asset(fake_lock, fake_asset, target, offline=False, skip_version_check=True)
+
+            self.assertEqual(result["status"], "cached")
+            self.assertEqual(list(Path(tmp).glob(".download.*.tmp")), [])
 
 
 class TestVersionAndLockGuards(unittest.TestCase):

@@ -506,6 +506,35 @@ def download_asset(asset: dict, destination: Path, timeout_seconds: int = 120) -
         )
 
 
+def is_windows_file_in_use_error(exc: OSError) -> bool:
+    """判断是否为 Windows 目标文件被占用错误。"""
+    return isinstance(exc, PermissionError) and getattr(exc, "winerror", None) == 32
+
+
+def install_downloaded_asset(temp_path: Path, target: Path, asset: dict, file_info: dict) -> dict:
+    """安装已校验下载文件；若 Windows 目标被占用但合法，则复用目标缓存。"""
+    try:
+        temp_path.replace(target)
+        return {"status": "downloaded", **file_info}
+    except OSError as exc:
+        if not is_windows_file_in_use_error(exc):
+            raise OfficeCliRuntimeError(
+                FH_OFFICECLI_DOWNLOAD_FAILED,
+                "OfficeCLI 缓存替换失败",
+                {"target": str(target), "temp_path": str(temp_path), "reason": str(exc)},
+            ) from exc
+        try:
+            existing_info = verify_file_hash_and_size(target, asset)
+        except OfficeCliRuntimeError:
+            raise OfficeCliRuntimeError(
+                FH_OFFICECLI_DOWNLOAD_FAILED,
+                "OfficeCLI 缓存替换失败",
+                {"target": str(target), "temp_path": str(temp_path), "reason": str(exc)},
+            ) from exc
+        ensure_executable_permission(target)
+        return {"status": "cached", **existing_info}
+
+
 def process_exists(pid: int) -> bool:
     """判断进程是否仍存在。"""
     if pid <= 0:
@@ -635,8 +664,8 @@ def materialize_asset(
             file_info = verify_file_hash_and_size(temp_path, asset)
             ensure_executable_permission(temp_path)
             version = None if skip_version_check else run_version_check(temp_path, lock["officecli_version"])
-            temp_path.replace(target)
-            return {"status": "downloaded", "version": version or lock["officecli_version"], **file_info}
+            installed = install_downloaded_asset(temp_path, target, asset, file_info)
+            return {"version": version or lock["officecli_version"], **installed}
         finally:
             if temp_path.exists():
                 try:
