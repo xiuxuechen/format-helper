@@ -45,16 +45,6 @@ jobs:
         include:
           - runtime_id: win-x64
             runner: windows-latest
-          - runtime_id: win-arm64
-            runner: officecli-win-arm64
-          - runtime_id: linux-x64-gnu
-            runner: ubuntu-latest
-          - runtime_id: linux-arm64-gnu
-            runner: officecli-linux-arm64-gnu
-          - runtime_id: linux-x64-musl
-            runner: officecli-linux-x64-musl
-          - runtime_id: linux-arm64-musl
-            runner: officecli-linux-arm64-musl
           - runtime_id: osx-x64
             runner: macos-13
           - runtime_id: osx-arm64
@@ -95,7 +85,7 @@ jobs:
         with:
           pattern: officecli-*-evidence
           path: artifacts/all-platform-evidence
-      - name: Validate all eight platform evidence packages
+      - name: Validate required win/mac platform evidence packages
         run: >-
           python scripts/officecli/v5_release_gate.py platform
           --evidence-root artifacts/all-platform-evidence

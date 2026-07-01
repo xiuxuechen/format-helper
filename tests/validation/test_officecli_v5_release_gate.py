@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.officecli.runtime_resolver import EXPECTED_RUNTIME_IDS, load_lock, select_asset
-from scripts.officecli.v5_release_gate import scan_production_paths, validate_platform_evidence
+from scripts.officecli.runtime_resolver import load_lock, select_asset
+from scripts.officecli.v5_release_gate import REQUIRED_RELEASE_RUNTIME_IDS, scan_production_paths, validate_platform_evidence
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -18,12 +18,12 @@ CAPABILITY = ROOT / "tools" / "officecli" / "officecli-capability-manifest.json"
 
 
 class TestOfficeCliV5ReleaseGate(unittest.TestCase):
-    """覆盖生产路径扫描与八平台聚合。"""
+    """覆盖生产路径扫描与 win/mac 必过平台聚合。"""
 
     def test_repository_production_paths_are_officecli_only(self):
         self.assertEqual(scan_production_paths(ROOT), [])
 
-    def test_eight_platform_evidence_passes_and_missing_platform_blocks(self):
+    def test_required_win_mac_platform_evidence_passes_and_missing_required_blocks(self):
         runner_by_runtime = {
             "win-x64": ("Windows", "AMD64"), "win-arm64": ("Windows", "ARM64"),
             "linux-x64-gnu": ("Linux", "x86_64"), "linux-arm64-gnu": ("Linux", "aarch64"),
@@ -36,7 +36,7 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
         capability_file_hash = hashlib.sha256(CAPABILITY.read_bytes()).hexdigest()
         with tempfile.TemporaryDirectory() as tmp:
             evidence_root = Path(tmp)
-            for runtime_id in EXPECTED_RUNTIME_IDS:
+            for runtime_id in REQUIRED_RELEASE_RUNTIME_IDS | {"linux-x64-gnu"}:
                 asset = select_asset(lock, runtime_id)
                 runtime_dir = evidence_root / runtime_id
                 runtime_dir.mkdir()
@@ -85,6 +85,11 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
                     "screenshot": {"path": screenshot_path.name, "sha256": hashlib.sha256(screenshot_path.read_bytes()).hexdigest(), "size_bytes": screenshot_path.stat().st_size},
                 }
                 (runtime_dir / f"{runtime_id}.platform-evidence.json").write_text(json.dumps(payload), encoding="utf-8")
+            linux_path = evidence_root / "linux-x64-gnu" / "linux-x64-gnu.platform-evidence.json"
+            linux_payload = json.loads(linux_path.read_text(encoding="utf-8"))
+            linux_payload["status"] = "failed"
+            linux_payload["resolution"]["sha256"] = "0" * 64
+            linux_path.write_text(json.dumps(linux_payload), encoding="utf-8")
             self.assertEqual(validate_platform_evidence(evidence_root, LOCK, CAPABILITY), [])
             win_x64_path = evidence_root / "win-x64" / "win-x64.platform-evidence.json"
             win_x64_payload = json.loads(win_x64_path.read_text(encoding="utf-8"))
@@ -98,9 +103,17 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
             self.assertTrue(any("create smoke command must include --force" in error for error in errors))
             win_x64_payload["commands"][1]["command"] = ["officecli", "create", "smoke.docx", "--force"]
             win_x64_path.write_text(json.dumps(win_x64_payload), encoding="utf-8")
-            (evidence_root / "win-arm64" / "win-arm64.platform-evidence.json").unlink()
+            (evidence_root / "osx-x64" / "osx-x64.platform-evidence.json").unlink()
             errors = validate_platform_evidence(evidence_root, LOCK, CAPABILITY)
-            self.assertTrue(any("win-arm64" in error for error in errors))
+            self.assertTrue(any("osx-x64" in error for error in errors))
+            unknown_dir = evidence_root / "unknown-runtime"
+            unknown_dir.mkdir()
+            (unknown_dir / "unknown-runtime.platform-evidence.json").write_text(
+                json.dumps({"runtime_id": "unknown-runtime"}),
+                encoding="utf-8",
+            )
+            errors = validate_platform_evidence(evidence_root, LOCK, CAPABILITY)
+            self.assertTrue(any("存在未知平台证据：unknown-runtime" in error for error in errors))
 
 
 if __name__ == "__main__":

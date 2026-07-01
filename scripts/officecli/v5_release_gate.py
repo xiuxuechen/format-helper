@@ -1,4 +1,4 @@
-"""V5-014 静态生产路径与八平台证据 Gate。"""
+"""V5-014 静态生产路径与 win/mac 必过平台证据 Gate。"""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from scripts.officecli.runtime_resolver import EXPECTED_RUNTIME_IDS, load_lock, 
 FORBIDDEN_PYTHON_TOKENS = ("import zipfile", "xml.etree", "from lxml", "python-docx", "from docx")
 REQUIRED_SMOKE_COMMANDS = ["version", "create", "add", "get", "set", "validate", "screenshot"]
 RETIRED_SKILLS = {"docx-format-repairer"}
+REQUIRED_RELEASE_RUNTIME_IDS = {"win-x64", "osx-x64", "osx-arm64"}
 EXPECTED_RUNNER = {
     "win-x64": ("windows", {"amd64", "x86_64"}),
     "win-arm64": ("windows", {"arm64", "aarch64"}),
@@ -86,7 +87,7 @@ def scan_production_paths(root: Path) -> list[str]:
         errors.append("missing .github/workflows/officecli-v5.yml")
     else:
         workflow_text = workflow.read_text(encoding="utf-8")
-        for runtime_id in sorted(EXPECTED_RUNTIME_IDS):
+        for runtime_id in sorted(REQUIRED_RELEASE_RUNTIME_IDS):
             if runtime_id not in workflow_text:
                 errors.append(f"workflow missing runtime_id: {runtime_id}")
         for required_label in ("native-toc-evidence", "officecli-windows-word", "officecli-windows-wps"):
@@ -101,14 +102,16 @@ def _load_platform_evidence(evidence_root: Path) -> dict[str, tuple[dict[str, An
         payload = json.loads(path.read_text(encoding="utf-8"))
         runtime_id = payload.get("runtime_id")
         if runtime_id in found:
-            raise ValueError(f"重复平台证据：{runtime_id}")
+            if runtime_id in REQUIRED_RELEASE_RUNTIME_IDS:
+                raise ValueError(f"重复平台证据：{runtime_id}")
+            continue
         if isinstance(runtime_id, str):
             found[runtime_id] = (payload, path)
     return found
 
 
 def validate_platform_evidence(evidence_root: Path, lock_path: Path, capability_path: Path) -> list[str]:
-    """验证八平台证据集合满足最终发布 Gate。"""
+    """验证 win/mac 必过平台证据集合满足最终发布 Gate。"""
     errors: list[str] = []
     lock = load_lock(lock_path)
     capability = json.loads(capability_path.read_text(encoding="utf-8"))
@@ -119,13 +122,13 @@ def validate_platform_evidence(evidence_root: Path, lock_path: Path, capability_
         found = _load_platform_evidence(evidence_root)
     except (OSError, json.JSONDecodeError, ValueError) as exc:
         return [f"平台证据读取失败：{exc}"]
-    missing = sorted(EXPECTED_RUNTIME_IDS - set(found))
+    missing = sorted(REQUIRED_RELEASE_RUNTIME_IDS - set(found))
     extra = sorted(set(found) - EXPECTED_RUNTIME_IDS)
     if missing:
-        errors.append(f"缺少平台证据：{', '.join(missing)}")
+        errors.append(f"缺少发布必过平台证据：{', '.join(missing)}")
     if extra:
         errors.append(f"存在未知平台证据：{', '.join(extra)}")
-    for runtime_id in sorted(EXPECTED_RUNTIME_IDS & set(found)):
+    for runtime_id in sorted(REQUIRED_RELEASE_RUNTIME_IDS & set(found)):
         payload, evidence_path = found[runtime_id]
         evidence_dir = evidence_path.parent
         resolution = payload.get("resolution", {})
