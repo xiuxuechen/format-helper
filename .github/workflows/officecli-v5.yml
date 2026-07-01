@@ -33,6 +33,7 @@ jobs:
           python -m unittest
           tests.validation.test_officecli_runtime_resolver
           tests.validation.test_officecli_platform_evidence
+          tests.validation.test_officecli_native_toc_evidence
           tests.validation.test_officecli_v5_release_gate
           tests.validation.test_repair_plan_v5
 
