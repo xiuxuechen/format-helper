@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from scripts.officecli.contracts import RAW_SET_ACTIONS
 from scripts.utils.simple_yaml import write_yaml
 from scripts.validation.skill_result_io import (
     canonical_json,
@@ -510,10 +511,13 @@ def validate_decision_snapshot(
 
 def compute_plan_revision(plan: dict[str, Any]) -> int:
     """由 finalized 输入 hash 集合确定性派生 plan_revision。"""
+    mri = plan.get("manual_review_items_ref") if isinstance(plan.get("manual_review_items_ref"), dict) else {}
+    ds = plan.get("decision_snapshot") if isinstance(plan.get("decision_snapshot"), dict) else {}
+    rpr = plan.get("risk_policy_ref") if isinstance(plan.get("risk_policy_ref"), dict) else {}
     payload = {
-        "manual_review_items_sha256": plan.get("manual_review_items_ref", {}).get("sha256"),
-        "decision_snapshot_items_sha256": plan.get("decision_snapshot", {}).get("items_sha256"),
-        "risk_policy_sha256": plan.get("risk_policy_ref", {}).get("sha256"),
+        "manual_review_items_sha256": mri.get("sha256"),
+        "decision_snapshot_items_sha256": ds.get("items_sha256"),
+        "risk_policy_sha256": rpr.get("sha256"),
         "source_audit_sha256": [item.get("sha256") for item in plan.get("source_audit_refs", [])],
     }
     return int(sha256_text(canonical_json(payload))[:8], 16)
@@ -616,7 +620,7 @@ def validate_repair_plan_v4(
                 if snapshot.get(field_name) != 0:
                     errors.append(f"finalized decision_snapshot.{field_name} must be 0")
             policy_data_for_snapshot = risk_policy
-            policy_sha_for_snapshot = plan.get("risk_policy_ref", {}).get("sha256")
+            policy_sha_for_snapshot = (plan.get("risk_policy_ref") or {}).get("sha256")
             errors.extend(
                 f"decision_snapshot.{error}"
                 for error in validate_decision_snapshot(
@@ -628,7 +632,7 @@ def validate_repair_plan_v4(
         if run_dir is not None:
             errors.extend(_validate_finalized_refs(plan, run_dir))
         risk_policy_path = plan.get("risk_policy_path")
-        policy_sha256 = plan.get("risk_policy_ref", {}).get("sha256")
+        policy_sha256 = (plan.get("risk_policy_ref") or {}).get("sha256")
         if run_dir is not None and risk_policy_path:
             policy_path = resolve_run_relative_path(run_dir, risk_policy_path)
             if not policy_path.exists():
@@ -661,6 +665,121 @@ def validate_repair_plan_v4(
                     errors.append(f"{action_id}.allowed_by_policy true only allowed by action_whitelist")
     else:
         errors.append("plan_state must be draft or finalized")
+    return ReviewValidationResult(not errors, errors)
+
+
+def validate_repair_plan_v5(
+    plan: dict[str, Any],
+    *,
+    run_dir: Path | None = None,
+    risk_policy: dict[str, Any] | None = None,
+) -> ReviewValidationResult:
+    """V5-006: 校验 v5 repair-plan（execution_backend、backend_action、risk_class 等）。"""
+    errors: list[str] = []
+    # v5 基础必填字段（与 v4 公共子集 + v5 扩展）
+    required_top = {
+        "schema_id", "schema_version", "contract_version", "run_id",
+        "plan_id", "plan_state", "plan_revision",
+        "execution_backend", "backend_version",
+        "snapshot_ref", "capability_manifest_ref",
+        "source_audit_paths", "source_audit_refs",
+        "risk_policy_path", "risk_policy_ref",
+        "manual_review_items_ref", "decision_snapshot",
+        "actions", "manual_review_required", "generated_at",
+    }
+    for field in sorted(required_top - set(plan.keys())):
+        errors.append(f"{field} is required")
+    if plan.get("schema_id") != "repair-plan":
+        errors.append("schema_id must be repair-plan")
+
+    # v5 contract_version
+    if plan.get("contract_version") != "v5":
+        errors.append("v5 repair-plan requires contract_version=v5")
+    if plan.get("schema_version") != "2.0.0":
+        errors.append("v5 repair-plan requires schema_version=2.0.0")
+
+    # v5 顶层必填
+    if plan.get("execution_backend") != "officecli":
+        errors.append("execution_backend must be officecli")
+    if plan.get("backend_version") != "1.0.113":
+        errors.append("backend_version must be 1.0.113")
+    if not isinstance(plan.get("snapshot_ref"), dict):
+        errors.append("snapshot_ref (ArtifactRef) is required")
+    if not isinstance(plan.get("capability_manifest_ref"), dict):
+        errors.append("capability_manifest_ref (ArtifactRef) is required")
+
+    # draft/finalized 约束
+    plan_state = plan.get("plan_state")
+    if plan_state == "draft":
+        if plan.get("plan_revision") != 0:
+            errors.append("draft plan_revision must be 0")
+        if plan.get("decision_snapshot") is not None:
+            errors.append("draft decision_snapshot must be null")
+    elif plan_state == "finalized":
+        if not isinstance(plan.get("plan_revision"), int) or plan.get("plan_revision") <= 0:
+            errors.append("finalized plan_revision must be positive integer")
+        if not plan.get("finalized_from_plan_id") or not plan.get("finalized_at"):
+            errors.append("finalized plan requires finalized_from_plan_id and finalized_at")
+    else:
+        errors.append("plan_state must be draft or finalized")
+
+    # per-action v5 字段
+    actions = plan.get("actions")
+    if isinstance(actions, list):
+        for action in actions:
+            if not isinstance(action, dict):
+                continue
+            action_id = action.get("action_id", "?")
+            risk_class = action.get("risk_class")
+            if risk_class not in {"L1", "L2", "L3_READ", "L3_WRITE"}:
+                errors.append(f"{action_id}: risk_class must be L1/L2/L3_READ/L3_WRITE")
+
+            backend_action = action.get("backend_action")
+            target_binding = action.get("target_binding")
+            exec_status = action.get("execution_status")
+
+            # finalized executable 必须有 backend_action
+            if plan.get("plan_state") == "finalized" and exec_status == "executable":
+                if not isinstance(backend_action, dict):
+                    errors.append(f"{action_id}: finalized executable requires backend_action")
+                else:
+                    cmd = backend_action.get("command")
+                    if cmd not in {"get", "query", "set", "add", "remove", "move", "swap", "raw-set"}:
+                        errors.append(f"{action_id}: backend_action.command invalid: {cmd}")
+                    if not isinstance(backend_action.get("path"), str) or not str(backend_action["path"]).startswith("/"):
+                        errors.append(f"{action_id}: backend_action.path must start with /")
+                    props = backend_action.get("properties", {})
+                    if isinstance(props, dict):
+                        for k, v in props.items():
+                            if isinstance(v, (dict, list)):
+                                errors.append(f"{action_id}: backend_action.properties.{k} must be scalar")
+
+                # L3_WRITE 必须有 manual_confirmation_ref
+                if risk_class == "L3_WRITE":
+                    if not isinstance(action.get("manual_confirmation_ref"), dict):
+                        errors.append(f"{action_id}: L3_WRITE requires manual_confirmation_ref")
+                    raw = backend_action.get("raw") if isinstance(backend_action, dict) else None
+                    if not isinstance(raw, dict):
+                        errors.append(f"{action_id}: L3_WRITE requires backend_action.raw")
+                    else:
+                        for field in ("part", "xpath", "action", "xml", "xml_sha256",
+                                      "expected_match_count", "precondition_raw_sha256",
+                                      "manual_review_id", "decision_snapshot_sha256"):
+                            if field not in raw:
+                                errors.append(f"{action_id}: L3_WRITE raw.{field} is required")
+                        if raw.get("expected_match_count") != 1:
+                            errors.append(f"{action_id}: L3_WRITE expected_match_count must be 1")
+                        if raw.get("action") not in RAW_SET_ACTIONS:
+                            errors.append(f"{action_id}: L3_WRITE raw.action is not allowed")
+
+                # 写动作必须有 target_binding
+                if risk_class in {"L2", "L3_WRITE"} and plan.get("plan_state") == "finalized":
+                    if not isinstance(target_binding, dict):
+                        errors.append(f"{action_id}: L2/L3_WRITE requires target_binding")
+                    elif not target_binding.get("node_id") or not target_binding.get("path"):
+                        errors.append(f"{action_id}: target_binding missing node_id or path")
+
+    # §15.4 兼容别名拒绝（通过调用方检查路径，此处仅检查 plan 结构）
     return ReviewValidationResult(not errors, errors)
 
 
@@ -736,6 +855,7 @@ __all__ = [
     "validate_decision_snapshot",
     "validate_policy_match",
     "validate_repair_plan_v4",
+    "validate_repair_plan_v5",
     "validate_selected_action",
     "write_manual_review_items",
     "write_repair_plan",

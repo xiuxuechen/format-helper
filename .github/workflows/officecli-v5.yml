@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - "scripts/officecli/**"
+      - "scripts/validation/**"
       - ".codex/skills/**"
       - "tools/officecli/**"
       - "docs/v5/**"
