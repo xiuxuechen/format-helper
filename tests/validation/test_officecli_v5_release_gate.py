@@ -13,6 +13,7 @@ from scripts.officecli.v5_release_gate import (
     REQUIRED_RELEASE_RUNTIME_IDS,
     _sha256_utf8_lf_file,
     scan_production_paths,
+    validate_native_toc_evidence,
     validate_platform_evidence,
 )
 
@@ -135,6 +136,170 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
             crlf_capability.write_text(CAPABILITY.read_text(encoding="utf-8").replace("\n", "\r\n"), encoding="utf-8", newline="")
             self.assertEqual(_sha256_utf8_lf_file(LOCK), _sha256_utf8_lf_file(crlf_lock))
             self.assertEqual(_sha256_utf8_lf_file(CAPABILITY), _sha256_utf8_lf_file(crlf_capability))
+
+    def test_native_toc_evidence_accepts_word_and_wps_local_bundle(self):
+        """本机 Word/WPS 真实 evidence 可作为发布候选 native TOC Gate 输入。"""
+        lock = load_lock(LOCK)
+        asset = select_asset(lock, "win-x64")
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence_root = Path(tmp)
+            for viewer_id, viewer_name in (("word", "Microsoft Word"), ("wps", "WPS Writer")):
+                run_dir = evidence_root / viewer_id
+                logs_dir = run_dir / "logs"
+                image_dir = run_dir / "output" / "_internal"
+                logs_dir.mkdir(parents=True)
+                image_dir.mkdir(parents=True)
+                page_path = image_dir / "toc-page-0001.png"
+                page_path.write_bytes(f"{viewer_id}-png".encode("utf-8"))
+                page_ref = {
+                    "artifact_id": "toc-page-0001",
+                    "kind": "png",
+                    "relative_path": "output/_internal/toc-page-0001.png",
+                    "sha256": hashlib.sha256(page_path.read_bytes()).hexdigest(),
+                    "size_bytes": page_path.stat().st_size,
+                    "schema_id": None,
+                    "schema_version": None,
+                }
+                acceptance = {
+                    "schema_id": "toc-acceptance",
+                    "schema_version": "2.0.0",
+                    "run_id": viewer_id,
+                    "required": True,
+                    "status": "passed",
+                    "viewer": viewer_name,
+                    "viewer_version": "12.0",
+                    "platform": "windows",
+                    "input_ref": None,
+                    "output_ref": None,
+                    "before_sha256": "a" * 64,
+                    "after_sha256": "b" * 64,
+                    "field_update_count": 1,
+                    "toc_update_count": 1,
+                    "page_count": 1,
+                    "visible_entries": [{"level": 1, "text": "第一章\t1", "page_number": 1}],
+                    "evidence_refs": [page_ref],
+                    "gate_check": {
+                        "gate_id": "toc-acceptance-v5",
+                        "status": "passed",
+                        "checked_at": "2026-01-01T00:00:00Z",
+                        "predicate_version": "1.0.0",
+                        "evidence_refs": [],
+                        "failed_codes": [],
+                    },
+                    "error": {"code": "NONE", "reason_code": "none", "message": "", "retryable": False, "viewer": None},
+                }
+                payload = {
+                    "schema_id": "officecli-native-toc-evidence",
+                    "schema_version": "1.0.0",
+                    "status": "passed",
+                    "resolution": {
+                        "runtime_id": "win-x64",
+                        "officecli_version": "1.0.113",
+                        "version": "1.0.113",
+                        "sha256": asset["sha256"],
+                        "size_bytes": asset["size_bytes"],
+                    },
+                    "viewer": {"ok": True, "viewer": viewer_name, "version": "12.0"},
+                    "toc_acceptance_path": "logs/toc_acceptance.json",
+                    "toc_acceptance": acceptance,
+                    "page_screenshots": [page_ref],
+                }
+                (logs_dir / "toc_acceptance.json").write_text(json.dumps(acceptance), encoding="utf-8")
+                (logs_dir / "native_toc.platform-evidence.json").write_text(json.dumps(payload), encoding="utf-8")
+            self.assertEqual(validate_native_toc_evidence(evidence_root, LOCK), [])
+            word_toc_path = evidence_root / "word" / "logs" / "toc_acceptance.json"
+            word_acceptance = json.loads(word_toc_path.read_text(encoding="utf-8"))
+            word_acceptance["field_update_count"] = 0
+            word_toc_path.write_text(json.dumps(word_acceptance), encoding="utf-8")
+            errors = validate_native_toc_evidence(evidence_root, LOCK)
+            self.assertTrue(any("embedded toc_acceptance does not match" in error for error in errors))
+            word_payload_path = evidence_root / "word" / "logs" / "native_toc.platform-evidence.json"
+            word_payload = json.loads(word_payload_path.read_text(encoding="utf-8"))
+            word_payload["toc_acceptance"] = word_acceptance
+            word_payload_path.write_text(json.dumps(word_payload), encoding="utf-8")
+            errors = validate_native_toc_evidence(evidence_root, LOCK)
+            self.assertTrue(any("field_update_count must be positive" in error for error in errors))
+            word_acceptance["field_update_count"] = 1
+            word_toc_path.write_text(json.dumps(word_acceptance), encoding="utf-8")
+            word_payload["toc_acceptance"] = word_acceptance
+            word_payload_path.write_text(json.dumps(word_payload), encoding="utf-8")
+            (evidence_root / "wps" / "logs" / "native_toc.platform-evidence.json").unlink()
+            errors = validate_native_toc_evidence(evidence_root, LOCK)
+            self.assertTrue(any("缺少 native TOC 证据：wps" in error for error in errors))
+
+    def test_native_toc_evidence_rejects_broken_screenshot_hash(self):
+        """native TOC Gate 必须复算截图 hash，不能只信 JSON。"""
+        lock = load_lock(LOCK)
+        asset = select_asset(lock, "win-x64")
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence_root = Path(tmp)
+            for viewer_id, viewer_name in (("word", "Microsoft Word"), ("wps", "WPS Writer")):
+                run_dir = evidence_root / viewer_id
+                logs_dir = run_dir / "logs"
+                image_dir = run_dir / "output" / "_internal"
+                logs_dir.mkdir(parents=True)
+                image_dir.mkdir(parents=True)
+                page_path = image_dir / "toc-page-0001.png"
+                page_path.write_bytes(b"png")
+                page_ref = {
+                    "artifact_id": "toc-page-0001",
+                    "kind": "png",
+                    "relative_path": "output/_internal/toc-page-0001.png",
+                    "sha256": hashlib.sha256(page_path.read_bytes()).hexdigest(),
+                    "size_bytes": page_path.stat().st_size,
+                    "schema_id": None,
+                    "schema_version": None,
+                }
+                acceptance = {
+                    "schema_id": "toc-acceptance",
+                    "schema_version": "2.0.0",
+                    "run_id": viewer_id,
+                    "required": True,
+                    "status": "passed",
+                    "viewer": viewer_name,
+                    "viewer_version": "12.0",
+                    "platform": "windows",
+                    "input_ref": None,
+                    "output_ref": None,
+                    "before_sha256": "a" * 64,
+                    "after_sha256": "b" * 64,
+                    "field_update_count": 1,
+                    "toc_update_count": 1,
+                    "page_count": 1,
+                    "visible_entries": [{"level": 1, "text": "第一章\t1", "page_number": 1}],
+                    "evidence_refs": [page_ref],
+                    "error": {"code": "NONE", "reason_code": "none", "message": "", "retryable": False, "viewer": None},
+                    "gate_check": {
+                        "gate_id": "toc-acceptance-v5",
+                        "status": "passed",
+                        "checked_at": "2026-01-01T00:00:00Z",
+                        "predicate_version": "1.0.0",
+                        "evidence_refs": [],
+                        "failed_codes": [],
+                    },
+                }
+                payload = {
+                    "schema_id": "officecli-native-toc-evidence",
+                    "schema_version": "1.0.0",
+                    "status": "passed",
+                    "resolution": {
+                        "runtime_id": "win-x64",
+                        "officecli_version": "1.0.113",
+                        "version": "1.0.113",
+                        "sha256": asset["sha256"],
+                        "size_bytes": asset["size_bytes"],
+                    },
+                    "viewer": {"ok": True, "viewer": viewer_name, "version": "12.0"},
+                    "toc_acceptance_path": "logs/toc_acceptance.json",
+                    "toc_acceptance": acceptance,
+                    "page_screenshots": [dict(page_ref)],
+                }
+                if viewer_id == "word":
+                    payload["page_screenshots"][0]["sha256"] = "0" * 64
+                (logs_dir / "toc_acceptance.json").write_text(json.dumps(acceptance), encoding="utf-8")
+                (logs_dir / "native_toc.platform-evidence.json").write_text(json.dumps(payload), encoding="utf-8")
+            errors = validate_native_toc_evidence(evidence_root, LOCK)
+            self.assertTrue(any("word: screenshot artifact mismatch" in error for error in errors))
 
 
 if __name__ == "__main__":

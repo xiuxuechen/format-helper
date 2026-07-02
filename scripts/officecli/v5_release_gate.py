@@ -1,4 +1,4 @@
-"""V5-014 静态生产路径与 win/mac 必过平台证据 Gate。"""
+"""V5-014 静态生产路径、win/mac 平台证据与 native TOC 证据 Gate。"""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+
+from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -21,6 +23,8 @@ FORBIDDEN_PYTHON_TOKENS = ("import zipfile", "xml.etree", "from lxml", "python-d
 REQUIRED_SMOKE_COMMANDS = ["version", "create", "add", "get", "set", "validate", "screenshot"]
 RETIRED_SKILLS = {"docx-format-repairer"}
 REQUIRED_RELEASE_RUNTIME_IDS = {"win-x64", "osx-arm64"}
+REQUIRED_NATIVE_TOC_VIEWERS = {"word", "wps"}
+TOC_ACCEPTANCE_SCHEMA = ROOT / "docs" / "v5" / "schemas" / "toc-acceptance.schema.json"
 EXPECTED_RUNNER = {
     "win-x64": ("windows", {"amd64", "x86_64"}),
     "win-arm64": ("windows", {"arm64", "aarch64"}),
@@ -96,7 +100,7 @@ def scan_production_paths(root: Path) -> list[str]:
         for runtime_id in sorted(REQUIRED_RELEASE_RUNTIME_IDS):
             if runtime_id not in workflow_text:
                 errors.append(f"workflow missing runtime_id: {runtime_id}")
-        for required_label in ("native-toc-evidence", "officecli-windows-word", "officecli-windows-wps"):
+        for required_label in ("native-toc-evidence", "run_native_toc_dedicated", "officecli-windows-word", "officecli-windows-wps"):
             if required_label not in workflow_text:
                 errors.append(f"workflow missing dedicated native TOC requirement: {required_label}")
     return errors
@@ -202,6 +206,152 @@ def validate_platform_evidence(evidence_root: Path, lock_path: Path, capability_
     return errors
 
 
+def _viewer_id(viewer_name: str) -> str:
+    normalized = viewer_name.strip().lower()
+    if normalized in {"word", "microsoft word"}:
+        return "word"
+    if normalized in {"wps", "wps writer"}:
+        return "wps"
+    return normalized
+
+
+def _load_native_toc_evidence(evidence_root: Path) -> dict[str, tuple[dict[str, Any], Path]]:
+    found: dict[str, tuple[dict[str, Any], Path]] = {}
+    for path in evidence_root.rglob("native_toc.platform-evidence.json"):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        viewer_payload = payload.get("viewer")
+        if not isinstance(viewer_payload, dict):
+            continue
+        viewer_id = _viewer_id(str(viewer_payload.get("viewer", "")))
+        if viewer_id in found:
+            raise ValueError(f"重复 native TOC 证据：{viewer_id}")
+        if viewer_id:
+            found[viewer_id] = (payload, path)
+    return found
+
+
+def _validate_toc_acceptance_payload(viewer_id: str, payload: dict[str, Any], evidence_dir: Path, errors: list[str]) -> None:
+    """校验 native TOC 内嵌和落盘 toc_acceptance 的发布证据强度。"""
+    toc_path_value = payload.get("toc_acceptance_path")
+    if not isinstance(toc_path_value, str) or not toc_path_value:
+        errors.append(f"{viewer_id}: toc_acceptance_path required")
+        return
+    toc_path = evidence_dir / toc_path_value
+    if not toc_path.is_file():
+        errors.append(f"{viewer_id}: toc_acceptance_path missing")
+        return
+    try:
+        file_acceptance = json.loads(toc_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"{viewer_id}: toc_acceptance_path unreadable: {exc}")
+        return
+    acceptance = payload.get("toc_acceptance")
+    if not isinstance(acceptance, dict):
+        errors.append(f"{viewer_id}: toc_acceptance missing")
+        return
+    if acceptance != file_acceptance:
+        errors.append(f"{viewer_id}: embedded toc_acceptance does not match toc_acceptance_path")
+    schema = json.loads(TOC_ACCEPTANCE_SCHEMA.read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    schema_errors = sorted(validator.iter_errors(acceptance), key=lambda error: list(error.path))
+    for error in schema_errors:
+        errors.append(f"{viewer_id}: toc_acceptance schema error: {error.message}")
+    if acceptance.get("status") != "passed" or acceptance.get("gate_check", {}).get("status") != "passed":
+        errors.append(f"{viewer_id}: toc_acceptance must pass")
+    if _viewer_id(str(acceptance.get("viewer", ""))) != viewer_id:
+        errors.append(f"{viewer_id}: toc_acceptance viewer mismatch")
+    if not isinstance(acceptance.get("before_sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", acceptance["before_sha256"]):
+        errors.append(f"{viewer_id}: before_sha256 required")
+    if not isinstance(acceptance.get("after_sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", acceptance["after_sha256"]):
+        errors.append(f"{viewer_id}: after_sha256 required")
+    if acceptance.get("before_sha256") == acceptance.get("after_sha256"):
+        errors.append(f"{viewer_id}: before_sha256 and after_sha256 must differ")
+    for key in ("field_update_count", "toc_update_count"):
+        if not isinstance(acceptance.get(key), int) or acceptance[key] <= 0:
+            errors.append(f"{viewer_id}: {key} must be positive")
+    page_count = acceptance.get("page_count")
+    if not isinstance(page_count, int) or page_count <= 0:
+        errors.append(f"{viewer_id}: page_count must be positive")
+    visible_entries = acceptance.get("visible_entries")
+    if not isinstance(visible_entries, list) or not visible_entries:
+        errors.append(f"{viewer_id}: visible_entries required")
+    else:
+        for entry in visible_entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("page_number"), int) or entry["page_number"] <= 0:
+                errors.append(f"{viewer_id}: visible_entries page_number must be positive")
+    screenshot_refs = payload.get("page_screenshots")
+    if isinstance(page_count, int) and isinstance(screenshot_refs, list) and len(screenshot_refs) != page_count:
+        errors.append(f"{viewer_id}: page_count must equal page_screenshots count")
+    evidence_refs = acceptance.get("evidence_refs")
+    if not isinstance(evidence_refs, list) or not isinstance(screenshot_refs, list):
+        errors.append(f"{viewer_id}: toc_acceptance evidence_refs and page_screenshots required")
+        return
+    evidence_keys = {
+        (
+            ref.get("relative_path"),
+            ref.get("sha256"),
+            ref.get("size_bytes"),
+        )
+        for ref in evidence_refs
+        if isinstance(ref, dict)
+    }
+    for ref in screenshot_refs:
+        if not isinstance(ref, dict):
+            continue
+        key = (ref.get("relative_path"), ref.get("sha256"), ref.get("size_bytes"))
+        if key not in evidence_keys:
+            errors.append(f"{viewer_id}: toc_acceptance evidence_refs must cover page_screenshots")
+
+
+def validate_native_toc_evidence(evidence_root: Path, lock_path: Path) -> list[str]:
+    """验证 Word/WPS native TOC 证据，可来自 CI dedicated runner 或维护者本机。"""
+    errors: list[str] = []
+    lock = load_lock(lock_path)
+    win_asset = select_asset(lock, "win-x64")
+    try:
+        found = _load_native_toc_evidence(evidence_root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [f"native TOC 证据读取失败：{exc}"]
+    missing = sorted(REQUIRED_NATIVE_TOC_VIEWERS - set(found))
+    if missing:
+        errors.append(f"缺少 native TOC 证据：{', '.join(missing)}")
+    for viewer_id in sorted(REQUIRED_NATIVE_TOC_VIEWERS & set(found)):
+        payload, evidence_path = found[viewer_id]
+        evidence_dir = evidence_path.parent.parent
+        if payload.get("schema_id") != "officecli-native-toc-evidence":
+            errors.append(f"{viewer_id}: schema_id must be officecli-native-toc-evidence")
+        if payload.get("status") != "passed":
+            errors.append(f"{viewer_id}: status must be passed")
+        resolution = payload.get("resolution")
+        if not isinstance(resolution, dict):
+            errors.append(f"{viewer_id}: resolution missing")
+        else:
+            if resolution.get("runtime_id") != "win-x64":
+                errors.append(f"{viewer_id}: native TOC must use win-x64 OfficeCLI")
+            if resolution.get("officecli_version") != "1.0.113" or resolution.get("version") != "1.0.113":
+                errors.append(f"{viewer_id}: OfficeCLI version mismatch")
+            if resolution.get("sha256") != win_asset["sha256"] or resolution.get("size_bytes") != win_asset["size_bytes"]:
+                errors.append(f"{viewer_id}: locked win-x64 asset hash/size mismatch")
+        viewer = payload.get("viewer")
+        if not isinstance(viewer, dict) or viewer.get("ok") is not True:
+            errors.append(f"{viewer_id}: viewer probe must be ok")
+        elif _viewer_id(str(viewer.get("viewer", ""))) != viewer_id or not viewer.get("version"):
+            errors.append(f"{viewer_id}: viewer identity/version mismatch")
+        _validate_toc_acceptance_payload(viewer_id, payload, evidence_dir, errors)
+        screenshots = payload.get("page_screenshots")
+        if not isinstance(screenshots, list) or not screenshots:
+            errors.append(f"{viewer_id}: page_screenshots required")
+        else:
+            for ref in screenshots:
+                if not isinstance(ref, dict) or not re.fullmatch(r"[a-f0-9]{64}", str(ref.get("sha256", ""))) or not isinstance(ref.get("size_bytes"), int):
+                    errors.append(f"{viewer_id}: screenshot ref invalid")
+                    continue
+                artifact_path = evidence_dir / str(ref.get("relative_path", ""))
+                if not artifact_path.is_file() or _sha256_file(artifact_path) != ref["sha256"] or artifact_path.stat().st_size != ref["size_bytes"]:
+                    errors.append(f"{viewer_id}: screenshot artifact mismatch")
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     """命令行入口。"""
     parser = argparse.ArgumentParser(description="OfficeCLI v5 release gate")
@@ -212,11 +362,16 @@ def main(argv: list[str] | None = None) -> int:
     platform_gate.add_argument("--evidence-root", required=True, type=Path)
     platform_gate.add_argument("--lock", required=True, type=Path)
     platform_gate.add_argument("--capability", required=True, type=Path)
+    native_toc_gate = sub.add_parser("native-toc")
+    native_toc_gate.add_argument("--evidence-root", required=True, type=Path)
+    native_toc_gate.add_argument("--lock", required=True, type=Path)
     args = parser.parse_args(argv)
     if args.command == "static":
         errors = scan_production_paths(args.root.resolve())
-    else:
+    elif args.command == "platform":
         errors = validate_platform_evidence(args.evidence_root, args.lock, args.capability)
+    else:
+        errors = validate_native_toc_evidence(args.evidence_root, args.lock)
     sys.stdout.write(json.dumps({"ok": not errors, "errors": errors}, ensure_ascii=False) + "\n")
     return 0 if not errors else 2
 
