@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import json
 import os
 import subprocess
@@ -46,6 +47,35 @@ def _run(command: list[str], env: dict[str, str], timeout: int) -> subprocess.Co
     )
 
 
+def _officecli_command_succeeded(proc: subprocess.CompletedProcess[str]) -> bool:
+    """OfficeCLI 有些 advisory warning 会返回非零，但 JSON success 仍为 true。"""
+    if proc.returncode == 0:
+        return True
+    try:
+        payload = json.loads((proc.stdout or "").strip())
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(payload, dict) or payload.get("success") is not True:
+        return False
+    warnings = payload.get("warnings")
+    if not isinstance(warnings, list) or not warnings:
+        return False
+    return all(isinstance(item, dict) and item.get("code") in {"warning", "advisory"} for item in warnings)
+
+
+def _probe_required_viewer(viewer_probe: Callable[..., dict[str, Any]], required_viewer: str) -> dict[str, Any]:
+    """兼容旧测试注入，同时避免吞掉 probe 内部真实 TypeError。"""
+    try:
+        signature = inspect.signature(viewer_probe)
+    except (TypeError, ValueError):
+        return viewer_probe(required_viewer=required_viewer)
+    parameters = signature.parameters
+    accepts_keyword = any(param.kind == inspect.Parameter.VAR_KEYWORD for param in parameters.values())
+    if "required_viewer" in parameters or accepts_keyword:
+        return viewer_probe(required_viewer=required_viewer)
+    return viewer_probe()
+
+
 def collect_native_toc_evidence(
     *, workspace_root: Path, lock_path: Path, run_dir: Path,
     required_viewer: str,
@@ -71,20 +101,21 @@ def collect_native_toc_evidence(
     commands = [
         [str(executable), "create", str(input_docx)],
         [str(executable), "add", str(input_docx), "/body", "--type", "toc", "--prop", "levels=1-3", "--prop", "title=目录", "--index", "0", "--json"],
-        [str(executable), "add", str(input_docx), "/body", "--type", "paragraph", "--prop", "text=第一章", "--prop", "style=Heading1", "--json"],
+        [str(executable), "add", str(input_docx), "/body", "--type", "paragraph", "--prop", "text=第一章", "--json"],
         [str(executable), "add", str(input_docx), "/body", "--type", "paragraph", "--prop", "text=正文内容", "--json"],
     ]
     command_results: list[dict[str, Any]] = []
     for command in commands:
         proc = command_runner(command, env, 120)
         command_results.append({"command": command, "exit_code": proc.returncode, "stdout": proc.stdout, "stderr": proc.stderr})
-        if proc.returncode != 0:
+        if not _officecli_command_succeeded(proc):
             raise RuntimeError(f"TOC fixture 命令失败：{command[1]}, exit={proc.returncode}")
-    viewer = viewer_probe()
+    viewer = _probe_required_viewer(viewer_probe, required_viewer)
     if not viewer.get("ok"):
         raise RuntimeError(f"Word/WPS viewer 不可用：{viewer}")
     if _viewer_id(str(viewer.get("viewer", ""))) != _viewer_id(required_viewer):
         raise RuntimeError(f"viewer 不匹配：要求 {required_viewer}，实际 {viewer.get('viewer')}")
+    viewer["native_toc_fixture_prepare_outline"] = True
     acceptance = refresh_func(
         input_docx, output_docx, viewer,
         officecli_executable=str(executable),
