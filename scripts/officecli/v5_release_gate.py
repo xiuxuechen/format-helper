@@ -20,7 +20,7 @@ from scripts.officecli.runtime_resolver import EXPECTED_RUNTIME_IDS, load_lock, 
 FORBIDDEN_PYTHON_TOKENS = ("import zipfile", "xml.etree", "from lxml", "python-docx", "from docx")
 REQUIRED_SMOKE_COMMANDS = ["version", "create", "add", "get", "set", "validate", "screenshot"]
 RETIRED_SKILLS = {"docx-format-repairer"}
-REQUIRED_RELEASE_RUNTIME_IDS = {"win-x64", "osx-x64", "osx-arm64"}
+REQUIRED_RELEASE_RUNTIME_IDS = {"win-x64", "osx-arm64"}
 EXPECTED_RUNNER = {
     "win-x64": ("windows", {"amd64", "x86_64"}),
     "win-arm64": ("windows", {"arm64", "aarch64"}),

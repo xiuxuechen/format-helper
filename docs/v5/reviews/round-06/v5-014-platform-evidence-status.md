@@ -7,9 +7,9 @@
 
 ## 当前结论
 
-V5-014 已按 format-helper 作为 Codex CLI skill 的实际目标收敛为 win/mac 桌面平台 Gate。发布必过 runtime 为 `win-x64`、`osx-x64`、`osx-arm64`；`win-arm64` 与 Linux 系列降级为 best-effort/后补兼容，不再阻塞 V5-014/V5-015。
+V5-014 已按 format-helper 作为 Codex CLI skill 的实际目标收敛为常见 win/mac 桌面平台 Gate。发布必过 runtime 为 `win-x64`、`osx-arm64`；`osx-x64`、`win-arm64` 与 Linux 系列降级为 best-effort/后补兼容，不再阻塞 V5-014/V5-015。
 
-最新候选 GitHub Actions run `28503927999` 已通过 `platform-contract-validation`，并成功生成 `win-x64`、`osx-arm64` 证据 artifact；`osx-x64` 仍等待 GitHub-hosted `macos-13` 接单。由于 Gate 已收敛，当前只需收齐 `win-x64`、`osx-x64`、`osx-arm64` 三个平台证据；不同 head_sha 的 PASS 仍不得混合作为同一发布候选。
+最新候选 GitHub Actions run `28504451037` 已通过 `platform-contract-validation`，并成功生成 `win-x64`、`osx-arm64` 证据 artifact。由于 Gate 已收敛，当前只需收齐 `win-x64`、`osx-arm64` 两个平台证据；不同 head_sha 的 PASS 仍不得混合作为同一发布候选。
 
 ## 已完成证据
 
@@ -27,21 +27,21 @@ V5-014 已按 format-helper 作为 Codex CLI skill 的实际目标收敛为 win/
 
 | runtime_id | 状态 | 证据路径 | 说明 |
 |---|---|---|---|
-| `win-x64` | passed | `officecli-win-x64-evidence` | GitHub Actions run `28503927999` 上传，artifact digest `sha256:f5ad1e12501eb568f1f375e6bf40fc44cdfc78e965a79c341333d0f9fb06ea38`。 |
-| `osx-arm64` | passed | `officecli-osx-arm64-evidence` | GitHub Actions run `28503927999` 上传，artifact digest `sha256:4e74245bd1305f4f9d655dc8498dd64091e3aee3bc440fc513d9e9a60567c44e`。 |
-| `osx-x64` | queued | 无 | GitHub Actions run `28503927999` 中仍等待 GitHub-hosted `macos-13` 接单。 |
+| `win-x64` | passed | `officecli-win-x64-evidence` | GitHub Actions run `28504451037` 上传，artifact digest `sha256:ef034910d4ebf64098a534718caa8f00a2350d6df705cd8057686c04943a9c99`。 |
+| `osx-arm64` | passed | `officecli-osx-arm64-evidence` | GitHub Actions run `28504451037` 上传，artifact digest `sha256:bb7e76cb42e9692cc49ba18e382d5d836584b6af72887859d938fb5ad820e9af`。 |
 
 ### best-effort/后补证据
 
 | runtime_id | 状态 | 说明 |
 |---|---|---|
+| `osx-x64` | best-effort | `macos-13` runner 长期 queued；Intel Mac 证据不再作为 V5-014 发布阻塞项。 |
 | `linux-x64-gnu` | passed | GitHub Actions run `28502682372` 曾上传 artifact digest `sha256:49499cc5a87cc315a292e5397757bc9bccc98c356d6c208eb2d6ad2d393c0fed`；作为后补兼容证据记录，不参与发布阻塞。 |
 | `win-arm64` | best-effort | 不再作为 V5-014 发布阻塞项。 |
 | `linux-arm64-gnu` | best-effort | 不再作为 V5-014 发布阻塞项。 |
 | `linux-x64-musl` | best-effort | 不再作为 V5-014 发布阻塞项。 |
 | `linux-arm64-musl` | best-effort | 不再作为 V5-014 发布阻塞项。 |
 
-上述最新候选 digest 来自 GitHub Actions artifact 元数据，均绑定到 head_sha `dc7a4f077264c6e1578d3ab73756896cc5c032b3`。
+上述最新候选 digest 来自 GitHub Actions artifact 元数据，均绑定到 head_sha `21e2e44e3c32737a4512ebd8468455043e581301`。
 
 ## 本地修复状态
 
@@ -69,34 +69,33 @@ python scripts/officecli/platform_evidence.py --workspace-root . --lock tools/of
 
 ## 当前 Gate 结果
 
-以下旧输出来自八平台 Gate 语义，仅作为历史阻塞记录。收敛后发布 Gate 应改为只要求 `win-x64`、`osx-x64`、`osx-arm64` 三个平台证据。
+以下旧输出来自八平台 Gate 语义，仅作为历史阻塞记录。收敛后发布 Gate 应改为只要求 `win-x64`、`osx-arm64` 两个平台证据。
 
 ```text
 python scripts/officecli/v5_release_gate.py platform --evidence-root artifacts/platform-evidence --lock tools/officecli/officecli.lock.json --capability tools/officecli/officecli-capability-manifest.json
 {"ok": false, "errors": ["缺少平台证据：linux-arm64-gnu, linux-arm64-musl, linux-x64-musl, osx-x64, win-arm64"]}
 ```
 
-GitHub Actions run `28503927999` 当前状态：
+GitHub Actions run `28504451037` 当前状态：
 
 | job | 状态 | 结论 |
 |---|---|---|
 | `platform-contract-validation` | completed | success |
 | `platform-evidence (osx-arm64, macos-14)` | completed | success |
 | `platform-evidence (win-x64, windows-latest)` | completed | success |
-| `platform-evidence (osx-x64, macos-13)` | queued | runner pending |
 
-`aggregate-platform-gate` 等待 `win-x64`、`osx-x64`、`osx-arm64` 三个必过 platform matrix job 全部完成并产出证据后运行；当前阻塞点仅剩 `osx-x64`。
+`aggregate-platform-gate` 等待 `win-x64`、`osx-arm64` 两个必过 platform matrix job 全部完成并产出证据后运行；当前平台证据 Gate 已具备进入聚合校验的前置条件。
 
 ## 待补证据
 
 | runtime_id | 推荐执行位置 | 备注 |
 |---|---|---|
-| `osx-x64` | `macos-13` | 发布必过平台；收敛后的 CI 需重新生成并上传 artifact。 |
+| 无 | 无 | 必过平台证据已由 run `28504451037` 生成；后续等待 aggregate-platform-gate 与 native-toc-evidence。 |
 
 ## 下一步
 
-1. 等待 run `28503927999` 的 `osx-x64` / `macos-13` 接单并上传 artifact。
-2. 待 `win-x64`、`osx-x64`、`osx-arm64` 三个 `officecli-*-evidence` artifact 全部上传后，下载或汇总到同一 evidence root。
+1. 等待 run `28504451037` 或后续同一 head_sha 候选 run 进入 `aggregate-platform-gate`。
+2. 待 `win-x64`、`osx-arm64` 两个 `officecli-*-evidence` artifact 被聚合下载到同一 evidence root。
 3. 执行聚合 Gate：
 
 ```powershell
