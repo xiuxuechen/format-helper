@@ -56,6 +56,12 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _sha256_utf8_lf_file(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 def scan_production_paths(root: Path) -> list[str]:
     """扫描活跃 v5 Python/Skill，退役目录不计入生产路径。"""
     errors: list[str] = []
@@ -116,8 +122,8 @@ def validate_platform_evidence(evidence_root: Path, lock_path: Path, capability_
     lock = load_lock(lock_path)
     capability = json.loads(capability_path.read_text(encoding="utf-8"))
     expected_capability_hash = capability.get("aggregate_sha256")
-    expected_lock_file_hash = _sha256_file(lock_path)
-    expected_capability_file_hash = _sha256_file(capability_path)
+    expected_lock_file_hash = _sha256_utf8_lf_file(lock_path)
+    expected_capability_file_hash = _sha256_utf8_lf_file(capability_path)
     try:
         found = _load_platform_evidence(evidence_root)
     except (OSError, json.JSONDecodeError, ValueError) as exc:

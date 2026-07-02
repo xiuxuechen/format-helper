@@ -9,7 +9,12 @@ import unittest
 from pathlib import Path
 
 from scripts.officecli.runtime_resolver import load_lock, select_asset
-from scripts.officecli.v5_release_gate import REQUIRED_RELEASE_RUNTIME_IDS, scan_production_paths, validate_platform_evidence
+from scripts.officecli.v5_release_gate import (
+    REQUIRED_RELEASE_RUNTIME_IDS,
+    _sha256_utf8_lf_file,
+    scan_production_paths,
+    validate_platform_evidence,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,8 +37,8 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
         }
         lock = load_lock(LOCK)
         capability_hash = json.loads(CAPABILITY.read_text(encoding="utf-8"))["aggregate_sha256"]
-        lock_file_hash = hashlib.sha256(LOCK.read_bytes()).hexdigest()
-        capability_file_hash = hashlib.sha256(CAPABILITY.read_bytes()).hexdigest()
+        lock_file_hash = _sha256_utf8_lf_file(LOCK)
+        capability_file_hash = _sha256_utf8_lf_file(CAPABILITY)
         with tempfile.TemporaryDirectory() as tmp:
             evidence_root = Path(tmp)
             for runtime_id in REQUIRED_RELEASE_RUNTIME_IDS | {"linux-x64-gnu", "osx-x64"}:
@@ -119,6 +124,17 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
             )
             errors = validate_platform_evidence(evidence_root, LOCK, CAPABILITY)
             self.assertTrue(any("存在未知平台证据：unknown-runtime" in error for error in errors))
+
+    def test_text_hashes_ignore_checkout_newline_differences(self):
+        """Windows checkout 的 CRLF 不应导致 lock/capability 文本 hash 漂移。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            crlf_lock = tmp_path / "officecli.lock.json"
+            crlf_capability = tmp_path / "officecli-capability-manifest.json"
+            crlf_lock.write_text(LOCK.read_text(encoding="utf-8").replace("\n", "\r\n"), encoding="utf-8", newline="")
+            crlf_capability.write_text(CAPABILITY.read_text(encoding="utf-8").replace("\n", "\r\n"), encoding="utf-8", newline="")
+            self.assertEqual(_sha256_utf8_lf_file(LOCK), _sha256_utf8_lf_file(crlf_lock))
+            self.assertEqual(_sha256_utf8_lf_file(CAPABILITY), _sha256_utf8_lf_file(crlf_capability))
 
 
 if __name__ == "__main__":

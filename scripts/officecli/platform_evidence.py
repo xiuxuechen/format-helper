@@ -32,6 +32,13 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_utf8_lf_file(path: Path) -> str:
+    """计算 UTF-8 文本在 LF 换行规范化后的 SHA-256。"""
+    text = path.read_text(encoding="utf-8")
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 def _run(command: list[str], env: dict[str, str], timeout_seconds: int) -> subprocess.CompletedProcess[str]:
     """执行单条 OfficeCLI 命令并捕获文本输出。"""
     return subprocess.run(
@@ -182,8 +189,8 @@ def collect_platform_evidence(
             "distribution_version": distro_version,
         },
         "resolution": resolution,
-        "lock_sha256": sha256_file(lock_path),
-        "capability_file_sha256": sha256_file(capability_path),
+        "lock_sha256": sha256_utf8_lf_file(lock_path),
+        "capability_file_sha256": sha256_utf8_lf_file(capability_path),
         "capability_aggregate_sha256": capability.get("aggregate_sha256"),
         "environment": {
             "OFFICECLI_SKIP_UPDATE": "1",
