@@ -3,18 +3,18 @@
 - **日期**：2026-07-06
 - **规范基线**：`docs/v5/OFFICECLI_BACKEND_MIGRATION_SPEC.md` §16、§18、§19
 - **复核对象**：PR 候选分支 `codex/v5-officecli-ci-evidence`
-- **候选 head_sha**：`86e325998fded8bfc16019f815fb446487fc714a`
+- **候选 head_sha**：`83921560685fc3a92ce90bcf993a04b73a3cf7a2`
 - **当前结论**：PASS。V5-015 已满足发布切换前 Gate；正式发布切换/合并前仍需维护者人工确认。
 
 ## Gate 复核结果
 
 | Gate | 状态 | 证据 |
 |---|---|---|
-| win/mac 必过平台证据 | passed | GitHub Actions run `28761474155` 生成 `win-x64` 与 `osx-arm64` 两项 evidence，均绑定 head_sha `86e325998fded8bfc16019f815fb446487fc714a`。 |
-| `win-x64` artifact | passed | `officecli-win-x64-evidence` digest `sha256:106089cae4d39df91c27f04851b4d90036c570a600a6e88c86fc25a72da7f3f0`。 |
-| `osx-arm64` artifact | passed | `officecli-osx-arm64-evidence` digest `sha256:733bee290161b0c18c20226ed557374cacd44c6c8f2d6deda6dbc85d283523df`。 |
-| `aggregate-platform-gate` | passed | run `28761474155` 中 `aggregate-platform-gate` 结论为 success。 |
-| dedicated native TOC runner | optional | run `28761474155` 为 PR 触发，`native-toc-evidence` 与 `aggregate-native-toc-gate` 按 `workflow_dispatch` 条件 skipped；后续可通过 `workflow_dispatch` + `run_native_toc_dedicated=true` 补自动化证据。 |
+| win/mac 必过平台证据 | passed | GitHub Actions run `28761782614` 生成 `win-x64` 与 `osx-arm64` 两项 evidence，均绑定 head_sha `83921560685fc3a92ce90bcf993a04b73a3cf7a2`。 |
+| `win-x64` artifact | passed | `officecli-win-x64-evidence` digest `sha256:c006455fc6d15452e81a42b4c6d9c2f93a320e5ec87acdfa4082527e50479bb9`。 |
+| `osx-arm64` artifact | passed | `officecli-osx-arm64-evidence` digest `sha256:4d9c0b71f67c62aad9f9d71bdd833f59f7dfbeb3047b90327d03bb1daff473a0`。 |
+| `aggregate-platform-gate` | passed | run `28761782614` 中 `aggregate-platform-gate` 结论为 success。 |
+| dedicated native TOC runner | optional | run `28761782614` 为 PR 触发，`native-toc-evidence` 与 `aggregate-native-toc-gate` 按 `workflow_dispatch` 条件 skipped；后续可通过 `workflow_dispatch` + `run_native_toc_dedicated=true` 补自动化证据。 |
 | 本机 Word/WPS native TOC Gate | passed | `python scripts/officecli/v5_release_gate.py native-toc --evidence-root artifacts/native-toc-evidence-release --lock tools/officecli/officecli.lock.json` 输出 `{"ok": true, "errors": []}`。 |
 | 无运行时双后端静态 Gate | passed | `python scripts/officecli/v5_release_gate.py static --root .` 输出 `{"ok": true, "errors": []}`。 |
 | 回归单测 | passed | 2026-07-06 补跑 `python -m unittest tests.validation.test_officecli_v5_release_gate -v`，共 5 项通过，输出 `Ran 5 tests in 0.379s` / `OK`。 |
