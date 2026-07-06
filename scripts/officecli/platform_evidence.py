@@ -1,4 +1,4 @@
-"""生成 V5-014 OfficeCLI 平台运行证据。"""
+"""生成 OfficeCLI 平台运行证据。"""
 
 from __future__ import annotations
 
@@ -132,8 +132,8 @@ def collect_platform_evidence(
         skip_version_check=False,
     )
     executable = Path(resolution["executable_path"])
-    smoke_docx = output_dir / "officecli-v5-smoke.docx"
-    screenshot = output_dir / "officecli-v5-smoke.png"
+    smoke_docx = output_dir / "officecli-smoke.docx"
+    screenshot = output_dir / "officecli-smoke.png"
     env = os.environ.copy()
     env.update({
         "OFFICECLI_SKIP_UPDATE": "1",
@@ -144,7 +144,7 @@ def collect_platform_evidence(
     commands = [
         ("version", [str(executable), "--version"]),
         ("create", [str(executable), "create", str(smoke_docx), "--force"]),
-        ("add", [str(executable), "add", str(smoke_docx), "/body", "--type", "paragraph", "--prop", "text=OfficeCLI V5 smoke", "--json"]),
+        ("add", [str(executable), "add", str(smoke_docx), "/body", "--type", "paragraph", "--prop", "text=OfficeCLI smoke", "--json"]),
         ("get", [str(executable), "get", str(smoke_docx), "/body/p[1]", "--depth", "2", "--json"]),
         ("set", [str(executable), "set", str(smoke_docx), "/body/p[1]", "--prop", "alignment=center", "--json"]),
         ("validate", [str(executable), "validate", str(smoke_docx), "--json"]),
@@ -218,7 +218,7 @@ def collect_platform_evidence(
 
 def main(argv: list[str] | None = None) -> int:
     """命令行入口。"""
-    parser = argparse.ArgumentParser(description="生成 OfficeCLI V5-014 平台证据")
+    parser = argparse.ArgumentParser(description="生成 OfficeCLI 平台证据")
     parser.add_argument("--workspace-root", type=Path, default=Path.cwd())
     parser.add_argument("--lock", type=Path, default=Path("tools/officecli/officecli.lock.json"))
     parser.add_argument("--capability", type=Path, default=Path("tools/officecli/officecli-capability-manifest.json"))
@@ -238,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(json.dumps({"ok": True, "runtime_id": evidence["runtime_id"], "status": evidence["status"]}) + "\n")
         return 0
     except Exception as exc:
-        sys.stderr.write(f"V5-014 平台证据失败：{exc}\n")
+        sys.stderr.write(f"平台证据失败：{exc}\n")
         return 2
 
 

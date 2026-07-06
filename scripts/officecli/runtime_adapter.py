@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V5-008: OfficeCLI runtime adapter — 执行 batch、管理 checkpoint、结果对齐。
+"""OfficeCLI runtime adapter — 执行 batch、管理 checkpoint、结果对齐。
 
 不在此模块中执行语义判断或风险升级。所有操作均按 execution request 的
 确定性指引执行。
@@ -39,7 +39,7 @@ SINGLE_NODE_XPATH_V1 = re.compile(
     r"^/[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z_][A-Za-z0-9_.-]*\[1\]"
     r"(?:/[A-Za-z_][A-Za-z0-9_.-]*:[A-Za-z_][A-Za-z0-9_.-]*\[[1-9][0-9]*\])*$"
 )
-REQUEST_SCHEMA_PATH = ROOT / "docs" / "v5" / "schemas" / "officecli-execution-request.schema.json"
+REQUEST_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "officecli-execution-request.schema.json"
 
 # §21.8 不可重试错误码
 NON_RETRYABLE_CODES = {
@@ -583,7 +583,7 @@ def execute_request(
     request_path: Path | None = None,
     attempt_no: int = 1,
 ) -> dict[str, Any]:
-    """V5-008 主入口：执行完整 execution request。"""
+    """runtime adapter 主入口：执行完整 execution request。"""
     started = utc_now()
     start_ms = int(time.time() * 1000)
     working_docx_path = _resolve_request_artifact(run_dir, request.get("working_docx_before_ref", {})) or Path("")
@@ -751,7 +751,7 @@ def execute_request(
 
 
 def _resume_handler(run_dir: Path, executable: Path) -> int:
-    """V5-011: resume — 校验 lock/capability/plan hash 一致性后从 checkpoint 恢复。"""
+    """resume — 校验 lock/capability/plan hash 一致性后从 checkpoint 恢复。"""
     repair_log_path = run_dir / "logs" / "repair_execution_log.json"
     if not repair_log_path.exists():
         sys.stdout.write(json.dumps({"ok": False, "error": "FH-OFFICECLI-RESUME-INTEGRITY-FAILED",
@@ -1010,7 +1010,7 @@ def _write_repair_execution_log(
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="V5-008 OfficeCLI runtime adapter")
+    parser = argparse.ArgumentParser(description="OfficeCLI runtime adapter")
     sub = parser.add_subparsers(dest="command", required=True)
     exe = sub.add_parser("execute", help="执行 officecli-execution-request")
     exe.add_argument("--run-dir", required=True, type=Path)

@@ -1,4 +1,4 @@
-"""OfficeCLI v5 固定契约常量。"""
+"""OfficeCLI 固定契约常量。"""
 
 from __future__ import annotations
 

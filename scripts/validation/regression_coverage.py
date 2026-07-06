@@ -205,7 +205,7 @@ def scan_repair_log_filename_references(root: Path) -> list[str]:
     errors: list[str] = []
     allowed = "logs/repair_execution_log.json"
     forbidden_names = {"repair_log.json", "repair-execution-log.json", "repairExecutionLog.json"}
-    for base in (root / "docs" / "v4", root / "tests", root / "scripts"):
+    for base in (root / "contracts" / "format-helper", root / "tests", root / "scripts"):
         for path in base.rglob("*"):
             if path.is_file() and path.suffix in {".md", ".py", ".json", ".yaml", ".yml"}:
                 content = path.read_text(encoding="utf-8", errors="ignore")

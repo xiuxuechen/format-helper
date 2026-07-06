@@ -15,7 +15,7 @@ from scripts.utils.simple_yaml import load_yaml
 
 
 TZ = timezone(timedelta(hours=8))
-CONTRACT_RELATIVE_PATH = "docs/v4/schemas/role_slot_contract.yaml"
+CONTRACT_RELATIVE_PATH = "contracts/format-helper/schemas/role_slot_contract.yaml"
 ROLE_MAP_RELATIVE_PATH = "semantic/semantic_role_map.before.json"
 RESOLVED_STATUS = {"resolved", "resolved_with_conflicts", "not_applicable", "user_confirmed"}
 ROLE_MAP_CONFIDENCE_THRESHOLD = 0.85
@@ -55,7 +55,7 @@ def unwrap_slot(value: Any) -> tuple[Any, str, float]:
 
 
 def is_officecli_snapshot_v2(snapshot: dict[str, Any]) -> bool:
-    """判断输入是否为 v5 OfficeCLI snapshot v2。"""
+    """判断输入是否为 OfficeCLI snapshot v2。"""
     return (
         snapshot.get("schema_id") == OFFICECLI_SNAPSHOT_SCHEMA_ID
         and snapshot.get("schema_version") == OFFICECLI_SNAPSHOT_SCHEMA_VERSION
@@ -66,7 +66,7 @@ def is_officecli_snapshot_v2(snapshot: dict[str, Any]) -> bool:
 def ensure_officecli_snapshot_v2(snapshot: dict[str, Any]) -> None:
     """生产 CLI 只允许消费 OfficeCLI snapshot v2。"""
     if not is_officecli_snapshot_v2(snapshot):
-        raise ValueError("V5-005 生产入口只允许 officecli-document-snapshot schema_version=2.0.0")
+        raise ValueError("生产入口只允许 officecli-document-snapshot schema_version=2.0.0")
     gate = snapshot.get("gate_check") if isinstance(snapshot.get("gate_check"), dict) else {}
     if gate.get("status") != "passed":
         raise ValueError("officecli-document-snapshot gate_check 未通过，语义层不得消费")

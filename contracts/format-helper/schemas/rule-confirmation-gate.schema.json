@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/rule-confirmation-gate.schema.json",
+  "title": "Rule Confirmation Gate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "gate_id",
+    "status",
+    "slot_facts_ref",
+    "manual_review_items_path",
+    "unresolved_slots",
+    "conflicts",
+    "manual_review_item_refs",
+    "evidence_refs",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {"const": "rule-confirmation-gate"},
+    "schema_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "contract_version": {"const": "v4"},
+    "run_id": {"type": "string"},
+    "gate_id": {"type": "string"},
+    "status": {"enum": ["pending", "cleared", "blocked"]},
+    "slot_facts_ref": {"$ref": "#/$defs/SlotFactsRef"},
+    "manual_review_items_path": {"const": "plans/manual_review_items.json"},
+    "unresolved_slots": {"type": "array", "items": {"$ref": "#/$defs/UnresolvedSlot"}},
+    "conflicts": {"type": "array", "items": {"$ref": "#/$defs/ConflictSlot"}},
+    "manual_review_item_refs": {"type": "array", "items": {"$ref": "#/$defs/ManualReviewItemRef"}},
+    "evidence_refs": {"type": "array"},
+    "generated_at": {"type": "string"}
+  },
+  "$defs": {
+    "SlotFactsRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "path_kind", "facts_id", "schema_id"],
+      "properties": {
+        "path": {"const": "semantic/role_format_slot_facts.json"},
+        "path_kind": {"const": "run_relative"},
+        "facts_id": {"type": "string"},
+        "schema_id": {"const": "role-format-slot-facts"}
+      }
+    },
+    "UnresolvedSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role_kind", "role_id", "slot_name", "prompt", "source_fact_refs", "triggered_rule_ids"],
+      "properties": {
+        "role_kind": {"type": "string"},
+        "role_id": {"type": ["string", "null"]},
+        "slot_name": {"type": "string"},
+        "prompt": {"type": ["string", "null"]},
+        "source_fact_refs": {"type": "array"},
+        "triggered_rule_ids": {"type": "array"}
+      }
+    },
+    "ConflictSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_kind",
+        "role_id",
+        "slot_name",
+        "status",
+        "mode_value",
+        "mode_coverage",
+        "value_histogram",
+        "conflicts",
+        "prompt",
+        "source_fact_refs"
+      ],
+      "properties": {
+        "role_kind": {"type": "string"},
+        "role_id": {"type": ["string", "null"]},
+        "slot_name": {"type": "string"},
+        "status": {"enum": ["conflict", "resolved_with_conflicts"]},
+        "mode_value": {},
+        "mode_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "value_histogram": {"type": "array"},
+        "conflicts": {"type": "array"},
+        "prompt": {"type": ["string", "null"]},
+        "source_fact_refs": {"type": "array"}
+      }
+    },
+    "ManualReviewItemRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["review_id", "proposal_id", "items_path", "decision_status", "allows_continue"],
+      "properties": {
+        "review_id": {"type": "string"},
+        "proposal_id": {"type": ["string", "null"]},
+        "items_path": {"const": "plans/manual_review_items.json"},
+        "decision_status": {
+          "enum": ["pending", "approved", "modified", "rejected", "deferred_non_blocking", "not_applicable"]
+        },
+        "allows_continue": {"type": "boolean"}
+      }
+    }
+  },
+  "description": "CODE-016 本地 schema。rule_confirmation_gate.json 只作为 Gate 摘要与人类视图，用户决策权威仍是 plans/manual_review_items.json。"
+}

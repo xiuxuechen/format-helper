@@ -1,0 +1,88 @@
+{
+  "schema_id": "run-state",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code005-example",
+  "status": "wip",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": false,
+    "checked_path": "../outside-workspace.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "path_negative",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "run_dir": "format_runs/run-code005-example",
+  "mode": "repair",
+  "workflow_mode": "repair",
+  "stage": "fact_extraction",
+  "input_docx": {
+    "path": "input/source.docx",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 123
+  },
+  "rule_id": "rule-code005",
+  "rule_ref": {
+    "path": "logs/rule_ref.json",
+    "status": "active"
+  },
+  "safe_outputs": [
+    {
+      "artifact_id": "ART-CODE005-001",
+      "kind": "run_state",
+      "path": "logs/example.json",
+      "path_kind": "run_relative",
+      "schema_id": "run-state",
+      "schema_version": "1.0.0",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 123,
+      "required": true,
+      "producer_result_id": "RESULT-CODE005-001"
+    }
+  ],
+  "skill_results": [
+    "logs/skill_results/001_example.result.json"
+  ],
+  "last_result_id": "RESULT-CODE005-001",
+  "applied_result_id": "RESULT-CODE005-001",
+  "result_chain_head": "0000000000000000000000000000000000000000000000000000000000000000",
+  "evidence_manifest_path": "logs/evidence_manifest.pre_acceptance.json",
+  "evidence_manifest_generations": {
+    "pre_acceptance": {
+      "path": "logs/evidence_manifest.pre_acceptance.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 123
+    }
+  },
+  "final_acceptance_path": null,
+  "reporting_result_path": null,
+  "blockers": [],
+  "next_action": {
+    "kind": "run_skill",
+    "stage": "semantic_strategy",
+    "skill_name": "docx-semantic-strategist",
+    "source_result_id": "RESULT-CODE005-001",
+    "override_reason": null,
+    "target_result_id": null,
+    "target_error_code": null,
+    "resume_from_stage": null,
+    "idempotency_key": "next-key",
+    "planned_idempotency_key": "planned-key",
+    "reason": "CODE-005 example",
+    "required_inputs": [],
+    "user_message": null
+  },
+  "updated_at": "2026-05-07T09:00:00+08:00"
+}

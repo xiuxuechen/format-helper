@@ -1,0 +1,79 @@
+{
+  "schema_id": "skill-result",
+  "schema_version": "2.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code005-example",
+  "status": "unknown_status_for_negative_example",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": false,
+    "errors": [
+      {
+        "field": "status",
+        "code": "UNKNOWN_ENUM",
+        "message": "示例用于验证 unknown enum blocking"
+      }
+    ]
+  },
+  "_code005_example_category": "schema_invalid",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "result_id": "RESULT-CODE005-001",
+  "order": 1,
+  "attempt": 1,
+  "idempotency_key": "code005:skill-result:001",
+  "stage": "fact_extraction",
+  "schema_valid": false,
+  "gate_passed": true,
+  "artifacts": [
+    {
+      "artifact_id": "ART-CODE005-001",
+      "kind": "skill_result",
+      "path": "logs/example.json",
+      "path_kind": "run_relative",
+      "schema_id": "skill-result",
+      "schema_version": "1.0.0",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 123,
+      "required": true,
+      "producer_result_id": "RESULT-CODE005-001"
+    }
+  ],
+  "next_action": {
+    "kind": "run_skill",
+    "stage": "semantic_strategy",
+    "skill_name": "docx-semantic-strategist",
+    "reason": "CODE-005 example",
+    "idempotency_key": "next-key",
+    "planned_idempotency_key": "planned-key",
+    "source_result_id": "RESULT-CODE005-001",
+    "override_reason": null,
+    "target_result_id": null,
+    "target_error_code": null,
+    "resume_from_stage": null,
+    "required_inputs": [],
+    "user_message": null
+  },
+  "runtime": {
+    "started_at": "2026-05-07T09:00:00+08:00",
+    "finished_at": "2026-05-07T09:00:01+08:00",
+    "duration_ms": 1000,
+    "platform": "codex"
+  },
+  "error": {
+    "code": null,
+    "message": null
+  }
+}

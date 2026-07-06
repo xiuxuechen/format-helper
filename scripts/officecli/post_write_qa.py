@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V5-009: 写后质量保证 — validate → issues → after snapshot → html → stats → screenshots。
+"""写后质量保证 — validate → issues → after snapshot → html → stats → screenshots。
 
 固定顺序（§12.5），任一步失败则阻塞。
 """
@@ -208,7 +208,7 @@ def run_full_qa(
     snapshot_executable: Path | None = None,
     capability_manifest: Path | None = None,
 ) -> dict[str, Any]:
-    """V5-009 主入口：执行完整写后 QA 序列。"""
+    """写后 QA 主入口：执行完整写后 QA 序列。"""
     run_id = run_dir.name
     now = utc_now()
     output_dir = run_dir / "output" / "_internal"
@@ -328,7 +328,7 @@ def run_full_qa(
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="V5-009 写后 QA")
+    parser = argparse.ArgumentParser(description="写后 QA")
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="执行写后 QA 序列")
     run.add_argument("--run-dir", required=True, type=Path)

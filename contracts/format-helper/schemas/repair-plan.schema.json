@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/repair-plan.schema.json",
+  "title": "Repair Plan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "plan_id",
+    "plan_state",
+    "plan_revision",
+    "source_audit_paths",
+    "source_audit_refs",
+    "risk_policy_path",
+    "risk_policy_ref",
+    "manual_review_items_ref",
+    "decision_snapshot",
+    "actions",
+    "manual_review_required",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "repair-plan"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "v4"
+    },
+    "run_id": {},
+    "plan_id": {},
+    "plan_state": {},
+    "plan_revision": {},
+    "source_audit_paths": {},
+    "source_audit_refs": {},
+    "risk_policy_path": {},
+    "risk_policy_ref": {},
+    "manual_review_items_ref": {},
+    "decision_snapshot": {},
+    "actions": {},
+    "manual_review_required": {},
+    "generated_at": {}
+  },
+  "description": "CODE-005 最小 schema 占位定义。字段级权威以 contracts/format-helper/schemas 为准。",
+  "x_code005_minimum_contract": {
+    "source": "41_SCHEMA_CONTRACTS.md + SCHEMA_MIN_STRATEGY.md",
+    "validates": [
+      "required",
+      "const",
+      "enum",
+      "semver",
+      "canonical_alias",
+      "unknown_enum_blocking",
+      "path_negative_examples"
+    ],
+    "trace_refs": [
+      "41-§2",
+      "41-§12",
+      "50-§3.5"
+    ]
+  }
+}

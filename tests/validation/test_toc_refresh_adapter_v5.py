@@ -1,4 +1,4 @@
-"""V5-010 TOC refresh adapter 验证。"""
+"""TOC refresh adapter 验证。"""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-TOC_SCHEMA_PATH = ROOT / "docs" / "v5" / "schemas" / "toc-acceptance.schema.json"
+TOC_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "toc-acceptance.schema.json"
 
 
 def _load_adapter():

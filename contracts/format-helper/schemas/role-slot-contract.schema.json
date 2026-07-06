@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/role-slot-contract.schema.json",
+  "title": "Role Slot Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "updated_at",
+    "role_slot_contracts",
+    "slot_type_registry",
+    "common_validation_rules"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "role-slot-contract"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "v4"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "role_slot_contracts": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "enum": [
+          "cover-title",
+          "cover-subtitle",
+          "cover-meta",
+          "revision-table-title",
+          "toc-title",
+          "toc-level-1",
+          "toc-level-2",
+          "toc-level-3",
+          "heading-level-1",
+          "heading-level-2",
+          "heading-level-3",
+          "heading-level-4",
+          "body-paragraph",
+          "list-paragraph",
+          "table-content",
+          "header-footer",
+          "section-page-setup"
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/RoleSlotContract"
+      }
+    },
+    "slot_type_registry": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/SlotType"
+      }
+    },
+    "common_validation_rules": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/CommonValidationRule"
+      }
+    }
+  },
+  "$defs": {
+    "RoleSlotContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_kind",
+        "semantic_role_kind_ref",
+        "category",
+        "required_slots",
+        "optional_slots",
+        "forbidden_slots",
+        "validation_rules",
+        "source_refs"
+      ],
+      "properties": {
+        "role_kind": {
+          "type": "string",
+          "enum": [
+            "cover-title",
+            "cover-subtitle",
+            "cover-meta",
+            "revision-table-title",
+            "toc-title",
+            "toc-level-1",
+            "toc-level-2",
+            "toc-level-3",
+            "heading-level-1",
+            "heading-level-2",
+            "heading-level-3",
+            "heading-level-4",
+            "body-paragraph",
+            "list-paragraph",
+            "table-content",
+            "header-footer",
+            "section-page-setup"
+          ]
+        },
+        "semantic_role_kind_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "title",
+            "heading",
+            "body",
+            "list_item",
+            "table_caption",
+            "toc_entry",
+            "header_footer",
+            "footnote",
+            "endnote",
+            "unsupported",
+            "unknown",
+            null
+          ]
+        },
+        "category": {
+          "enum": [
+            "text_content",
+            "heading",
+            "table",
+            "toc",
+            "page",
+            "header_footer",
+            "note",
+            "cover"
+          ]
+        },
+        "required_slots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "optional_slots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "forbidden_slots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "validation_rules": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "$ref": "#/$defs/ValidationRule"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          }
+        }
+      }
+    },
+    "SlotType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot_name",
+        "data_type",
+        "unit",
+        "nullable",
+        "enum_values",
+        "range",
+        "ooxml_source",
+        "description"
+      ],
+      "properties": {
+        "slot_name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "data_type": {
+          "enum": [
+            "number",
+            "string",
+            "enum",
+            "boolean"
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "pt",
+            "cm",
+            "multiple",
+            "half_pt",
+            "twip",
+            null
+          ]
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "enum_values": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "range": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "min",
+            "max"
+          ],
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ooxml_source": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ValidationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "condition",
+        "severity",
+        "blocks_confirmation_gate",
+        "message",
+        "remediation"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "blocks_confirmation_gate": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "remediation": {
+          "type": "string"
+        }
+      }
+    },
+    "CommonValidationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "condition",
+        "severity",
+        "blocks_confirmation_gate",
+        "message",
+        "remediation",
+        "applies_to",
+        "applies_to_slots"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^RSC-COMMON-[A-Z0-9-]+$"
+        },
+        "condition": {
+          "enum": [
+            "required_slot_confidence_eq_0"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "blocks_confirmation_gate": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "remediation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "applies_to": {
+          "const": "all_roles"
+        },
+        "applies_to_slots": {
+          "const": "required_slots"
+        }
+      }
+    },
+    "SourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_ref_id",
+        "artifact_id",
+        "artifact_kind",
+        "schema_id",
+        "item_type",
+        "item_id",
+        "attribute",
+        "value",
+        "unit",
+        "source_rule_ref",
+        "source_fact_ref",
+        "source_role_ref",
+        "locator",
+        "evidence_refs"
+      ],
+      "properties": {
+        "source_ref_id": {
+          "type": "string"
+        },
+        "artifact_id": {
+          "type": "string"
+        },
+        "artifact_kind": {
+          "type": "string"
+        },
+        "schema_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "item_type": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "attribute": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {},
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_rule_ref": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "source_fact_ref": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "source_role_ref": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "locator": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "description": "CODE-012 本地 schema。字段级权威以 contracts/format-helper/schemas/role_slot_contract.yaml §3 为准；本 schema 不纳入 41 canonical schema inventory。"
+}

@@ -1,4 +1,4 @@
-"""V5-014 专用 Windows runner 原生 TOC 证据生成。"""
+"""专用 Windows runner 原生 TOC 证据生成。"""
 
 from __future__ import annotations
 
@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
         sys.stdout.write(json.dumps({"ok": True, "status": evidence["status"]}) + "\n")
         return 0
     except Exception as exc:
-        sys.stderr.write(f"V5-014 原生 TOC 证据失败：{exc}\n")
+        sys.stderr.write(f"原生 TOC 证据失败：{exc}\n")
         return 2
 
 

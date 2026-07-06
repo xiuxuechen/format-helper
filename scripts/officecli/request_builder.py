@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V5-007: 将 finalized repair plan 转换为 officecli-execution-request。
+"""将 finalized repair plan 转换为 officecli-execution-request。
 
 该模块不直接调用 OfficeCLI；只生成确定性的 request JSON。
 governance 字段（operation_id/source_action_id/risk_class/target_binding/expected_result/idempotency_key）
@@ -29,7 +29,7 @@ CANONICAL_SEP = (",", ":")
 BATCH_MAX_OPERATIONS = 12
 DEFAULT_TIMEOUT_SECONDS = 120
 UTC = timezone.utc
-REPAIR_PLAN_SCHEMA_PATH = ROOT / "docs" / "v5" / "schemas" / "repair-plan.schema.json"
+REPAIR_PLAN_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "repair-plan.schema.json"
 
 # §8.2 生产 batch 允许的命令
 PRODUCTION_BATCH_COMMANDS = {"set", "add", "remove", "move", "swap", "raw-set"}
@@ -107,7 +107,7 @@ def validate_finalized_plan_for_request(
     snapshot_path: Path,
     capability_manifest_path: Path,
 ) -> list[str]:
-    """校验 execution request 来源必须是确定的 finalized v5 repair-plan。"""
+    """校验 execution request 来源必须是确定的 finalized repair-plan。"""
     errors: list[str] = []
     schema = json.loads(REPAIR_PLAN_SCHEMA_PATH.read_text(encoding="utf-8"))
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
@@ -339,7 +339,7 @@ def build_execution_request(
     request_id: str | None = None,
     artifact_root: Path | None = None,
 ) -> dict[str, Any]:
-    """V5-007 主入口：构建完整 execution request。"""
+    """execution request builder 主入口：构建完整 execution request。"""
     plan = load_repair_plan(plan_path)
     plan_sha = sha256_file(plan_path)
     working_sha = sha256_file(working_docx_path)
@@ -426,7 +426,7 @@ def write_native_batches(request: dict[str, Any], output_dir: Path, artifact_roo
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="V5-007 OfficeCLI execution request builder")
+    parser = argparse.ArgumentParser(description="OfficeCLI execution request builder")
     sub = parser.add_subparsers(dest="command", required=True)
     build = sub.add_parser("build", help="构建 officecli-execution-request")
     build.add_argument("--run-dir", required=True, type=Path)

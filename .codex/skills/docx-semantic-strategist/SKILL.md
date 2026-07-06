@@ -38,7 +38,7 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
 1. 确认输入快照和规则文件编码；`.docx` 不在本技能内读取或写回。
 2. 根据 `mode` 选择目标产物和 schema。
 3. 从 OfficeCLI snapshot v2 的 `nodes[]`、`parts[]`、`indexes`、`raw_evidence_ref` 和 `gate_check.evidence_refs` 中提取可解释证据：文本模式、OfficeCLI path、相邻结构、有效格式、编号、目录字段和表格结构。
-4. `mode=rule-draft` 时读取 `docs/v4/schemas/role_slot_contract.yaml`，生成 `semantic/role_format_slot_facts.json`，并复算 contract/snapshot hash。
+4. `mode=rule-draft` 时读取 `contracts/format-helper/schemas/role_slot_contract.yaml`，生成 `semantic/role_format_slot_facts.json`，并复算 contract/snapshot hash。
 5. 为每个语义判断输出 `evidence`、`confidence`、`risk_level` 和人工确认建议。
 6. 对低置信度、高风险或证据不足项，显式设置人工确认原因。
 7. 输出结构化 JSON；不要在报告正文中直接堆叠内部 JSON。
@@ -168,5 +168,5 @@ semantic_strategy
 
 - `references/semantic-output-contract.md`：三种语义产物的字段契约、阈值规则和安全边界。
 - `../../../schemas/semantic_rule_draft.schema.json`：`semantic_rule_draft.json` 机器校验契约。
-- `docs/v4/40_DESIGN_FINAL.md`：v4 设计文档。
-- `docs/v4/41_SCHEMA_CONTRACTS.md`：v4 schema 契约。
+- `contracts/format-helper/40_DESIGN_FINAL.md`：v4 设计文档。
+- `contracts/format-helper/41_SCHEMA_CONTRACTS.md`：v4 schema 契约。

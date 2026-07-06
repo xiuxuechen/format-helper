@@ -24,6 +24,8 @@ from scripts.validation.skill_result_io import canonical_json, compute_file_sha2
 FINAL_ACCEPTANCE_PATH = "logs/final_acceptance.json"
 REPORTING_RESULT_PATH = "logs/reporting_result.json"
 PRE_ACCEPTANCE_MANIFEST_PATH = GENERATION_PATHS["pre_acceptance"]
+ROOT = Path(__file__).resolve().parents[2]
+TOC_ACCEPTANCE_V5_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "toc-acceptance.schema.json"
 
 ACCEPTANCE_TYPES = {
     "final_delivery",

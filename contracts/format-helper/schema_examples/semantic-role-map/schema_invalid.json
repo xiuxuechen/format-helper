@@ -1,0 +1,71 @@
+{
+  "schema_id": "semantic-role-map-invalid",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code005-example",
+  "status": "done",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "semantic/semantic_role_map.before.json"
+  },
+  "validation": {
+    "schema_valid": false,
+    "errors": [
+      {
+        "field": "roles[0].slot_role_kind",
+        "code": "MISSING_REQUIRED",
+        "message": "角色定义缺少 slot_role_kind"
+      }
+    ]
+  },
+  "_code005_example_category": "schema_invalid",
+  "_trace_refs": [
+    "41-2",
+    "41-12",
+    "50-3.5"
+  ],
+  "artifact": {
+    "artifact_id": "ART-CODE005-001",
+    "kind": "semantic_role_map",
+    "path": "semantic/semantic_role_map.before.json",
+    "path_kind": "run_relative",
+    "schema_id": "semantic-role-map",
+    "schema_version": "1.0.0",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size_bytes": 123,
+    "required": true,
+    "producer_result_id": "RESULT-CODE005-001"
+  },
+  "roles": [
+    {
+      "role_id": "body-paragraph"
+    }
+  ],
+  "mappings": [
+    {
+      "fact_id": "F-00001",
+      "target_role_id": "body-paragraph",
+      "confidence": 0.95,
+      "mapping_kind": "direct"
+    }
+  ],
+  "source_refs": [
+    {
+      "source_ref_id": "SRC-CODE005-001",
+      "artifact_id": "ART-CODE005-001",
+      "schema_id": "semantic-role-map",
+      "item_type": "schema_example",
+      "item_id": "ITEM-CODE005-001"
+    }
+  ],
+  "evidence_refs": [
+    "EV-CODE005-001"
+  ],
+  "generated_at": "2026-05-07T09:00:00+08:00"
+}

@@ -1,0 +1,52 @@
+{
+  "schema_id": "role-slot-contract",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "updated_at": "2026-05-09T00:00:00+08:00",
+  "role_slot_contracts": {
+    "body-paragraph": {
+      "role_kind": "body-paragraph",
+      "semantic_role_kind_ref": "body",
+      "category": "text_content",
+      "required_slots": [
+        "line_spacing_multiple"
+      ],
+      "optional_slots": [],
+      "forbidden_slots": [],
+      "validation_rules": [
+        {"rule_id": "RSC-BODY-PARAGRAPH-MISSING-REQUIRED", "condition": "required_slot_missing", "severity": "error", "blocks_confirmation_gate": true, "message": "正文段落必需槽位缺失。", "remediation": "重新抽取或人工确认正文段落格式。"},
+        {"rule_id": "RSC-BODY-PARAGRAPH-UNRESOLVED", "condition": "required_slot_unresolved", "severity": "error", "blocks_confirmation_gate": true, "message": "正文段落存在未解析槽位。", "remediation": "人工确认未解析格式。"},
+        {"rule_id": "RSC-BODY-PARAGRAPH-LOW-CONFIDENCE", "condition": "required_slot_confidence_lt_0_85", "severity": "warning", "blocks_confirmation_gate": false, "message": "正文段落槽位置信度偏低。", "remediation": "保留警示或人工确认。"},
+        {"rule_id": "RSC-BODY-PARAGRAPH-CONFLICT", "condition": "required_slot_conflict", "severity": "error", "blocks_confirmation_gate": true, "message": "正文段落槽位存在冲突。", "remediation": "从候选值中选择权威值。"},
+        {"rule_id": "RSC-BODY-PARAGRAPH-FORBIDDEN-PRESENT", "condition": "forbidden_slot_present", "severity": "error", "blocks_confirmation_gate": true, "message": "正文段落出现禁止槽位。", "remediation": "移除错误槽位映射。"}
+      ],
+      "source_refs": [
+        {"source_ref_id": "SRC-RSC-BODY-PARAGRAPH", "artifact_id": "ART-SLOT-DESIGN", "artifact_kind": "design_doc", "schema_id": null, "item_type": "design_section", "item_id": "SLOT-3.6", "attribute": "role_slot_contracts.body-paragraph", "value": "body-paragraph", "unit": null, "source_rule_ref": null, "source_fact_ref": null, "source_role_ref": null, "locator": null, "evidence_refs": []}
+      ]
+    }
+  },
+  "slot_type_registry": {
+    "line_spacing_multiple": {
+      "slot_name": "line_spacing_multiple",
+      "data_type": "number",
+      "unit": "multiple",
+      "nullable": false,
+      "enum_values": null,
+      "range": {"min": 0.5, "max": 3.0},
+      "ooxml_source": {"element": "w:spacing", "attribute": "w:line", "rule_attribute": "w:lineRule"},
+      "description": "倍数行距"
+    }
+  },
+  "common_validation_rules": [
+    {
+      "rule_id": "RSC-COMMON-ZERO-CONFIDENCE",
+      "condition": "required_slot_confidence_eq_0",
+      "severity": "error",
+      "blocks_confirmation_gate": true,
+      "message": "槽位值置信度为0，无法自动确定，必须人工确认。",
+      "remediation": "人工确认该槽位的正确值，或从标准文档中重新抽取。",
+      "applies_to": "all_roles",
+      "applies_to_slots": "required_slots"
+    }
+  ]
+}

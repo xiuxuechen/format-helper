@@ -1,0 +1,46 @@
+{
+  "schema_id": "role-format-slot-facts",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "rule_20260509_example",
+  "facts_id": "RFSF-rule_20260509_example-001",
+  "source_snapshot_path": "snapshots/officecli-document-snapshot.standard.json",
+  "source_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_snapshot_artifact_id": "officecli-snapshot-standard",
+  "source_snapshot_schema_version": "2.0.0",
+  "contract_ref": {"contract_path": "contracts/format-helper/schemas/role_slot_contract.yaml", "contract_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "contract_version": "1.0.0", "path_kind": "workspace_relative"},
+  "roles": [
+    {
+      "role_kind": "body-paragraph",
+      "role_id": "body-paragraph",
+      "target_role_ref": {
+        "path": "semantic/semantic_role_map.before.json",
+        "path_kind": "run_relative",
+        "role_id": "body-paragraph",
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "semantic_role_kind_ref": "body",
+      "category": "text_content",
+      "sample_count": 0,
+      "samples": [],
+      "slot_summary": {"line_spacing_multiple": {"slot_name": "line_spacing_multiple", "unit": "multiple", "status": "unresolved", "mode_value": null, "mode_coverage": 0.0, "confidence": 0.0, "total_samples": 0, "value_histogram": [], "conflicts": [], "primary_source": "unresolved", "source_fact_refs": [], "source_rule_refs": [], "requires_confirmation": true, "confirmation_prompt": "请确认正文段落的行距", "triggered_rule_ids": ["RSC-BODY-PARAGRAPH-UNRESOLVED"]}},
+      "role_confidence": 0.0,
+      "requires_confirmation": true,
+      "confirmation_reasons": ["RSC-BODY-PARAGRAPH-UNRESOLVED"],
+      "reasons": [
+        {
+          "reason_code": "UNRESOLVED_MAPPING",
+          "message": "无可信 role-map 映射。",
+          "source": "role-map",
+          "evidence_ref": null
+        }
+      ]
+    }
+  ],
+  "gate_status": "blocked",
+  "gate_blockers": [{"blocker_id": "BLK-body-paragraph-line_spacing_multiple-RSC-BODY-PARAGRAPH-UNRESOLVED", "role_kind": "body-paragraph", "slot_name": "line_spacing_multiple", "rule_id": "RSC-BODY-PARAGRAPH-UNRESOLVED", "severity": "error", "message": "正文段落行距未能确定，必须人工确认。", "suggested_options": [{"label": "人工输入", "value": null, "requires_input": true}]}],
+  "manual_review_proposals": [{"proposal_id": "MRP-BLK-body-paragraph-line_spacing_multiple-RSC-BODY-PARAGRAPH-UNRESOLVED", "source": {"artifact_kind": "role_format_slot_facts", "item_type": "slot_gate_blocker", "item_id": "BLK-body-paragraph-line_spacing_multiple-RSC-BODY-PARAGRAPH-UNRESOLVED", "role_kind": "body-paragraph", "slot_name": "line_spacing_multiple"}, "blocking": true, "reason": "正文段落行距未能确定，必须人工确认。", "suggested_options": [{"label": "人工输入", "value": null, "requires_input": true}], "evidence_refs": []}],
+  "source_refs": [],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}

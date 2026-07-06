@@ -1,0 +1,49 @@
+{
+  "schema_id": "final-acceptance",
+  "schema_version": "2.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code005-example",
+  "status": "unknown_status_for_negative_example",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": false,
+    "errors": [
+      {
+        "field": "status",
+        "code": "UNKNOWN_ENUM",
+        "message": "示例用于验证 unknown enum blocking"
+      }
+    ]
+  },
+  "_code005_example_category": "schema_invalid",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "acceptance_type": "blocked_terminal",
+  "skill_results": [
+    "RESULT-CODE005-001"
+  ],
+  "evidence_manifest_path": "logs/evidence_manifest.pre_acceptance.json",
+  "evidence_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "evidence_manifest_size_bytes": 123,
+  "manual_review_summary": {
+    "pending_count": 0,
+    "blocking_count": 0
+  },
+  "warnings": [],
+  "blockers": [],
+  "blocking_categories": [],
+  "allowed_warning_categories": [],
+  "evaluated_at": "2026-05-07T09:00:00+08:00"
+}

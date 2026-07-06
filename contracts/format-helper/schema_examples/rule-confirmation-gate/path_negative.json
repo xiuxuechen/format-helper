@@ -1,0 +1,28 @@
+{
+  "schema_id": "rule-confirmation-gate",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code016-example",
+  "gate_id": "RCG-path-negative",
+  "status": "pending",
+  "slot_facts_ref": {
+    "path": "../semantic/role_format_slot_facts.json",
+    "path_kind": "run_relative",
+    "facts_id": "RFSF-run-code016-example-001",
+    "schema_id": "role-format-slot-facts"
+  },
+  "manual_review_items_path": "plans/manual_review_items.json",
+  "unresolved_slots": [],
+  "conflicts": [],
+  "manual_review_item_refs": [
+    {
+      "review_id": "MRI-001",
+      "proposal_id": "MRP-BLK-001",
+      "items_path": "../plans/manual_review_items.json",
+      "decision_status": "pending",
+      "allows_continue": false
+    }
+  ],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}

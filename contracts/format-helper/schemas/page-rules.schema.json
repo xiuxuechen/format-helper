@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/page-rules.schema.json",
+  "title": "Page Rules",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "status",
+    "artifact",
+    "source_refs",
+    "evidence_refs",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "page-rules"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "v4"
+    },
+    "run_id": {},
+    "status": {
+      "enum": [
+        "done",
+        "waiting_user",
+        "blocked",
+        "accepted",
+        "accepted_with_warnings",
+        "passed",
+        "passed_with_warnings",
+        "failed"
+      ]
+    },
+    "artifact": {},
+    "source_refs": {},
+    "evidence_refs": {},
+    "generated_at": {}
+  },
+  "description": "CODE-005 最小 schema 占位定义。字段级权威以 contracts/format-helper/schemas 为准。",
+  "x_code005_minimum_contract": {
+    "source": "41_SCHEMA_CONTRACTS.md + SCHEMA_MIN_STRATEGY.md",
+    "validates": [
+      "required",
+      "const",
+      "enum",
+      "semver",
+      "canonical_alias",
+      "unknown_enum_blocking",
+      "path_negative_examples"
+    ],
+    "trace_refs": [
+      "41-§2",
+      "41-§12",
+      "50-§3.5"
+    ]
+  }
+}

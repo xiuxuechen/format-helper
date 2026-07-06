@@ -1,6 +1,6 @@
 """OfficeCLI 固定运行时解析与缓存校验。
 
-该模块实现 v5 规范中的 V5-001、V5-002 地基能力：
+该模块实现 OfficeCLI 运行时地基能力：
 - 读取并校验 `officecli.lock.json`
 - 按系统、架构和 libc 解析 runtime_id
 - 按锁文件下载、缓存、哈希和版本校验 OfficeCLI
@@ -233,7 +233,7 @@ def validate_lock(lock: dict) -> None:
     if lock["mirror_base_url"] is not None or lock["auto_update_disabled"] is not True:
         raise OfficeCliRuntimeError(
             FH_OFFICECLI_LOCK_INVALID,
-            "锁文件镜像或自动更新策略不符合 v5 固定契约",
+            "锁文件镜像或自动更新策略不符合 OfficeCLI 固定契约",
         )
     assets = lock["assets"]
     if not isinstance(assets, list) or len(assets) != 8:
@@ -349,7 +349,7 @@ def detect_runtime_id(
     alpine_release_exists: Optional[bool] = None,
     ldd_output: Optional[str] = None,
 ) -> str:
-    """按 v5 固定映射解析 runtime_id。"""
+    """按固定映射解析 runtime_id。"""
     system = (system_name or platform.system()).lower()
     arch = normalize_arch(machine or platform.machine())
     if arch is None:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""V5-010: Word/WPS TOC 原生刷新适配器（仅 Windows COM 自动化）。
+"""Word/WPS TOC 原生刷新适配器（仅 Windows COM 自动化）。
 
 §21.7 固定状态机（12 阶段）：
 probe → copy_refresh_input → open_hidden →
@@ -61,7 +61,7 @@ STAGE_TIMEOUT = 120
 TOTAL_TIMEOUT = 600
 NO_ERROR_SENTINEL = "none"
 DEFAULT_RUN_ID = "local-toc-refresh"
-TOC_ACCEPTANCE_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "docs" / "v5" / "schemas" / "toc-acceptance.schema.json"
+TOC_ACCEPTANCE_SCHEMA_PATH = Path(__file__).resolve().parents[2] / "contracts" / "officecli" / "schemas" / "toc-acceptance.schema.json"
 
 
 def utc_now() -> str:
@@ -918,7 +918,7 @@ def _toc_blocked(
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="V5-010 TOC refresh adapter")
+    parser = argparse.ArgumentParser(description="TOC refresh adapter")
     sub = parser.add_subparsers(dest="command", required=True)
     refresh = sub.add_parser("refresh", help="执行 TOC 刷新")
     refresh.add_argument("--run-dir", required=True, type=Path)

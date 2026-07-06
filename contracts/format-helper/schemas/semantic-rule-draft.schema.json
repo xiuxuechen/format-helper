@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/semantic-rule-draft.schema.json",
+  "title": "Semantic Rule Draft",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "status",
+    "artifact",
+    "slot_facts_ref",
+    "source_refs",
+    "evidence_refs",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "semantic-rule-draft"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "v4"
+    },
+    "run_id": {},
+    "status": {
+      "enum": [
+        "done",
+        "waiting_user",
+        "blocked",
+        "accepted",
+        "accepted_with_warnings",
+        "passed",
+        "passed_with_warnings",
+        "failed"
+      ]
+    },
+    "artifact": {},
+    "slot_facts_ref": {
+      "description": "SLOT_CONTRACT_DESIGN.md §7.2: 引用 role_format_slot_facts.json 的 ArtifactRef",
+      "type": "object",
+      "required": ["path", "path_kind", "sha256", "size_bytes", "artifact_id"],
+      "properties": {
+        "path": { "type": "string" },
+        "path_kind": { "const": "run_relative" },
+        "sha256": { "type": "string" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "artifact_id": { "type": "string" }
+      }
+    },
+    "source_refs": {},
+    "evidence_refs": {},
+    "generated_at": {}
+  },
+  "description": "CODE-005 最小 schema 占位定义。字段级权威以 contracts/format-helper/schemas 为准。",
+  "x_code005_minimum_contract": {
+    "source": "41_SCHEMA_CONTRACTS.md + SCHEMA_MIN_STRATEGY.md",
+    "validates": [
+      "required",
+      "const",
+      "enum",
+      "semver",
+      "canonical_alias",
+      "unknown_enum_blocking",
+      "path_negative_examples"
+    ],
+    "trace_refs": [
+      "41-§2",
+      "41-§12",
+      "50-§3.5"
+    ]
+  }
+}

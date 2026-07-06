@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""基于 v5 事实产物生成 review-result 2.0.0。"""
+"""基于 OfficeCLI 事实产物生成 review-result 2.0.0。"""
 
 from __future__ import annotations
 
@@ -208,7 +208,7 @@ def build_review(run_dir: Path) -> dict[str, Any]:
     required = [execution_log_path, before_path, after_path]
     missing = [str(path.relative_to(run_dir)) for path in required if not path.is_file()]
     if missing:
-        raise FileNotFoundError("缺少 v5 二轮复核输入：" + "、".join(missing))
+        raise FileNotFoundError("缺少二轮复核输入：" + "、".join(missing))
 
     plan = load_yaml(plan_path)
     execution_log = load_json(execution_log_path)

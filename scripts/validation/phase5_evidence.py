@@ -25,7 +25,7 @@ from scripts.validation.regression_coverage import (
 
 EVIDENCE_DATE = "20260508"
 EVIDENCE_VERSION = f"v4-phase5-{EVIDENCE_DATE}"
-EVIDENCE_ROOT = Path("docs/v4/phase5_evidence") / EVIDENCE_DATE
+EVIDENCE_ROOT = Path("evidence/phase5_evidence") / EVIDENCE_DATE
 NEGATIVE_FIXTURE_IDS = {
     "V4-T04",
     "V4-T05",

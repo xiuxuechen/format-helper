@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/role-format-slot-facts.schema.json",
+  "title": "Role Format Slot Facts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "facts_id",
+    "source_snapshot_path",
+    "source_snapshot_sha256",
+    "source_snapshot_artifact_id",
+    "source_snapshot_schema_version",
+    "contract_ref",
+    "roles",
+    "gate_status",
+    "gate_blockers",
+    "manual_review_proposals",
+    "source_refs",
+    "evidence_refs",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {"const": "role-format-slot-facts"},
+    "schema_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "contract_version": {"const": "v4"},
+    "run_id": {"type": "string"},
+    "facts_id": {"type": "string"},
+    "source_snapshot_path": {"type": "string"},
+    "source_snapshot_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "source_snapshot_artifact_id": {"type": "string"},
+    "source_snapshot_schema_version": {"const": "2.0.0"},
+    "contract_ref": {"$ref": "#/$defs/ContractRef"},
+    "roles": {"type": "array", "items": {"$ref": "#/$defs/RoleSlotFacts"}},
+    "gate_status": {"enum": ["passed", "blocked", "waiting_user"]},
+    "gate_blockers": {"type": "array", "items": {"$ref": "#/$defs/GateBlocker"}},
+    "manual_review_proposals": {"type": "array", "items": {"$ref": "#/$defs/ManualReviewItemDraft"}},
+    "source_refs": {"type": "array"},
+    "evidence_refs": {"type": "array"},
+    "generated_at": {"type": "string"}
+  },
+  "$defs": {
+    "ContractRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_path", "contract_sha256", "contract_version", "path_kind"],
+      "properties": {
+        "contract_path": {"type": "string"},
+        "contract_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+        "contract_version": {"type": "string"},
+        "path_kind": {"const": "workspace_relative"}
+      }
+    },
+    "RoleSlotFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_kind",
+        "role_id",
+        "target_role_ref",
+        "semantic_role_kind_ref",
+        "category",
+        "sample_count",
+        "samples",
+        "slot_summary",
+        "role_confidence",
+        "requires_confirmation",
+        "confirmation_reasons",
+        "reasons"
+      ],
+      "properties": {
+        "role_kind": {"type": "string"},
+        "role_id": {"type": "string", "minLength": 1},
+        "target_role_ref": {"$ref": "#/$defs/TargetRoleRef"},
+        "semantic_role_kind_ref": {"type": ["string", "null"]},
+        "category": {"type": "string"},
+        "sample_count": {"type": "integer"},
+        "samples": {"type": "array", "items": {"$ref": "#/$defs/SampleExtraction"}},
+        "slot_summary": {"type": "object", "additionalProperties": {"$ref": "#/$defs/SlotSummary"}},
+        "role_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "requires_confirmation": {"type": "boolean"},
+        "confirmation_reasons": {"type": "array", "items": {"type": "string"}},
+        "reasons": {"type": "array", "items": {"$ref": "#/$defs/ResolverReason"}}
+      }
+    },
+    "ResolverReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason_code", "message", "source", "evidence_ref"],
+      "properties": {
+        "reason_code": {
+          "enum": [
+            "ROLEMAP_CONSISTENT",
+            "ROLEMAP_CONFLICT_WARNING",
+            "ROLEMAP_CONFLICT_BLOCKED",
+            "LEGACY_ROLE_DIAGNOSTIC",
+            "STRUCTURE_RULE_USED",
+            "STRUCTURE_RULE_WARNING",
+            "STRUCTURE_RULE_BLOCKED",
+            "USER_CONFIRMED",
+            "UNRESOLVED_MAPPING",
+            "LOW_CONFIDENCE",
+            "MULTI_ROLE_CONFLICT"
+          ]
+        },
+        "message": {"type": "string", "minLength": 1},
+        "source": {"type": "string", "minLength": 1},
+        "evidence_ref": {"type": ["string", "null"]}
+      }
+    },
+    "TargetRoleRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "path_kind", "role_id", "sha256"],
+      "properties": {
+        "path": {"const": "semantic/semantic_role_map.before.json"},
+        "path_kind": {"const": "run_relative"},
+        "role_id": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+      }
+    },
+    "SampleExtraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact_id", "locator", "element_id_legacy", "fact_kind", "text_preview", "extracted_slots"],
+      "properties": {
+        "fact_id": {"type": "string"},
+        "locator": {"type": ["object", "null"]},
+        "element_id_legacy": {"type": ["string", "null"]},
+        "fact_kind": {"type": "string"},
+        "text_preview": {"type": "string"},
+        "extracted_slots": {"type": "object", "additionalProperties": {"$ref": "#/$defs/SlotExtraction"}}
+      }
+    },
+    "SlotExtraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "source", "confidence", "evidence_refs", "notes"],
+      "properties": {
+        "value": {},
+        "source": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "evidence_refs": {"type": "array"},
+        "notes": {"type": "string"}
+      }
+    },
+    "SlotSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot_name",
+        "unit",
+        "status",
+        "mode_value",
+        "mode_coverage",
+        "confidence",
+        "total_samples",
+        "value_histogram",
+        "conflicts",
+        "primary_source",
+        "source_fact_refs",
+        "source_rule_refs",
+        "requires_confirmation",
+        "confirmation_prompt",
+        "triggered_rule_ids"
+      ],
+      "properties": {
+        "slot_name": {"type": "string"},
+        "unit": {"type": ["string", "null"]},
+        "status": {"enum": ["resolved", "resolved_with_conflicts", "conflict", "unresolved", "not_applicable", "user_confirmed"]},
+        "mode_value": {},
+        "mode_coverage": {"type": "number", "minimum": 0, "maximum": 1},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "total_samples": {"type": "integer"},
+        "value_histogram": {"type": "array"},
+        "conflicts": {"type": "array"},
+        "primary_source": {"type": "string"},
+        "source_fact_refs": {"type": "array", "items": {"type": "string"}},
+        "source_rule_refs": {"type": "array"},
+        "requires_confirmation": {"type": "boolean"},
+        "confirmation_prompt": {"type": "string"},
+        "triggered_rule_ids": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "GateBlocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blocker_id", "role_kind", "slot_name", "rule_id", "severity", "message", "suggested_options"],
+      "properties": {
+        "blocker_id": {"type": "string"},
+        "role_kind": {"type": "string"},
+        "slot_name": {"type": "string"},
+        "rule_id": {"type": "string"},
+        "severity": {"enum": ["error", "warning"]},
+        "message": {"type": "string"},
+        "suggested_options": {"type": "array"}
+      }
+    },
+    "ManualReviewItemDraft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proposal_id", "source", "blocking", "reason", "suggested_options", "evidence_refs"],
+      "properties": {
+        "proposal_id": {"type": "string"},
+        "source": {"type": "object"},
+        "blocking": {"type": "boolean"},
+        "reason": {"type": "string"},
+        "suggested_options": {"type": "array"},
+        "evidence_refs": {"type": "array"}
+      }
+    }
+  },
+  "description": "CODE-014 本地 schema。字段级权威以 contracts/format-helper/schemas/role_slot_contract.yaml §4 为准；本 schema 不纳入 41 canonical schema inventory。"
+}

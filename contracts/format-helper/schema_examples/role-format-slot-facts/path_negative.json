@@ -1,0 +1,19 @@
+{
+  "schema_id": "role-format-slot-facts",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "rule_20260509_example",
+  "facts_id": "RFSF-rule_20260509_example-001",
+  "source_snapshot_path": "../outside/standard_snapshot.json",
+  "source_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_snapshot_artifact_id": "ART-STANDARD-SNAPSHOT",
+  "source_snapshot_schema_version": "2.0.0",
+  "contract_ref": {"contract_path": "../outside/role_slot_contract.yaml", "contract_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "contract_version": "1.0.0", "path_kind": "workspace_relative"},
+  "roles": [],
+  "gate_status": "blocked",
+  "gate_blockers": [],
+  "manual_review_proposals": [],
+  "source_refs": [],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}

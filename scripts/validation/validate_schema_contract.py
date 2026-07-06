@@ -20,7 +20,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "docs" / "v4" / "schemas"
+SCHEMA_DIR = ROOT / "contracts" / "format-helper" / "schemas"
 
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
 CONTRACT_VERSION = "v4"
@@ -147,7 +147,7 @@ def validate_schema_contract(data: dict[str, Any], expected_schema_id: str | Non
         result.add_error(
             CODE005_SCHEMA_NOT_FOUND,
             "schema_id",
-            f"未找到 canonical schema 定义：docs/v4/schemas/{schema_id}.schema.json",
+            f"未找到 canonical schema 定义：contracts/format-helper/schemas/{schema_id}.schema.json",
         )
         return result
 

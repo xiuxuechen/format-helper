@@ -1,0 +1,71 @@
+{
+  "schema_id": "repair-plan",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code005-example",
+  "status": "blocked",
+  "gate_check": {
+    "status": "failed",
+    "passed": false,
+    "blockers": [
+      {
+        "code": "CODE005-GATE-BLOCKED",
+        "message": "示例用于验证 Gate 阻断场景"
+      }
+    ]
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "gate_blocked",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "plan_id": "RP-CODE005-001",
+  "plan_state": "draft",
+  "plan_revision": "r001",
+  "source_audit_paths": [
+    "review_results/example.audit.json"
+  ],
+  "source_audit_refs": [
+    {
+      "artifact_id": "ART-CODE005-001",
+      "kind": "repair_plan",
+      "path": "logs/example.json",
+      "path_kind": "run_relative",
+      "schema_id": "repair-plan",
+      "schema_version": "1.0.0",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 123,
+      "required": true,
+      "producer_result_id": "RESULT-CODE005-001"
+    }
+  ],
+  "risk_policy_path": "format-rules/rule-code005/risk-policy.yaml",
+  "risk_policy_ref": {
+    "path": "format-rules/rule-code005/risk-policy.yaml",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 123,
+    "schema_id": "risk-policy"
+  },
+  "manual_review_items_ref": {
+    "ref_state": "draft",
+    "path": null,
+    "sha256": null,
+    "size_bytes": null,
+    "pending_count": 1,
+    "blocking_count": 0
+  },
+  "decision_snapshot": null,
+  "actions": [],
+  "manual_review_required": true,
+  "generated_at": "2026-05-07T09:00:00+08:00"
+}

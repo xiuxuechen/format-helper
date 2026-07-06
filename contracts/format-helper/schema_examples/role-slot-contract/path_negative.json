@@ -1,0 +1,9 @@
+{
+  "schema_id": "role-slot-contract",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "updated_at": "2026-05-09T00:00:00+08:00",
+  "contract_path": "../outside/role_slot_contract.yaml",
+  "role_slot_contracts": {},
+  "slot_type_registry": {}
+}

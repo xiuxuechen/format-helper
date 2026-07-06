@@ -1,0 +1,53 @@
+{
+  "schema_id": "rule-confirmation-gate",
+  "schema_version": "1.0.0",
+  "contract_version": "v4",
+  "run_id": "run-code016-example",
+  "gate_id": "RCG-RFSF-run-code016-example-001",
+  "status": "pending",
+  "slot_facts_ref": {
+    "path": "semantic/role_format_slot_facts.json",
+    "path_kind": "run_relative",
+    "facts_id": "RFSF-run-code016-example-001",
+    "schema_id": "role-format-slot-facts"
+  },
+  "manual_review_items_path": "plans/manual_review_items.json",
+  "unresolved_slots": [
+    {
+      "role_kind": "body-paragraph",
+      "role_id": "run-code016-example-body-paragraph",
+      "slot_name": "line_spacing_multiple",
+      "prompt": "请确认 body-paragraph 的 line_spacing_multiple",
+      "source_fact_refs": ["F-00001"],
+      "triggered_rule_ids": ["RSC-BODY-PARAGRAPH-UNRESOLVED"]
+    }
+  ],
+  "conflicts": [
+    {
+      "role_kind": "table-content",
+      "role_id": "run-code016-example-table-content",
+      "slot_name": "alignment",
+      "status": "conflict",
+      "mode_value": "left",
+      "mode_coverage": 0.5,
+      "value_histogram": [
+        {"value": "left", "count": 1, "ratio": 0.5},
+        {"value": "center", "count": 1, "ratio": 0.5}
+      ],
+      "conflicts": [{"value": "center", "count": 1}],
+      "prompt": "请确认 table-content 的 alignment",
+      "source_fact_refs": ["F-00002"]
+    }
+  ],
+  "manual_review_item_refs": [
+    {
+      "review_id": "MRI-001",
+      "proposal_id": "MRP-BLK-body-paragraph-line_spacing_multiple",
+      "items_path": "plans/manual_review_items.json",
+      "decision_status": "pending",
+      "allows_continue": false
+    }
+  ],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}
