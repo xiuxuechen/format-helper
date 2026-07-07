@@ -46,8 +46,8 @@ def snapshot_v2_errors(snapshot: dict[str, Any], expected_kind: str) -> list[str
     errors: list[str] = []
     if snapshot.get("schema_id") != "officecli-document-snapshot":
         errors.append("schema_id 必须为 officecli-document-snapshot")
-    if snapshot.get("schema_version") != "2.0.0" or snapshot.get("contract_version") != "v5":
-        errors.append("snapshot 必须为 v5/2.0.0")
+    if snapshot.get("schema_version") != "2.0.0" or snapshot.get("contract_version") != "officecli":
+        errors.append("snapshot 必须为 officecli/2.0.0")
     if snapshot.get("kind") != expected_kind:
         errors.append(f"snapshot.kind 必须为 {expected_kind}")
     if snapshot.get("gate_check", {}).get("status") != "passed":
@@ -225,7 +225,7 @@ def build_reviews(run_dir: Path) -> list[dict[str, Any]]:
 
 
 def main() -> int:
-    """兼容旧入口，实际执行统一的 v5 review-result 构建器。"""
+    """兼容旧入口，实际执行统一的 officecli review-result 构建器。"""
     from scripts.officecli.review_builder import main as review_main
 
     parser = argparse.ArgumentParser(description="生成 review-result 2.0.0")

@@ -776,7 +776,7 @@ def _refresh_toc_in_process(
                 "viewer": viewer_info.get("viewer"),
             },
             "gate_check": {
-                "gate_id": "toc-acceptance-v5",
+                "gate_id": "toc-acceptance-officecli",
                 "status": "passed" if passed else "blocked",
                 "checked_at": utc_now(),
                 "predicate_version": "1.0.0",
@@ -907,7 +907,7 @@ def _toc_blocked(
             "viewer": None,
         },
         "gate_check": {
-            "gate_id": "toc-acceptance-v5",
+            "gate_id": "toc-acceptance-officecli",
             "status": "blocked",
             "checked_at": utc_now(),
             "predicate_version": "1.0.0",

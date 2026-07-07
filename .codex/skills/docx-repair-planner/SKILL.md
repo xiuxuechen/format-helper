@@ -117,7 +117,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 
 下一步
 - 若仍有 pending 阻塞项，等待用户确认
-- 【V5】若已生成 finalized 计划，使用 `python -m scripts.officecli.runtime_adapter execute` 执行 OfficeCLI batch 写回
+- 【OFFICECLI】若已生成 finalized 计划，使用 `python -m scripts.officecli.runtime_adapter execute` 执行 OfficeCLI batch 写回
 
 验收自检
 - [x] draft repair_plan schema 通过
@@ -172,7 +172,7 @@ repair_planning
 ## 首阶段落地脚本
 
 ```powershell
-# v5 draft 计划
+# officecli draft 计划
 python .codex/skills/docx-repair-planner/scripts/build_repair_plan.py ^
   --plan-state draft ^
   --run-id run-20260616-001 ^
@@ -187,4 +187,4 @@ python .codex/skills/docx-repair-planner/scripts/build_repair_plan.py ^
   --output plans/repair_plan.draft.yaml
 ```
 
-v5 产出 `schema_id: "repair-plan"`, `schema_version: "2.0.0"`, `contract_version: "v5"`，包含 `execution_backend: "officecli"`、`backend_version: "1.0.113"`、`snapshot_ref`、`capability_manifest_ref`、`backend_action`、`target_binding`、`risk_class` 等字段。
+officecli 产出 `schema_id: "repair-plan"`, `schema_version: "2.0.0"`, `contract_version: "officecli"`，包含 `execution_backend: "officecli"`、`backend_version: "1.0.113"`、`snapshot_ref`、`capability_manifest_ref`、`backend_action`、`target_binding`、`risk_class` 等字段。

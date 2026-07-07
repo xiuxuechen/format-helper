@@ -1,7 +1,7 @@
 {
   "schema_id": "role-format-slot-facts",
   "schema_version": "1.0.0",
-  "contract_version": "v4",
+  "contract_version": "legacy",
   "run_id": "rule_20260509_example",
   "facts_id": "RFSF-rule_20260509_example-001",
   "source_snapshot_path": "snapshots/officecli-document-snapshot.standard.json",

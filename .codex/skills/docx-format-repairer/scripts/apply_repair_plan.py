@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# v4 historical reference; non-executable — replaced by scripts/officecli/runtime_adapter.py (V5-008)
-"""执行 repair_plan.yaml 中允许的白名单修复动作。（v4 历史参考，已退役）"""
+# legacy historical reference; non-executable — replaced by scripts/officecli/runtime_adapter.py (OFFICECLI-008)
+"""执行 repair_plan.yaml 中允许的白名单修复动作。（legacy 历史参考，已退役）"""
 
 from __future__ import annotations
 
-# V5-013: 禁止生产路径导入
+# OFFICECLI-013: 禁止生产路径导入
 import sys as _sys
 if "__test__" not in " ".join(_sys.argv) and "unittest" not in " ".join(_sys.argv) and "pytest" not in str(_sys.modules):
-    raise ImportError("V5 DEPRECATED: this module is retired. Use scripts/officecli/runtime_adapter.py")
+    raise ImportError("OFFICECLI DEPRECATED: this module is retired. Use scripts/officecli/runtime_adapter.py")
 
 import argparse
 import json
@@ -25,7 +25,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import load_yaml
-from scripts.validation.manual_review_repair import validate_repair_plan_v4
+from scripts.validation.manual_review_repair import validate_repair_plan_legacy
 
 
 TZ = timezone(timedelta(hours=8))
@@ -486,7 +486,7 @@ def main_from_args(argv: list[str] | None = None) -> int:
     if not isinstance(plan, dict):
         print("repair_plan 根节点必须是对象")
         return 1
-    errors = validate_repair_plan_v4(plan)
+    errors = validate_repair_plan_legacy(plan)
     if errors:
         for error in errors:
             print(error)
@@ -506,4 +506,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     import sys as _sys
-    _sys.exit("V5 DEPRECATED: this script is retired. Use scripts/officecli/runtime_adapter.py instead.")
+    _sys.exit("OFFICECLI DEPRECATED: this script is retired. Use scripts/officecli/runtime_adapter.py instead.")

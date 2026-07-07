@@ -1,4 +1,4 @@
-"""V5-006 repair-plan v5 schema 和 planner 验证。"""
+"""OFFICECLI-006 repair-plan officecli schema 和 planner 验证。"""
 
 from __future__ import annotations
 
@@ -16,12 +16,12 @@ sys.path.insert(0, str(ROOT))
 SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "repair-plan.schema.json"
 
 
-def _minimal_v5_plan(plan_state: str = "draft", **overrides: Any) -> dict[str, Any]:
-    """构造最小 v5 repair-plan。"""
+def _minimal_officecli_plan(plan_state: str = "draft", **overrides: Any) -> dict[str, Any]:
+    """构造最小 officecli repair-plan。"""
     plan: dict[str, Any] = {
         "schema_id": "repair-plan",
         "schema_version": "2.0.0",
-        "contract_version": "v5",
+        "contract_version": "officecli",
         "run_id": "run-test",
         "plan_id": "RP-run-test-20260616-000000",
         "plan_state": plan_state,
@@ -143,67 +143,67 @@ def _validate_against_schema(instance: dict[str, Any]) -> list[str]:
     return errors
 
 
-class V5RepairPlanSchemaTest(unittest.TestCase):
-    """v5 repair-plan schema 验证。"""
+class OFFICECLIRepairPlanSchemaTest(unittest.TestCase):
+    """officecli repair-plan schema 验证。"""
 
     def test_schema_exists(self):
         self.assertTrue(SCHEMA_PATH.exists())
 
     def test_minimal_draft_passes(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         self.assertEqual([], _validate_against_schema(plan))
 
     def test_minimal_draft_passes_draft202012_validator(self):
         from jsonschema import Draft202012Validator
         schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         self.assertEqual([], list(Draft202012Validator(schema).iter_errors(plan)))
 
     def test_minimal_finalized_passes(self):
-        plan = _minimal_v5_plan("finalized")
+        plan = _minimal_officecli_plan("finalized")
         self.assertEqual([], _validate_against_schema(plan))
 
     def test_minimal_finalized_passes_draft202012_validator(self):
         from jsonschema import Draft202012Validator
         schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-        plan = _minimal_v5_plan("finalized")
+        plan = _minimal_officecli_plan("finalized")
         self.assertEqual([], list(Draft202012Validator(schema).iter_errors(plan)))
 
     def test_draft_revision_must_be_zero(self):
-        from scripts.validation.manual_review_repair import validate_repair_plan_v5
-        plan = _minimal_v5_plan("draft", plan_revision=5)
-        result = validate_repair_plan_v5(plan)
+        from scripts.validation.manual_review_repair import validate_repair_plan_officecli
+        plan = _minimal_officecli_plan("draft", plan_revision=5)
+        result = validate_repair_plan_officecli(plan)
         self.assertFalse(result.valid)
         self.assertTrue(any("plan_revision" in e for e in result.errors), result.errors)
 
     def test_finalized_revision_must_be_positive(self):
-        from scripts.validation.manual_review_repair import validate_repair_plan_v5
-        plan = _minimal_v5_plan("finalized", plan_revision=0)
-        result = validate_repair_plan_v5(plan)
+        from scripts.validation.manual_review_repair import validate_repair_plan_officecli
+        plan = _minimal_officecli_plan("finalized", plan_revision=0)
+        result = validate_repair_plan_officecli(plan)
         self.assertFalse(result.valid)
         self.assertTrue(any("plan_revision" in e for e in result.errors), result.errors)
 
     def test_finalized_requires_finalized_fields(self):
-        from scripts.validation.manual_review_repair import validate_repair_plan_v5
-        plan = _minimal_v5_plan("finalized")
+        from scripts.validation.manual_review_repair import validate_repair_plan_officecli
+        plan = _minimal_officecli_plan("finalized")
         del plan["finalized_from_plan_id"]
-        result = validate_repair_plan_v5(plan)
+        result = validate_repair_plan_officecli(plan)
         self.assertFalse(result.valid)
         self.assertTrue(any("finalized_from_plan_id" in e for e in result.errors), result.errors)
 
     def test_missing_execution_backend(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         del plan["execution_backend"]
         errors = _validate_against_schema(plan)
         self.assertTrue(any("execution_backend" in e for e in errors), errors)
 
     def test_wrong_contract_version(self):
-        plan = _minimal_v5_plan("draft", contract_version="v4")
+        plan = _minimal_officecli_plan("draft", contract_version="legacy")
         errors = _validate_against_schema(plan)
         self.assertTrue(any("contract_version" in e for e in errors), errors)
 
     def test_action_with_valid_risk_class(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -224,7 +224,7 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
         self.assertEqual([], _validate_against_schema(plan))
 
     def test_action_invalid_risk_class(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -240,7 +240,7 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
         self.assertTrue(any("risk_class" in e for e in errors), errors)
 
     def test_backend_action_command_enum(self):
-        plan = _minimal_v5_plan("finalized")
+        plan = _minimal_officecli_plan("finalized")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -271,8 +271,8 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
         self.assertTrue(any("command" in e for e in errors), errors)
 
     def test_backend_action_properties_scalars_only(self):
-        from scripts.validation.manual_review_repair import validate_repair_plan_v5
-        plan = _minimal_v5_plan("finalized")
+        from scripts.validation.manual_review_repair import validate_repair_plan_officecli
+        plan = _minimal_officecli_plan("finalized")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -301,12 +301,12 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
                 "raw": None,
             },
         }]
-        result = validate_repair_plan_v5(plan)
+        result = validate_repair_plan_officecli(plan)
         self.assertFalse(result.valid)
         self.assertTrue(any("must be scalar" in e for e in result.errors), result.errors)
 
     def test_l3_write_requires_raw_fields(self):
-        plan = _minimal_v5_plan("finalized")
+        plan = _minimal_officecli_plan("finalized")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -355,7 +355,7 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
 
     def test_l3_write_raw_action_uses_canonical_enum(self):
         from jsonschema import Draft202012Validator
-        plan = _minimal_v5_plan("finalized")
+        plan = _minimal_officecli_plan("finalized")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -404,7 +404,7 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
         self.assertTrue(list(Draft202012Validator(schema).iter_errors(plan)))
 
     def test_target_binding_node_id_pattern(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         plan["actions"] = [{
             "action_id": "A001",
             "source_issue_ids": ["K001"],
@@ -425,19 +425,19 @@ class V5RepairPlanSchemaTest(unittest.TestCase):
         self.assertTrue(any("node_id" in e for e in errors), errors)
 
     def test_artifact_ref_sha256_pattern(self):
-        plan = _minimal_v5_plan("draft")
+        plan = _minimal_officecli_plan("draft")
         plan["snapshot_ref"]["sha256"] = "bad-hash"
         errors = _validate_against_schema(plan)
         self.assertTrue(any("sha256" in e for e in errors), errors)
 
 
-class V5RepairPlanBackendActionTest(unittest.TestCase):
+class OFFICECLIRepairPlanBackendActionTest(unittest.TestCase):
     """backend_action 映射正确性测试。"""
 
     def _load_build_module(self):
         import importlib.util
         path = ROOT / ".codex" / "skills" / "docx-repair-planner" / "scripts" / "build_repair_plan.py"
-        spec = importlib.util.spec_from_file_location("test_build_repair_plan_v5", path)
+        spec = importlib.util.spec_from_file_location("test_build_repair_plan_officecli", path)
         module = importlib.util.module_from_spec(spec)
         assert spec and spec.loader
         spec.loader.exec_module(module)

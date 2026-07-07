@@ -31,9 +31,9 @@ SR_CONSISTENCY_ERROR = "SR-CONSISTENCY-ERROR"
 SR_SCHEMA_ID_MISMATCH = "SR-SCHEMA-ID-MISMATCH"
 
 
-# v4 支持的 schema_version（simple semver: MAJOR.MINOR.PATCH）
+# legacy 支持的 schema_version（simple semver: MAJOR.MINOR.PATCH）
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
-CONTRACT_VERSION = "v4"
+CONTRACT_VERSION = "legacy"
 
 # Required 字段最小子集（参考 41-§5.1, SCHEMA_MIN_STRATEGY.md §3.2.1）
 REQUIRED_FIELDS = [
@@ -171,7 +171,7 @@ def validate_skill_result(result: dict[str, Any]) -> ValidationResult:
     if not validation.valid:
         return validation
 
-    # 3. contract_version 必须为 v4
+    # 3. contract_version 必须为 legacy
     if result.get("contract_version") != CONTRACT_VERSION:
         validation.add_error(
             SR_INVALID_ENUM,

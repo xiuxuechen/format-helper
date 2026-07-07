@@ -1,4 +1,4 @@
-"""V5-014 发布 Gate 测试。"""
+"""OFFICECLI-014 发布 Gate 测试。"""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ LOCK = ROOT / "tools" / "officecli" / "officecli.lock.json"
 CAPABILITY = ROOT / "tools" / "officecli" / "officecli-capability-manifest.json"
 
 
-class TestOfficeCliV5ReleaseGate(unittest.TestCase):
+class TestOfficeCliReleaseGate(unittest.TestCase):
     """覆盖生产路径扫描与 Windows/Apple Silicon Mac 必过平台聚合。"""
 
     def test_repository_production_paths_are_officecli_only(self):
@@ -179,7 +179,7 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
                     "visible_entries": [{"level": 1, "text": "第一章\t1", "page_number": 1}],
                     "evidence_refs": [page_ref],
                     "gate_check": {
-                        "gate_id": "toc-acceptance-v5",
+                        "gate_id": "toc-acceptance-officecli",
                         "status": "passed",
                         "checked_at": "2026-01-01T00:00:00Z",
                         "predicate_version": "1.0.0",
@@ -270,7 +270,7 @@ class TestOfficeCliV5ReleaseGate(unittest.TestCase):
                     "evidence_refs": [page_ref],
                     "error": {"code": "NONE", "reason_code": "none", "message": "", "retryable": False, "viewer": None},
                     "gate_check": {
-                        "gate_id": "toc-acceptance-v5",
+                        "gate_id": "toc-acceptance-officecli",
                         "status": "passed",
                         "checked_at": "2026-01-01T00:00:00Z",
                         "predicate_version": "1.0.0",

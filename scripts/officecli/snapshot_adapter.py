@@ -834,7 +834,7 @@ def build_snapshot(
     return {
         "schema_id": "officecli-document-snapshot",
         "schema_version": "2.0.0",
-        "contract_version": "v5",
+        "contract_version": "officecli",
         "snapshot_id": snapshot_id,
         "kind": kind,
         "run_id": run_id,

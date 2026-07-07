@@ -267,7 +267,7 @@ def build_review(run_dir: Path) -> dict[str, Any]:
             "render_page_count": len(render_pages),
         },
         "gate_check": {
-            "gate_id": "review-result-v5",
+            "gate_id": "review-result-officecli",
             "status": "passed" if not failed_codes else "blocked",
             "checked_at": utc_now(),
             "predicate_version": "1.0.0",

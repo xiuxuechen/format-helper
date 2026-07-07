@@ -735,7 +735,7 @@ def execute_request(
         "stdout_artifacts": [item["stdout_artifact_ref"] for item in batch_results],
         "stderr_artifacts": [item["stderr_artifact_ref"] for item in batch_results],
         "gate_check": {
-            "gate_id": "officecli-execution-result-v5",
+            "gate_id": "officecli-execution-result-officecli",
             "status": "passed" if overall_status == "done" else "failed",
             "checked_at": finished,
             "predicate_version": "1.0.0",
@@ -921,7 +921,7 @@ def _write_execution_in_progress(
             "blocked_reason_code": None,
         },
         "gate_check": {
-            "gate_id": "repair-execution-log-v5", "status": "blocked",
+            "gate_id": "repair-execution-log-officecli", "status": "blocked",
             "checked_at": utc_now(), "predicate_version": "1.0.0",
             "evidence_refs": [checkpoint_ref["artifact_id"]],
             "failed_codes": ["FH-OFFICECLI-EXECUTION-IN-PROGRESS"],
@@ -993,7 +993,7 @@ def _write_repair_execution_log(
             "blocked_reason_code": None if target_status == "executed_ready" else result.get("error", {}).get("code"),
         },
         "gate_check": {
-            "gate_id": "repair-execution-log-v5",
+            "gate_id": "repair-execution-log-officecli",
             "status": "passed" if target_status == "executed_ready" else "failed",
             "checked_at": utc_now(),
             "predicate_version": "1.0.0",

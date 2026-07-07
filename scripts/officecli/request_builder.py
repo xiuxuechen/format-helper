@@ -115,10 +115,10 @@ def validate_finalized_plan_for_request(
         f"repair-plan schema {error.json_path}: {error.message}"
         for error in sorted(validator.iter_errors(plan), key=lambda item: item.json_path)
     )
-    from scripts.validation.manual_review_repair import validate_repair_plan_v5
+    from scripts.validation.manual_review_repair import validate_repair_plan_officecli
     risk_policy = _load_risk_policy(plan, plan_path)
-    v5_result = validate_repair_plan_v5(plan, risk_policy=risk_policy)
-    errors.extend(f"repair-plan v5: {item}" for item in v5_result.errors)
+    officecli_result = validate_repair_plan_officecli(plan, risk_policy=risk_policy)
+    errors.extend(f"repair-plan officecli: {item}" for item in officecli_result.errors)
     if plan.get("plan_state") != "finalized":
         errors.append("repair-plan plan_state must be finalized")
     if plan.get("run_id") != run_id:
@@ -393,7 +393,7 @@ def build_execution_request(
         },
         "batches": batches,
         "gate_check": {
-            "gate_id": "officecli-execution-request-v5",
+            "gate_id": "officecli-execution-request-officecli",
             "status": "passed" if batches else "blocked",
             "checked_at": now,
             "predicate_version": "1.0.0",

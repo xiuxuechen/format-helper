@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/officecli-capability-manifest.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/officecli-capability-manifest.schema.json",
   "title": "officecli-capability-manifest",
   "type": "object",
   "additionalProperties": false,

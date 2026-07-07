@@ -1,7 +1,7 @@
 {
   "schema_id": "evidence-manifest",
   "schema_version": "1.0.0",
-  "contract_version": "v4",
+  "contract_version": "legacy",
   "run_id": "run-code005-example",
   "status": "done",
   "gate_check": {

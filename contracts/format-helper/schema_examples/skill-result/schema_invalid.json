@@ -1,7 +1,7 @@
 {
   "schema_id": "skill-result",
   "schema_version": "2.0.0",
-  "contract_version": "v4",
+  "contract_version": "legacy",
   "run_id": "run-code005-example",
   "status": "unknown_status_for_negative_example",
   "gate_check": {

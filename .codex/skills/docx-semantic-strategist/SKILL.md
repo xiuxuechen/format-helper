@@ -20,7 +20,7 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
 ## 输入
 
 - `mode`：`rule-draft`、`role-map` 或 `audit`。
-- `snapshot`：`snapshots/officecli-document-snapshot.{standard|before}.json`，必须为 `schema_id=officecli-document-snapshot`、`schema_version=2.0.0`、`contract_version=v5`，且 `gate_check.status=passed`。
+- `snapshot`：`snapshots/officecli-document-snapshot.{standard|before}.json`，必须为 `schema_id=officecli-document-snapshot`、`schema_version=2.0.0`、`contract_version=officecli`，且 `gate_check.status=passed`。
 - `rule_profile`：审计和修复场景必需，指向已确认规则包。
 - `output_path`：本次语义产物写入路径，位于 `format_runs/{run_id}/semantic/`。
 
@@ -168,5 +168,5 @@ semantic_strategy
 
 - `references/semantic-output-contract.md`：三种语义产物的字段契约、阈值规则和安全边界。
 - `../../../schemas/semantic_rule_draft.schema.json`：`semantic_rule_draft.json` 机器校验契约。
-- `contracts/format-helper/40_DESIGN_FINAL.md`：v4 设计文档。
-- `contracts/format-helper/41_SCHEMA_CONTRACTS.md`：v4 schema 契约。
+- `contracts/format-helper/40_DESIGN_FINAL.md`：legacy 设计文档。
+- `contracts/format-helper/41_SCHEMA_CONTRACTS.md`：legacy schema 契约。

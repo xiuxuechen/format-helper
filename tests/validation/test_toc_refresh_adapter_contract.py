@@ -19,7 +19,7 @@ TOC_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "toc-acceptance
 def _load_adapter():
     import importlib.util
     path = ROOT / "scripts" / "officecli" / "toc_refresh_adapter.py"
-    spec = importlib.util.spec_from_file_location("v5_toc_adapter", path)
+    spec = importlib.util.spec_from_file_location("officecli_toc_adapter", path)
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(module)
@@ -229,7 +229,7 @@ class WorkerTimeoutTest(unittest.TestCase):
                 "evidence_refs": [],
                 "error": {"code": "NONE", "reason_code": "none", "message": "", "retryable": False, "viewer": None},
                 "gate_check": {
-                    "gate_id": "toc-acceptance-v5",
+                    "gate_id": "toc-acceptance-officecli",
                     "status": "passed",
                     "checked_at": "2026-01-01T00:00:00Z",
                     "predicate_version": "1.0.0",

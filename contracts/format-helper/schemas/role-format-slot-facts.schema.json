@@ -26,7 +26,7 @@
   "properties": {
     "schema_id": {"const": "role-format-slot-facts"},
     "schema_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
-    "contract_version": {"const": "v4"},
+    "contract_version": {"const": "legacy"},
     "run_id": {"type": "string"},
     "facts_id": {"type": "string"},
     "source_snapshot_path": {"type": "string"},

@@ -39,7 +39,7 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
     "contract_version": {
-      "const": "v4"
+      "const": "legacy"
     },
     "run_id": {},
     "run_dir": {},

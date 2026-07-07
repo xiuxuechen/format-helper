@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/toc-acceptance.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/toc-acceptance.schema.json",
   "title": "toc-acceptance",
   "type": "object",
   "additionalProperties": false,

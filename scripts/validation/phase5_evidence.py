@@ -24,27 +24,27 @@ from scripts.validation.regression_coverage import (
 
 
 EVIDENCE_DATE = "20260508"
-EVIDENCE_VERSION = f"v4-phase5-{EVIDENCE_DATE}"
+EVIDENCE_VERSION = f"legacy-phase5-{EVIDENCE_DATE}"
 EVIDENCE_ROOT = Path("evidence/phase5_evidence") / EVIDENCE_DATE
 NEGATIVE_FIXTURE_IDS = {
-    "V4-T04",
-    "V4-T05",
-    "V4-T06",
-    "V4-T09",
-    "V4-T13",
-    "V4-T16",
-    "V4-T17",
-    "V4-T18",
-    "V4-T19",
-    "V4-T22",
-    "V4-T23",
-    "V4-T25",
-    "V4-T28",
-    "V4-T30",
-    "V4-T34",
-    "V4-T38",
-    "V4-T39",
-    "V4-T44",
+    "LEGACY-T04",
+    "LEGACY-T05",
+    "LEGACY-T06",
+    "LEGACY-T09",
+    "LEGACY-T13",
+    "LEGACY-T16",
+    "LEGACY-T17",
+    "LEGACY-T18",
+    "LEGACY-T19",
+    "LEGACY-T22",
+    "LEGACY-T23",
+    "LEGACY-T25",
+    "LEGACY-T28",
+    "LEGACY-T30",
+    "LEGACY-T34",
+    "LEGACY-T38",
+    "LEGACY-T39",
+    "LEGACY-T44",
 }
 REQUIRED_INDEX_SECTIONS = ("证据包版本", "覆盖率摘要", "剩余风险", "签字状态")
 REQUIRED_SUBDIRS = ("test_reports", "scans", "negative_fixtures", "risk_acceptance", "manual_checks", "sign_off")
@@ -106,7 +106,7 @@ def _result_for_item(item: dict[str, Any]) -> dict[str, Any]:
         outcome = "pending_implementation_recorded"
     return {
         "schema_id": "phase5-test-result",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "test_id": item["test_id"],
         "owner_task": item["owner_task"],
         "verification_type": item["verification_type"],
@@ -124,7 +124,7 @@ def _result_for_item(item: dict[str, Any]) -> dict[str, Any]:
 def _negative_fixture_for_item(item: dict[str, Any]) -> dict[str, Any]:
     return {
         "schema_id": "phase5-negative-fixture-result",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "test_id": item["test_id"],
         "owner_task": item["owner_task"],
         "expected_gate_behavior": "blocked_or_rejected",
@@ -275,7 +275,7 @@ def _write_index(package_root: Path, summary: dict[str, Any], not_automated: lis
 
 ## 导航
 
-- 覆盖矩阵：`test_reports/v4_test_matrix.yaml`
+- 覆盖矩阵：`test_reports/legacy_test_matrix.yaml`
 - 静态扫描：`scans/`
 - 负向 fixture：`negative_fixtures/`
 - 风险接受：`risk_acceptance/`
@@ -290,7 +290,7 @@ def generate_phase5_evidence_package(root: Path) -> Path:
     for subdir in REQUIRED_SUBDIRS:
         (package_root / subdir).mkdir(parents=True, exist_ok=True)
 
-    shutil.copyfile(root / "tests" / "coverage_matrix.yaml", package_root / "test_reports" / "v4_test_matrix.yaml")
+    shutil.copyfile(root / "tests" / "coverage_matrix.yaml", package_root / "test_reports" / "legacy_test_matrix.yaml")
     items = matrix["items"]
     for item in items:
         _write_json(package_root / "test_reports" / f"{item['test_id']}_result.json", _result_for_item(item))
@@ -328,14 +328,14 @@ def validate_phase5_evidence_package(package_root: Path) -> list[str]:
                 errors.append(f"INDEX.md missing section: {section}")
         if EVIDENCE_VERSION not in content:
             errors.append("INDEX.md missing evidence version")
-    matrix_path = package_root / "test_reports" / "v4_test_matrix.yaml"
+    matrix_path = package_root / "test_reports" / "legacy_test_matrix.yaml"
     if not matrix_path.exists():
-        errors.append("test_reports/v4_test_matrix.yaml is required")
+        errors.append("test_reports/legacy_test_matrix.yaml is required")
         matrix_items: list[dict[str, Any]] = []
     else:
         matrix = load_coverage_matrix(matrix_path)
         matrix_errors = validate_coverage_matrix(matrix)
-        errors.extend(f"v4_test_matrix.{error}" for error in matrix_errors)
+        errors.extend(f"legacy_test_matrix.{error}" for error in matrix_errors)
         matrix_items = matrix.get("items", [])
     for scan_name in ("skill_md_template_scan.json", "schema_inventory_scan.json", "path_policy_scan.json"):
         scan_path = package_root / "scans" / scan_name

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/evidence-manifest.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/evidence-manifest.schema.json",
   "title": "evidence-manifest",
   "type": "object",
   "additionalProperties": false,
@@ -12,7 +12,7 @@
   "properties": {
     "schema_id": { "const": "evidence-manifest" },
     "schema_version": { "const": "2.0.0" },
-    "contract_version": { "const": "v5" },
+    "contract_version": { "const": "officecli" },
     "run_id": { "type": "string" },
     "status": { "enum": ["complete", "complete_with_warnings", "broken"] },
     "manifest_id": { "type": "string" },

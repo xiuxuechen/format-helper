@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/repair-execution-log.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/repair-execution-log.schema.json",
   "title": "repair-execution-log",
   "type": "object",
   "additionalProperties": false,

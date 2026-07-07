@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""从 semantic_audit.json 生成 v5 repair_plan（draft 或 finalized）。"""
+"""从 semantic_audit.json 生成 officecli repair_plan（draft 或 finalized）。"""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.utils.simple_yaml import write_yaml
-from scripts.validation.manual_review_repair import WHITELIST_ACTIONS, validate_repair_plan_v5
+from scripts.validation.manual_review_repair import WHITELIST_ACTIONS, validate_repair_plan_officecli
 
 
 TZ = timezone(timedelta(hours=8))
@@ -43,7 +43,7 @@ FORMAT_STRATEGY = {
     "insert_or_replace_toc_field": "toc-field",
 }
 
-# V5-006: §9.1 业务动作 → OfficeCLI 后端动作映射
+# OFFICECLI-006: §9.1 业务动作 → OfficeCLI 后端动作映射
 BACKEND_ACTION_MAP: dict[str, dict[str, Any]] = {
     "map_heading_native_style": {
         "command": "set",
@@ -84,14 +84,14 @@ BACKEND_ACTION_MAP: dict[str, dict[str, Any]] = {
     },
 }
 
-# V5-006: §9.3 已知禁止属性及其替代
+# OFFICECLI-006: §9.3 已知禁止属性及其替代
 FORBIDDEN_PROPERTIES: dict[str, str] = {
     "shd.fill": 'shd="clear;XXXXXX"',
     "ind.firstLine": "firstLineIndent",
 }
 FORBIDDEN_BORDER_KEYS = {"border.top", "border.bottom", "border.left", "border.right"}
 
-# V5-006: §9.1 action_type → 风险分类
+# OFFICECLI-006: §9.1 action_type → 风险分类
 ACTION_RISK_CLASS: dict[str, str] = {
     "map_heading_native_style": "L1",
     "apply_body_style_definition": "L1",
@@ -119,7 +119,7 @@ def canonical_output_docx(source_docx: Path, requested_output: Path, now: dateti
 
 
 def canonical_plan_output_path(requested_output: Path, plan_state: str, plan_revision: int) -> Path:
-    """根据 CLI --output 和 v5 规范确定 repair_plan 落盘路径。"""
+    """根据 CLI --output 和 officecli 规范确定 repair_plan 落盘路径。"""
     if plan_state == "draft":
         return requested_output
     output_dir = requested_output if requested_output.suffix == "" else requested_output.parent
@@ -131,7 +131,7 @@ def normalize_path(path: Path | str) -> str:
 
 
 def artifact_ref(path: Path, kind: str, schema_id: str | None = None, schema_version: str | None = None, artifact_id: str | None = None) -> dict[str, Any]:
-    """构造 v5 ArtifactRef。"""
+    """构造 officecli ArtifactRef。"""
     file_hash = sha256_file(path)
     return {
         "artifact_id": artifact_id or f"{kind}-{file_hash[:12]}",
@@ -160,7 +160,7 @@ def build_target_binding(
     element_id: str | None,
     snapshot_index: dict[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
-    """V5-006: 从 v1 element_id / node_id 构建 target_binding。
+    """OFFICECLI-006: 从 v1 element_id / node_id 构建 target_binding。
 
     element_id 可能是 v1 格式（如 "p-00001"）或 v2 node_id（如 "N-..."）。
     优先按 node_id 查找，否则按 ordinal 近似匹配。
@@ -181,14 +181,14 @@ def build_target_binding(
             "path": node.get("officecli_path", ""),
             "fingerprint": fingerprint,
         }
-    # v1 element_id 格式已不再支持（V5-005 规范：禁止按数组位置猜测）
+    # v1 element_id 格式已不再支持（OFFICECLI-005 规范：禁止按数组位置猜测）
     if str(element_id).startswith("p-"):
         return None
     return None
 
 
 def check_forbidden_attributes(after: dict[str, Any]) -> list[str]:
-    """V5-006: §9.3 检查禁止属性。返回阻断原因列表。"""
+    """OFFICECLI-006: §9.3 检查禁止属性。返回阻断原因列表。"""
     reasons: list[str] = []
     for key, alternative in FORBIDDEN_PROPERTIES.items():
         if key in after:
@@ -204,7 +204,7 @@ def assign_risk_class(
     after: dict[str, Any],
     backend_config: dict[str, Any] | None,
 ) -> str:
-    """V5-006: §9.1 分配风险分类，§9.3 禁止属性升级到 L3_WRITE。"""
+    """OFFICECLI-006: §9.1 分配风险分类，§9.3 禁止属性升级到 L3_WRITE。"""
     base_risk = ACTION_RISK_CLASS.get(action_type, "L2")
     if check_forbidden_attributes(after):
         return "L3_WRITE"
@@ -217,7 +217,7 @@ def build_backend_action(
     after: dict[str, Any],
     target_binding: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
-    """V5-006: §9.1 构建 OfficeCLI backend_action。"""
+    """OFFICECLI-006: §9.1 构建 OfficeCLI backend_action。"""
     config = BACKEND_ACTION_MAP.get(action_type)
     if config is None:
         return None
@@ -283,7 +283,7 @@ def build_action(
     index: int,
     snapshot_index: dict[str, dict[str, Any]],
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    """构造 v5 修复动作和可选人工确认项。"""
+    """构造 officecli 修复动作和可选人工确认项。"""
     recommended = item.get("recommended_action") or {}
     action_type = recommended.get("action_type") or "manual_review"
     policy, reasons = candidate_policy(item)
@@ -374,7 +374,7 @@ def build_repair_plan(
     decision_snapshot: dict[str, Any] | None = None,
     finalized_from_plan_id: str | None = None,
 ) -> dict[str, Any]:
-    """生成 v5 repair_plan 数据结构。"""
+    """生成 officecli repair_plan 数据结构。"""
     plan_id = f"RP-{run_id}-{now.strftime('%Y%m%d-%H%M%S')}"
     plan_revision = 0 if plan_state == "draft" else _compute_revision(run_id, plan_id, now)
 
@@ -408,7 +408,7 @@ def build_repair_plan(
     return {
         "schema_id": "repair-plan",
         "schema_version": "2.0.0",
-        "contract_version": "v5",
+        "contract_version": "officecli",
         "run_id": run_id,
         "plan_id": plan_id,
         "plan_state": plan_state,
@@ -453,7 +453,7 @@ def _compute_revision(run_id: str, plan_id: str, now: datetime) -> int:
 
 
 def main_from_args(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="生成 v5 repair_plan（draft 或 finalized）")
+    parser = argparse.ArgumentParser(description="生成 officecli repair_plan（draft 或 finalized）")
     parser.add_argument("--semantic-audit", required=True, type=Path)
     parser.add_argument("--format-audit", type=Path)
     parser.add_argument("--risk-policy", type=Path)
@@ -504,10 +504,10 @@ def main_from_args(argv: list[str] | None = None) -> int:
         finalized_from_plan_id=finalized_from,
     )
 
-    # v5 校验 + 输出
-    v5_result = validate_repair_plan_v5(plan)
-    if not v5_result.valid:
-        for error in v5_result.errors:
+    # officecli 校验 + 输出
+    officecli_result = validate_repair_plan_officecli(plan)
+    if not officecli_result.valid:
+        for error in officecli_result.errors:
             print(error)
         return 1
 

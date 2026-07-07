@@ -142,4 +142,4 @@ fact_extraction
 python scripts/officecli/snapshot_adapter.py --help
 ```
 
-旧 `scripts/ooxml/extract_docx_snapshot.py` 仅作为 v4 迁移输入保留，不得由 v5 生产流程调用。
+旧 `scripts/ooxml/extract_docx_snapshot.py` 仅作为 legacy 迁移输入保留，不得由 officecli 生产流程调用。

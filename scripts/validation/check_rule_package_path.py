@@ -109,12 +109,12 @@ def validate_rule_package_path(
                     f"规则包只能写入 format-rules/{{rule_id}}/",
                 )
 
-    # 禁止 format_rules/（历史别名，v4 应使用 format-rules/）
+    # 禁止 format_rules/（历史别名，legacy 应使用 format-rules/）
     if path_str.startswith("format_rules/") or "/format_rules/" in path_str:
         raise RulePackagePathError(
             RP_PATH_FORBIDDEN,
             f"规则包路径使用了历史别名 format_rules/：{path_str}。"
-            f"v4 规则库目录必须为 format-rules/（参考 40-§5.2）",
+            f"legacy 规则库目录必须为 format-rules/（参考 40-§5.2）",
         )
 
     # 禁止路径穿越（参考 40-§3.4）

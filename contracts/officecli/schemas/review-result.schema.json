@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/review-result.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/review-result.schema.json",
   "title": "review-result",
   "type": "object",
   "additionalProperties": false,

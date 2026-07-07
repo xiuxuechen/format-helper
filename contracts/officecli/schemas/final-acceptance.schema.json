@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/final-acceptance.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/final-acceptance.schema.json",
   "title": "final-acceptance",
   "type": "object",
   "additionalProperties": false,
@@ -16,7 +16,7 @@
   "properties": {
     "schema_id": { "const": "final-acceptance" },
     "schema_version": { "const": "2.0.0" },
-    "contract_version": { "const": "v5" },
+    "contract_version": { "const": "officecli" },
     "acceptance_id": { "type": "string" },
     "run_id": { "type": "string" },
     "status": { "enum": ["accepted", "blocked", "rejected"] },

@@ -59,7 +59,7 @@ def is_officecli_snapshot_v2(snapshot: dict[str, Any]) -> bool:
     return (
         snapshot.get("schema_id") == OFFICECLI_SNAPSHOT_SCHEMA_ID
         and snapshot.get("schema_version") == OFFICECLI_SNAPSHOT_SCHEMA_VERSION
-        and snapshot.get("contract_version") == "v5"
+        and snapshot.get("contract_version") == "officecli"
     )
 
 
@@ -626,7 +626,7 @@ def build_slot_facts(
     return {
         "schema_id": "role-format-slot-facts",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "run_id": run_id,
         "facts_id": f"RFSF-{run_id}-001",
         "source_snapshot_path": source_snapshot_path,

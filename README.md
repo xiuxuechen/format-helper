@@ -226,7 +226,7 @@ format_runs/{run_id}/reports/FINAL_ACCEPTANCE_REPORT.md
 │   ├── reporting/                   # 人类可读报告工具
 │   └── utils/                       # 通用工具
 ├── schemas/                         # 运行期核心 schema
-├── contracts/format-helper/                         # v4 设计、契约、测试和验收材料
+├── contracts/format-helper/                         # legacy 设计、契约、测试和验收材料
 ├── tests/                           # 回归测试与 fixture
 ├── format-rules/                    # 规则库：按 rule_id 保存可复用规则包
 └── format_runs/                     # 运行目录：按 run_id 保存每次处理产物

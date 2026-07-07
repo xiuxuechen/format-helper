@@ -22,7 +22,7 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
     "contract_version": {
-      "const": "v4"
+      "const": "legacy"
     },
     "updated_at": {
       "type": "string"

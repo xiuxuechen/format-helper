@@ -212,7 +212,7 @@ def build_rule_confirmation_gate(
     return {
         "schema_id": "rule-confirmation-gate",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "run_id": slot_facts.get("run_id", "unknown"),
         "gate_id": f"RCG-{slot_facts.get('facts_id', slot_facts.get('run_id', 'unknown'))}",
         "status": gate_status_from_manual_items(slot_facts, manual_review_items),
@@ -399,8 +399,8 @@ def validate_rule_confirmation_gate(gate: dict[str, Any]) -> list[str]:
         errors.append(f"{field_name} is required")
     if gate.get("schema_id") != "rule-confirmation-gate":
         errors.append("schema_id must be rule-confirmation-gate")
-    if gate.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if gate.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
     if gate.get("status") not in {"pending", "cleared", "blocked"}:
         errors.append("status is not allowed")
     if gate.get("manual_review_items_path") != "plans/manual_review_items.json":

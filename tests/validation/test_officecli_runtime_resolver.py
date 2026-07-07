@@ -1,6 +1,6 @@
 """OfficeCLI 运行时解析器测试。
 
-覆盖 V5-T001 到 V5-T014 中无需真实下载即可验证的供应链和平台规则。
+覆盖 OFFICECLI-T001 到 OFFICECLI-T014 中无需真实下载即可验证的供应链和平台规则。
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ class TestOfficeCliLock(unittest.TestCase):
     """测试 OfficeCLI 锁文件。"""
 
     def test_lock_contains_exact_eight_assets(self):
-        """V5-T001：锁文件必须精确包含八个平台资产。"""
+        """OFFICECLI-T001：锁文件必须精确包含八个平台资产。"""
         lock = load_lock(LOCK_PATH)
         runtime_ids = {asset["runtime_id"] for asset in lock["assets"]}
 
@@ -62,7 +62,7 @@ class TestOfficeCliLock(unittest.TestCase):
         self.assertTrue(lock["auto_update_disabled"])
 
     def test_lock_drift_is_rejected(self):
-        """V5-T006：锁文件版本漂移必须阻塞。"""
+        """OFFICECLI-T006：锁文件版本漂移必须阻塞。"""
         lock = load_lock(LOCK_PATH)
         lock["officecli_version"] = "1.0.114"
 
@@ -72,7 +72,7 @@ class TestOfficeCliLock(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "FH-OFFICECLI-LOCK-INVALID")
 
     def test_lock_asset_tuple_drift_is_rejected(self):
-        """V5-T006：任一平台官方资产元组漂移必须阻塞。"""
+        """OFFICECLI-T006：任一平台官方资产元组漂移必须阻塞。"""
         lock = load_lock(LOCK_PATH)
         lock["assets"][0]["sha256"] = "0" * 64
 
@@ -95,15 +95,15 @@ class TestRuntimeDetection(unittest.TestCase):
     """测试平台映射。"""
 
     def test_detect_windows_x64(self):
-        """V5-T007：Windows x64 映射到 win-x64。"""
+        """OFFICECLI-T007：Windows x64 映射到 win-x64。"""
         self.assertEqual(detect_runtime_id("Windows", "AMD64"), "win-x64")
 
     def test_detect_macos_arm64(self):
-        """V5-T008：macOS arm64 映射到 osx-arm64。"""
+        """OFFICECLI-T008：macOS arm64 映射到 osx-arm64。"""
         self.assertEqual(detect_runtime_id("Darwin", "arm64"), "osx-arm64")
 
     def test_detect_linux_glibc(self):
-        """V5-T009：Linux glibc 映射到 gnu 资产。"""
+        """OFFICECLI-T009：Linux glibc 映射到 gnu 资产。"""
         result = detect_runtime_id(
             "Linux",
             "x86_64",
@@ -114,7 +114,7 @@ class TestRuntimeDetection(unittest.TestCase):
         self.assertEqual(result, "linux-x64-gnu")
 
     def test_detect_linux_musl(self):
-        """V5-T010：Linux musl/Alpine 映射到 alpine 资产。"""
+        """OFFICECLI-T010：Linux musl/Alpine 映射到 alpine 资产。"""
         result = detect_runtime_id(
             "Linux",
             "aarch64",
@@ -125,7 +125,7 @@ class TestRuntimeDetection(unittest.TestCase):
         self.assertEqual(result, "linux-arm64-musl")
 
     def test_unsupported_arch_is_rejected(self):
-        """V5-T011：未知架构不得猜测。"""
+        """OFFICECLI-T011：未知架构不得猜测。"""
         with self.assertRaises(OfficeCliRuntimeError) as ctx:
             detect_runtime_id("Linux", "riscv64")
 
@@ -136,7 +136,7 @@ class TestCacheValidation(unittest.TestCase):
     """测试缓存路径和文件校验。"""
 
     def test_cache_path_uses_locked_version_and_runtime(self):
-        """V5-T002：缓存路径必须使用固定版本和 runtime_id。"""
+        """OFFICECLI-T002：缓存路径必须使用固定版本和 runtime_id。"""
         lock = load_lock(LOCK_PATH)
         asset = select_asset(lock, "win-x64")
         with tempfile.TemporaryDirectory() as tmp:
@@ -145,7 +145,7 @@ class TestCacheValidation(unittest.TestCase):
         self.assertTrue(str(path).replace("\\", "/").endswith(".cache/officecli/v1.0.113/win-x64/officecli.exe"))
 
     def test_missing_offline_cache_is_rejected(self):
-        """V5-T013：无网且缓存不存在必须阻塞。"""
+        """OFFICECLI-T013：无网且缓存不存在必须阻塞。"""
         lock = load_lock(LOCK_PATH)
         asset = select_asset(lock, "win-x64")
         with tempfile.TemporaryDirectory() as tmp:
@@ -156,7 +156,7 @@ class TestCacheValidation(unittest.TestCase):
         self.assertEqual(ctx.exception.code, FH_OFFICECLI_OFFLINE_CACHE_MISS)
 
     def test_cache_size_mismatch_is_rejected(self):
-        """V5-T014：缓存损坏必须阻塞。"""
+        """OFFICECLI-T014：缓存损坏必须阻塞。"""
         fake_asset = {
             "size_bytes": 10,
             "sha256": hashlib.sha256(b"abc").hexdigest(),
@@ -265,7 +265,7 @@ class TestVersionAndLockGuards(unittest.TestCase):
     """测试版本精确匹配和 runtime 文件锁。"""
 
     def test_exact_version_output_accepts_only_locked_forms(self):
-        """V5-T012：版本输出只能是固定版本的精确形式。"""
+        """OFFICECLI-T012：版本输出只能是固定版本的精确形式。"""
         self.assertTrue(is_exact_version_output("1.0.113", "1.0.113"))
         self.assertTrue(is_exact_version_output("OfficeCLI 1.0.113", "1.0.113"))
         self.assertTrue(is_exact_version_output("v1.0.113", "1.0.113"))

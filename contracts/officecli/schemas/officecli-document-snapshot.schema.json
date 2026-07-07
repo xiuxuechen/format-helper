@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://format-helper.local/schemas/v5/officecli-document-snapshot.schema.json",
+  "$id": "https://format-helper.local/schemas/officecli/officecli-document-snapshot.schema.json",
   "title": "officecli-document-snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -28,7 +28,7 @@
   "properties": {
     "schema_id": { "const": "officecli-document-snapshot" },
     "schema_version": { "const": "2.0.0" },
-    "contract_version": { "const": "v5" },
+    "contract_version": { "const": "officecli" },
     "snapshot_id": {
       "type": "string",
       "pattern": "^S-[a-f0-9]{24}$"

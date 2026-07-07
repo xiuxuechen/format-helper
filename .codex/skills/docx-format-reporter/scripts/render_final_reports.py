@@ -107,8 +107,8 @@ def collect_blockers(reviews: list[dict[str, Any]]) -> list[str]:
 
 
 def execution_log_path(run_dir: Path, final_acceptance: dict[str, Any] | None = None) -> Path:
-    """v5 只读取规范日志名；仅明确 v4 产物允许旧别名。"""
-    if (final_acceptance or {}).get("contract_version") == "v4":
+    """officecli 只读取规范日志名；仅明确 legacy 产物允许旧别名。"""
+    if (final_acceptance or {}).get("contract_version") == "legacy":
         return run_dir / "logs" / "repair_execution.json"
     return run_dir / "logs" / "repair_execution_log.json"
 
@@ -138,9 +138,9 @@ def detect_mode_details(run_dir: Path, final_acceptance: dict[str, Any] | None =
     current_execution_log = execution_log_path(run_dir, final_acceptance)
     if (run_dir / "semantic").exists() and not current_execution_log.exists():
         return "extract-rule", True
-    legacy_v4 = final_acceptance.get("contract_version") == "v4"
-    after_name = "document_snapshot.after.json" if legacy_v4 else "officecli-document-snapshot.after.json"
-    before_name = "document_snapshot.before.json" if legacy_v4 else "officecli-document-snapshot.before.json"
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
     if current_execution_log.exists() or (run_dir / "snapshots" / after_name).exists():
         return "repair", True
     if (run_dir / "snapshots" / before_name).exists():
@@ -208,7 +208,7 @@ def load_or_build_final_acceptance(run_dir: Path, *, mode: str) -> dict[str, Any
         return existing
 
     execution_log = load_json_if_exists(execution_log_path(run_dir))
-    # V5: 使用 revisioned plan 和 officecli snapshot v2
+    # OFFICECLI: 使用 revisioned plan 和 officecli snapshot v2
     repair_plan = load_yaml_if_exists(_find_latest_plan(run_dir)) or {}
     before_snapshot = load_json_if_exists(run_dir / "snapshots" / "officecli-document-snapshot.before.json")
     after_snapshot = load_json_if_exists(run_dir / "snapshots" / "officecli-document-snapshot.after.json")
@@ -257,9 +257,9 @@ def build_final_report_view_model(
     """从运行目录和 final_acceptance 构建最终交付报告 view model。"""
     execution_log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
     repair_plan = load_yaml_if_exists(_find_latest_plan(run_dir))
-    legacy_v4 = final_acceptance.get("contract_version") == "v4"
-    before_name = "document_snapshot.before.json" if legacy_v4 else "officecli-document-snapshot.before.json"
-    after_name = "document_snapshot.after.json" if legacy_v4 else "officecli-document-snapshot.after.json"
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
     before_snapshot = load_json_if_exists(run_dir / "snapshots" / before_name)
     after_snapshot = load_json_if_exists(run_dir / "snapshots" / after_name)
     reviews = load_reviews(run_dir)
@@ -435,7 +435,7 @@ def build_final_report_view_model(
 
 
 def _snapshot_count(snapshot: dict[str, Any], node_type: str, legacy_field: str) -> int:
-    """读取 snapshot v2 类型索引数量；v4 历史 run 使用显式旧字段。"""
+    """读取 snapshot v2 类型索引数量；legacy 历史 run 使用显式旧字段。"""
     if snapshot.get("schema_id") == "officecli-document-snapshot":
         by_type = snapshot.get("indexes", {}).get("by_type", {})
         values = by_type.get(node_type, []) if isinstance(by_type, dict) else []
@@ -446,9 +446,9 @@ def _snapshot_count(snapshot: dict[str, Any], node_type: str, legacy_field: str)
 def render_diff_summary(run_dir: Path) -> str:
     """渲染内部差异摘要。"""
     final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
-    legacy_v4 = final_acceptance.get("contract_version") == "v4"
-    before_name = "document_snapshot.before.json" if legacy_v4 else "officecli-document-snapshot.before.json"
-    after_name = "document_snapshot.after.json" if legacy_v4 else "officecli-document-snapshot.after.json"
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
     before = load_json_if_exists(run_dir / "snapshots" / before_name)
     after = load_json_if_exists(run_dir / "snapshots" / after_name)
     if before is None or after is None:
@@ -492,8 +492,8 @@ def write_optional_reports(run_dir: Path) -> None:
     final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
     if execution_log_path(run_dir, final_acceptance).exists():
         (reports_dir / "REPAIR_LOG.md").write_text("# 修复日志\n\n" + render_repair_log(run_dir).rstrip() + "\n", encoding="utf-8")
-    legacy_v4 = final_acceptance.get("contract_version") == "v4"
-    before_name = "document_snapshot.before.json" if legacy_v4 else "officecli-document-snapshot.before.json"
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
     if (run_dir / "snapshots" / before_name).exists():
         (reports_dir / "DIFF_SUMMARY.md").write_text("# 差异摘要\n\n" + render_diff_summary(run_dir).rstrip() + "\n", encoding="utf-8")
 
@@ -509,7 +509,7 @@ def write_blocked_state(run_dir: Path, final_acceptance: dict[str, Any], *, erro
     blocked["open_blockers"] = open_blockers
 
     final_path = run_dir / "logs" / "final_acceptance.json"
-    if final_acceptance.get("contract_version") != "v4":
+    if final_acceptance.get("contract_version") != "legacy":
         write_json_atomic(run_dir / "logs" / "reporting_result.json", {
             "schema_id": "reporting-result", "schema_version": "2.0.0",
             "created_at": datetime.now(TZ).isoformat(), "extensions": {},
@@ -574,7 +574,7 @@ def render_reports(run_dir: Path) -> dict[str, Any]:
 
     updated_final = dict(final_acceptance)
     final_path = run_dir / "logs" / "final_acceptance.json"
-    if final_acceptance.get("contract_version") != "v4":
+    if final_acceptance.get("contract_version") != "legacy":
         write_json_atomic(run_dir / "logs" / "reporting_result.json", {
             "schema_id": "reporting-result", "schema_version": "2.0.0",
             "created_at": datetime.now(TZ).isoformat(), "extensions": {},

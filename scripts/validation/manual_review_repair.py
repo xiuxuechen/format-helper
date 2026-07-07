@@ -296,7 +296,7 @@ def build_manual_review_items(
     return {
         "schema_id": "manual-review-items",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "run_id": run_id,
         "required": bool(items),
         "status": "pending" if counts["pending_count"] else "not_required",
@@ -352,8 +352,8 @@ def validate_manual_review_items(data: dict[str, Any]) -> ReviewValidationResult
         errors.append(f"{field_name} is required")
     if data.get("schema_id") != "manual-review-items":
         errors.append("schema_id must be manual-review-items")
-    if data.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if data.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
     if data.get("items_path") != MANUAL_REVIEW_ITEMS_PATH:
         errors.append("items_path must be plans/manual_review_items.json")
     if data.get("writer") not in {None, "format-helper"}:
@@ -552,7 +552,7 @@ def validate_policy_match(action: dict[str, Any], risk_policy: dict[str, Any], p
     return errors
 
 
-def validate_repair_plan_v4(
+def validate_repair_plan_legacy(
     plan: dict[str, Any],
     *,
     run_dir: Path | None = None,
@@ -582,8 +582,8 @@ def validate_repair_plan_v4(
         errors.append(f"{field_name} is required")
     if plan.get("schema_id") != "repair-plan":
         errors.append("schema_id must be repair-plan")
-    if plan.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if plan.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
 
     actions = plan.get("actions")
     if not isinstance(actions, list):
@@ -668,15 +668,15 @@ def validate_repair_plan_v4(
     return ReviewValidationResult(not errors, errors)
 
 
-def validate_repair_plan_v5(
+def validate_repair_plan_officecli(
     plan: dict[str, Any],
     *,
     run_dir: Path | None = None,
     risk_policy: dict[str, Any] | None = None,
 ) -> ReviewValidationResult:
-    """V5-006: 校验 v5 repair-plan（execution_backend、backend_action、risk_class 等）。"""
+    """OFFICECLI-006: 校验 officecli repair-plan（execution_backend、backend_action、risk_class 等）。"""
     errors: list[str] = []
-    # v5 基础必填字段（与 v4 公共子集 + v5 扩展）
+    # officecli 基础必填字段（与 legacy 公共子集 + officecli 扩展）
     required_top = {
         "schema_id", "schema_version", "contract_version", "run_id",
         "plan_id", "plan_state", "plan_revision",
@@ -692,13 +692,13 @@ def validate_repair_plan_v5(
     if plan.get("schema_id") != "repair-plan":
         errors.append("schema_id must be repair-plan")
 
-    # v5 contract_version
-    if plan.get("contract_version") != "v5":
-        errors.append("v5 repair-plan requires contract_version=v5")
+    # officecli contract_version
+    if plan.get("contract_version") != "officecli":
+        errors.append("officecli repair-plan requires contract_version=officecli")
     if plan.get("schema_version") != "2.0.0":
-        errors.append("v5 repair-plan requires schema_version=2.0.0")
+        errors.append("officecli repair-plan requires schema_version=2.0.0")
 
-    # v5 顶层必填
+    # officecli 顶层必填
     if plan.get("execution_backend") != "officecli":
         errors.append("execution_backend must be officecli")
     if plan.get("backend_version") != "1.0.113":
@@ -723,7 +723,7 @@ def validate_repair_plan_v5(
     else:
         errors.append("plan_state must be draft or finalized")
 
-    # per-action v5 字段
+    # per-action officecli 字段
     actions = plan.get("actions")
     if isinstance(actions, list):
         for action in actions:
@@ -824,7 +824,7 @@ def finalized_plan_path(plan_revision: int) -> str:
 
 def write_repair_plan(run_dir: Path, plan: dict[str, Any]) -> dict[str, Any]:
     """按 draft/finalized canonical 路径写入 repair-plan。"""
-    validation = validate_repair_plan_v4(plan, run_dir=run_dir)
+    validation = validate_repair_plan_legacy(plan, run_dir=run_dir)
     if not validation.valid:
         raise ValueError(f"repair-plan 未通过校验：{validation.errors}")
     if plan.get("plan_state") == "draft":
@@ -854,8 +854,8 @@ __all__ = [
     "validate_manual_review_items",
     "validate_decision_snapshot",
     "validate_policy_match",
-    "validate_repair_plan_v4",
-    "validate_repair_plan_v5",
+    "validate_repair_plan_legacy",
+    "validate_repair_plan_officecli",
     "validate_selected_action",
     "write_manual_review_items",
     "write_repair_plan",
