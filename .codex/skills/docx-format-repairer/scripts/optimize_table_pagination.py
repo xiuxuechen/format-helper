@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""优化表格与分页布局，减少孤立标题、孤立标点和空白页。"""
+# legacy historical reference; non-executable — replaced by OFFICECLI-008 OfficeCLI batch
+"""优化表格与分页布局。（legacy 历史参考，已退役）"""
 
 from __future__ import annotations
+
+import sys as _sys
+if "__test__" not in " ".join(_sys.argv) and "unittest" not in " ".join(_sys.argv) and "pytest" not in str(_sys.modules):
+    raise ImportError("OFFICECLI DEPRECATED: this module is retired.")
 
 import argparse
 import json

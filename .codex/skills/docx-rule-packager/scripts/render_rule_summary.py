@@ -390,7 +390,10 @@ def build_confirmed_rule_row(role: dict[str, Any], contract: dict[str, Any] | No
 def format_evidence_heading(role: dict[str, Any], sample: dict[str, Any], contract: dict[str, Any] | None) -> str:
     """渲染证据标题。"""
     fact_id = sample.get("fact_id", "unknown")
-    return f"### {role_label(role.get('role_kind'), contract)}（事实 `{fact_id}`）"
+    locator = sample.get("locator") if isinstance(sample.get("locator"), dict) else {}
+    node_id = locator.get("node_id")
+    identifier = f"`{node_id}`" if node_id else f"`{fact_id}`"
+    return f"### {role_label(role.get('role_kind'), contract)}（{identifier}）"
 
 
 def format_histogram(histogram: Any, slot_name: str, unit: Any = None) -> str:

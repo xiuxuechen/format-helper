@@ -1,0 +1,157 @@
+name: OfficeCLI platform evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_native_toc_dedicated:
+        description: "Run self-hosted Word/WPS native TOC evidence jobs"
+        required: false
+        default: "false"
+  pull_request:
+    paths:
+      - "scripts/officecli/**"
+      - "scripts/validation/**"
+      - ".codex/skills/**"
+      - "tools/officecli/**"
+      - "contracts/officecli/schemas/**"
+      - "tests/validation/test_officecli_*.py"
+      - "tests/validation/test_repair_plan_contract.py"
+      - ".github/workflows/officecli-platform-evidence.yml"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  platform-contract-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install platform contract validation dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run OfficeCLI platform contract validation
+        run: >-
+          python -m unittest
+          tests.validation.test_officecli_runtime_resolver
+          tests.validation.test_officecli_platform_evidence
+          tests.validation.test_officecli_native_toc_evidence
+          tests.validation.test_officecli_release_gate
+          tests.validation.test_repair_plan_contract
+
+  platform-evidence:
+    needs: platform-contract-validation
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime_id: win-x64
+            runner: windows-latest
+          - runtime_id: osx-arm64
+            runner: macos-14
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate locked platform evidence
+        env:
+          OFFICECLI_SKIP_UPDATE: "1"
+          OFFICECLI_NO_AUTO_RESIDENT: "1"
+        run: >-
+          python scripts/officecli/platform_evidence.py
+          --workspace-root .
+          --lock tools/officecli/officecli.lock.json
+          --capability tools/officecli/officecli-capability-manifest.json
+          --runtime-id ${{ matrix.runtime_id }}
+          --output-dir artifacts/platform-evidence/${{ matrix.runtime_id }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: officecli-${{ matrix.runtime_id }}-evidence
+          path: artifacts/platform-evidence/${{ matrix.runtime_id }}
+          if-no-files-found: error
+
+  aggregate-platform-gate:
+    needs: platform-evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install release gate dependencies
+        run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: officecli-*-evidence
+          path: artifacts/all-platform-evidence
+      - name: Validate required win/mac platform evidence packages
+        run: >-
+          python scripts/officecli/release_gate.py platform
+          --evidence-root artifacts/all-platform-evidence
+          --lock tools/officecli/officecli.lock.json
+          --capability tools/officecli/officecli-capability-manifest.json
+      - name: Verify production paths use OfficeCLI only
+        run: python scripts/officecli/release_gate.py static --root .
+
+  native-toc-evidence:
+    needs: aggregate-platform-gate
+    if: github.event_name == 'workflow_dispatch' && inputs.run_native_toc_dedicated == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - viewer: word
+            runner: officecli-windows-word
+          - viewer: wps
+            runner: officecli-windows-wps
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Windows automation dependency
+        run: python -m pip install pywin32
+      - name: Generate Word/WPS native TOC evidence
+        env:
+          OFFICECLI_SKIP_UPDATE: "1"
+          OFFICECLI_NO_AUTO_RESIDENT: "1"
+        run: >-
+          python scripts/officecli/native_toc_evidence.py
+          --workspace-root .
+          --lock tools/officecli/officecli.lock.json
+          --run-dir artifacts/native-toc-evidence/${{ matrix.viewer }}
+          --viewer ${{ matrix.viewer }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: officecli-native-toc-${{ matrix.viewer }}-evidence
+          path: artifacts/native-toc-evidence/${{ matrix.viewer }}
+          if-no-files-found: error
+
+  aggregate-native-toc-gate:
+    needs: native-toc-evidence
+    if: github.event_name == 'workflow_dispatch' && inputs.run_native_toc_dedicated == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install native TOC gate dependencies
+        run: python -m pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: officecli-native-toc-*-evidence
+          path: artifacts/all-native-toc-evidence
+      - name: Validate Word/WPS native TOC evidence packages
+        run: >-
+          python scripts/officecli/release_gate.py native-toc
+          --evidence-root artifacts/all-native-toc-evidence
+          --lock tools/officecli/officecli.lock.json

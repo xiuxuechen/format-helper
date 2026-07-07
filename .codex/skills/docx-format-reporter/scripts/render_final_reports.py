@@ -29,6 +29,18 @@ TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "templates" / "FINAL_REPOR
 LEGACY_REPAIR_PLAN_WARNING = "未发现 repair_plan.yaml，已按现有执行产物兼容渲染。"
 
 
+def _find_latest_plan(run_dir: Path) -> Path:
+    plans_dir = run_dir / "plans"
+    if not plans_dir.is_dir():
+        return plans_dir / "repair_plan.finalized.r001.yaml"
+    candidates = sorted(
+        [p for p in plans_dir.iterdir()
+         if p.name.startswith("repair_plan.finalized.r") and p.suffix == ".yaml"],
+        key=lambda p: p.stat().st_mtime, reverse=True,
+    )
+    return candidates[0] if candidates else plans_dir / "repair_plan.finalized.r001.yaml"
+
+
 def load_json(path: Path) -> dict[str, Any]:
     """读取 JSON 文件。"""
     return json.loads(path.read_text(encoding="utf-8"))
@@ -58,7 +70,11 @@ def write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
 
 def review_files(run_dir: Path) -> list[Path]:
     """列出二轮复核结果文件。"""
-    return sorted((run_dir / "review_results").glob("T*.review.json"))
+    review_dir = run_dir / "review_results"
+    final_review = review_dir / "final_review.json"
+    if final_review.is_file():
+        return [final_review]
+    return sorted(review_dir.glob("T*.review.json"))
 
 
 def load_reviews(run_dir: Path) -> list[dict[str, Any]]:
@@ -70,7 +86,14 @@ def collect_blockers(reviews: list[dict[str, Any]]) -> list[str]:
     """收集复核中的阻断项。"""
     blockers: list[str] = []
     for review in reviews:
-        if review.get("status") != "blocked":
+        status = review.get("status") or review.get("gate_check", {}).get("status")
+        if status not in {"blocked", "failed"}:
+            continue
+        if review.get("schema_id") == "review-result":
+            failure_codes = review.get("gate_check", {}).get("failed_codes") or []
+            blockers.extend(f"二轮复核未通过：{code}" for code in failure_codes)
+            if not failure_codes:
+                blockers.append("二轮复核 Gate 未通过。")
             continue
         task_name = review.get("task_name") or review.get("task_id") or "复核项"
         issues = review.get("issues") or []
@@ -81,6 +104,13 @@ def collect_blockers(reviews: list[dict[str, Any]]) -> list[str]:
             description = issue.get("description") or "存在未通过项"
             blockers.append(f"{task_name}：{description}")
     return blockers
+
+
+def execution_log_path(run_dir: Path, final_acceptance: dict[str, Any] | None = None) -> Path:
+    """officecli 只读取规范日志名；仅明确 legacy 产物允许旧别名。"""
+    if (final_acceptance or {}).get("contract_version") == "legacy":
+        return run_dir / "logs" / "repair_execution.json"
+    return run_dir / "logs" / "repair_execution_log.json"
 
 
 def detect_mode_details(run_dir: Path, final_acceptance: dict[str, Any] | None = None) -> tuple[str, bool]:
@@ -105,11 +135,15 @@ def detect_mode_details(run_dir: Path, final_acceptance: dict[str, Any] | None =
     if workflow_mode in {"repair", "final_delivery"}:
         return "repair", True
 
-    if (run_dir / "semantic").exists() and not (run_dir / "logs" / "repair_execution.json").exists():
+    current_execution_log = execution_log_path(run_dir, final_acceptance)
+    if (run_dir / "semantic").exists() and not current_execution_log.exists():
         return "extract-rule", True
-    if (run_dir / "logs" / "repair_execution.json").exists() or (run_dir / "snapshots" / "document_snapshot.after.json").exists():
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    if current_execution_log.exists() or (run_dir / "snapshots" / after_name).exists():
         return "repair", True
-    if (run_dir / "snapshots" / "document_snapshot.before.json").exists():
+    if (run_dir / "snapshots" / before_name).exists():
         return "audit-only", True
     return "repair", False
 
@@ -168,21 +202,22 @@ def normalize_status(final_acceptance: dict[str, Any]) -> str:
 
 
 def load_or_build_final_acceptance(run_dir: Path, *, mode: str) -> dict[str, Any]:
-    """优先读取已有 final_acceptance，不存在时按运行产物构建兼容对象。"""
+    """读取真实最终验收；缺失时只能构造 blocked 展示对象。"""
     existing = load_json_if_exists(run_dir / "logs" / "final_acceptance.json")
     if existing:
         return existing
 
-    execution_log = load_json_if_exists(run_dir / "logs" / "repair_execution.json")
-    repair_plan = load_yaml_if_exists(run_dir / "plans" / "repair_plan.yaml") or {}
-    before_snapshot = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.before.json")
-    after_snapshot = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.after.json")
+    execution_log = load_json_if_exists(execution_log_path(run_dir))
+    # OFFICECLI: 使用 revisioned plan 和 officecli snapshot v2
+    repair_plan = load_yaml_if_exists(_find_latest_plan(run_dir)) or {}
+    before_snapshot = load_json_if_exists(run_dir / "snapshots" / "officecli-document-snapshot.before.json")
+    after_snapshot = load_json_if_exists(run_dir / "snapshots" / "officecli-document-snapshot.after.json")
     reviews = load_reviews(run_dir)
 
     blockers = collect_blockers(reviews)
     if mode == "repair":
         if execution_log is None:
-            blockers.append("repair 模式缺少执行日志。")
+            blockers.append("repair 模式缺少 logs/repair_execution_log.json。")
         if before_snapshot is None:
             blockers.append("repair 模式缺少修复前快照。")
         if after_snapshot is None:
@@ -192,16 +227,16 @@ def load_or_build_final_acceptance(run_dir: Path, *, mode: str) -> dict[str, Any
         if execution_log and not bool(execution_log.get("output_docx_valid", False)):
             blockers.append("输出 DOCX 未通过有效性检查。")
 
-    accepted = not blockers
+    blockers.insert(0, "缺少 logs/final_acceptance.json，禁止由报告器推导 accepted。")
     output_doc = infer_output_doc(run_dir, execution_log, {}, mode)
     reports = []
     final_report_path = run_dir / "reports" / "FINAL_ACCEPTANCE_REPORT.md"
     if final_report_path.exists():
         reports.append(str(final_report_path).replace("\\", "/"))
     return {
-        "schema_version": "1.0.0",
-        "accepted": accepted,
-        "status": "accepted" if accepted else "blocked",
+        "schema_version": "2.0.0",
+        "accepted": False,
+        "status": "blocked",
         "created_at": datetime.now(TZ).isoformat(),
         "open_blockers": blockers,
         "manual_items_remaining": repair_plan.get("manual_review_items", []),
@@ -220,21 +255,25 @@ def build_final_report_view_model(
     mode_recognized: bool = True,
 ) -> dict[str, object]:
     """从运行目录和 final_acceptance 构建最终交付报告 view model。"""
-    execution_log = load_json_if_exists(run_dir / "logs" / "repair_execution.json")
-    repair_plan = load_yaml_if_exists(run_dir / "plans" / "repair_plan.yaml")
-    before_snapshot = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.before.json")
-    after_snapshot = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.after.json")
+    execution_log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
+    repair_plan = load_yaml_if_exists(_find_latest_plan(run_dir))
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before_snapshot = load_json_if_exists(run_dir / "snapshots" / before_name)
+    after_snapshot = load_json_if_exists(run_dir / "snapshots" / after_name)
     reviews = load_reviews(run_dir)
     rule_profile = load_rule_profile(run_dir, repair_plan)
 
     missing_items: list[str] = []
     if mode == "repair":
         if execution_log is None:
-            missing_items.append("repair 模式缺少 logs/repair_execution.json")
+            relative_log = str(execution_log_path(run_dir, final_acceptance).relative_to(run_dir)).replace("\\", "/")
+            missing_items.append(f"repair 模式缺少 {relative_log}")
         if before_snapshot is None:
-            missing_items.append("repair 模式缺少 snapshots/document_snapshot.before.json")
+            missing_items.append(f"repair 模式缺少 snapshots/{before_name}")
         if after_snapshot is None:
-            missing_items.append("repair 模式缺少 snapshots/document_snapshot.after.json")
+            missing_items.append(f"repair 模式缺少 snapshots/{after_name}")
         if not reviews:
             missing_items.append("repair 模式缺少 review_results/T*.review.json")
         if missing_items:
@@ -395,27 +434,41 @@ def build_final_report_view_model(
     }
 
 
+def _snapshot_count(snapshot: dict[str, Any], node_type: str, legacy_field: str) -> int:
+    """读取 snapshot v2 类型索引数量；legacy 历史 run 使用显式旧字段。"""
+    if snapshot.get("schema_id") == "officecli-document-snapshot":
+        by_type = snapshot.get("indexes", {}).get("by_type", {})
+        values = by_type.get(node_type, []) if isinstance(by_type, dict) else []
+        return len(values) if isinstance(values, list) else 0
+    return int(snapshot.get(legacy_field, 0) or 0)
+
+
 def render_diff_summary(run_dir: Path) -> str:
     """渲染内部差异摘要。"""
-    before = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.before.json")
-    after = load_json_if_exists(run_dir / "snapshots" / "document_snapshot.after.json")
+    final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before = load_json_if_exists(run_dir / "snapshots" / before_name)
+    after = load_json_if_exists(run_dir / "snapshots" / after_name)
     if before is None or after is None:
         return "## 快照差异\n\n- 无可展示的修复前后对比项。"
     return "\n".join(
         [
             "## 快照差异",
             "",
-            f"- before hash：`{before.get('document_hash')}`",
-            f"- after hash：`{after.get('document_hash')}`",
-            f"- 段落数：{before.get('paragraph_count')} -> {after.get('paragraph_count')}",
-            f"- 表格数：{before.get('table_count')} -> {after.get('table_count')}",
+            f"- before hash：`{before.get('snapshot_source_hash') or before.get('document_hash')}`",
+            f"- after hash：`{after.get('snapshot_source_hash') or after.get('document_hash')}`",
+            f"- 段落数：{_snapshot_count(before, 'paragraph', 'paragraph_count')} -> {_snapshot_count(after, 'paragraph', 'paragraph_count')}",
+            f"- 表格数：{_snapshot_count(before, 'table', 'table_count')} -> {_snapshot_count(after, 'table', 'table_count')}",
         ]
     )
 
 
 def render_repair_log(run_dir: Path) -> str:
     """渲染内部修复日志。"""
-    log = load_json_if_exists(run_dir / "logs" / "repair_execution.json")
+    final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
+    log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
     if log is None:
         return "## 执行摘要\n\n- 本次未执行自动修复。"
     lines = [
@@ -436,9 +489,12 @@ def write_optional_reports(run_dir: Path) -> None:
     """按现有产物补写内部追溯报告。"""
     reports_dir = run_dir / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
-    if (run_dir / "logs" / "repair_execution.json").exists():
+    final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
+    if execution_log_path(run_dir, final_acceptance).exists():
         (reports_dir / "REPAIR_LOG.md").write_text("# 修复日志\n\n" + render_repair_log(run_dir).rstrip() + "\n", encoding="utf-8")
-    if (run_dir / "snapshots" / "document_snapshot.before.json").exists():
+    legacy_contract = final_acceptance.get("contract_version") == "legacy"
+    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    if (run_dir / "snapshots" / before_name).exists():
         (reports_dir / "DIFF_SUMMARY.md").write_text("# 差异摘要\n\n" + render_diff_summary(run_dir).rstrip() + "\n", encoding="utf-8")
 
 
@@ -453,9 +509,16 @@ def write_blocked_state(run_dir: Path, final_acceptance: dict[str, Any], *, erro
     blocked["open_blockers"] = open_blockers
 
     final_path = run_dir / "logs" / "final_acceptance.json"
-    write_json_atomic(final_path, blocked)
+    if final_acceptance.get("contract_version") != "legacy":
+        write_json_atomic(run_dir / "logs" / "reporting_result.json", {
+            "schema_id": "reporting-result", "schema_version": "2.0.0",
+            "created_at": datetime.now(TZ).isoformat(), "extensions": {},
+            "run_id": run_dir.name, "status": "reporting_incomplete",
+            "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
+            "blockers": open_blockers,
+        })
 
-    execution_log = load_json_if_exists(run_dir / "logs" / "repair_execution.json")
+    execution_log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
     output_docx = execution_log.get("output_docx") if execution_log else None
     write_yaml(
         run_dir / "logs" / "state.yaml",
@@ -510,13 +573,18 @@ def render_reports(run_dir: Path) -> dict[str, Any]:
     os.replace(temp_report, final_report_path)
 
     updated_final = dict(final_acceptance)
-    updated_final.setdefault("created_at", datetime.now(TZ).isoformat())
-    updated_final["reports"] = list(dict.fromkeys(list(updated_final.get("reports") or []) + [str(final_report_path).replace("\\", "/")]))
-
     final_path = run_dir / "logs" / "final_acceptance.json"
-    write_json_atomic(final_path, updated_final)
+    if final_acceptance.get("contract_version") != "legacy":
+        write_json_atomic(run_dir / "logs" / "reporting_result.json", {
+            "schema_id": "reporting-result", "schema_version": "2.0.0",
+            "created_at": datetime.now(TZ).isoformat(), "extensions": {},
+            "run_id": run_dir.name, "status": "done",
+            "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
+            "report_artifacts": [str(final_report_path.relative_to(run_dir)).replace("\\", "/")],
+            "blockers": [],
+        })
 
-    execution_log = load_json_if_exists(run_dir / "logs" / "repair_execution.json")
+    execution_log = load_json_if_exists(execution_log_path(run_dir, updated_final))
     output_docx = execution_log.get("output_docx") if execution_log else None
     write_yaml(
         run_dir / "logs" / "state.yaml",

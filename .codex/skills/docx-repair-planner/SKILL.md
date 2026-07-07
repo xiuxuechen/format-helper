@@ -1,13 +1,13 @@
 ---
 name: docx-repair-planner
-description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helper 已获得 semantic_audit.json、format audit 结果和 risk-policy.yaml，并需要生成可追溯 repair_plan.yaml 与 manual_review_items 时使用；负责风险、置信度和白名单校验，不执行 Word 写回。
+description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helper 已获得 semantic_audit.json、format audit 结果和 risk-policy.yaml，并需要生成 revisioned finalized repair plan 与 manual_review_items 时使用；负责风险、置信度和白名单校验，不执行 Word 写回。
 ---
 
 # DOCX Repair Planner
 
 ## 定位
 
-内部能力。把语义审计、真实格式审计和风险策略合成为可校验、可恢复、可人工确认的 `repair_plan.yaml`。
+内部能力。把语义审计、真实格式审计和风险策略合成为可校验、可恢复、可人工确认的 `repair_plan.finalized.rNNN.yaml`。
 
 ## 输入
 
@@ -18,7 +18,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 
 ## 输出
 
-- `plans/repair_plan.yaml`
+- `plans/repair_plan.finalized.rNNN.yaml`
 - `plans/manual_review_items.yaml`
 - 可复用脚本：`scripts/build_repair_plan.py`
 
@@ -117,7 +117,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 
 下一步
 - 若仍有 pending 阻塞项，等待用户确认
-- 若已生成 finalized 计划，进入 docx-format-repairer 执行安全写回
+- 【OFFICECLI】若已生成 finalized 计划，使用 `python -m scripts.officecli.runtime_adapter execute` 执行 OfficeCLI batch 写回
 
 验收自检
 - [x] draft repair_plan schema 通过
@@ -172,7 +172,19 @@ repair_planning
 ## 首阶段落地脚本
 
 ```powershell
-python .codex/skills/docx-repair-planner/scripts/build_repair_plan.py --semantic-audit semantic/semantic_audit.json --snapshot snapshots/document_snapshot.before.json --rule-id official-report-v1 --source-docx input/original.docx --working-docx input/working.docx --output-docx output --output plans/repair_plan.yaml
+# officecli draft 计划
+python .codex/skills/docx-repair-planner/scripts/build_repair_plan.py ^
+  --plan-state draft ^
+  --run-id run-20260616-001 ^
+  --semantic-audit semantic/semantic_audit.json ^
+  --snapshot snapshots/officecli-document-snapshot.before.json ^
+  --capability-manifest tools/officecli/officecli-capability-manifest.json ^
+  --risk-policy format-rules/zhjsz-archives-v15/risk-policy.yaml ^
+  --rule-id zhjsz-archives-v15 ^
+  --source-docx input/source.docx ^
+  --working-docx input/working.docx ^
+  --output-docx output/repaired.docx ^
+  --output plans/repair_plan.draft.yaml
 ```
 
-脚本必须先校验 `semantic_audit.json`，再按置信度、风险等级和动作白名单决定 `auto-fix` 或 `manual-review`。
+officecli 产出 `schema_id: "repair-plan"`, `schema_version: "2.0.0"`, `contract_version: "officecli"`，包含 `execution_backend: "officecli"`、`backend_version: "1.0.113"`、`snapshot_ref`、`capability_manifest_ref`、`backend_action`、`target_binding`、`risk_class` 等字段。

@@ -1,7 +1,7 @@
 """CODE-011 回归覆盖输入与扫描工具。
 
 覆盖条款：
-- 40-§7.2/§7.3：V4 回归测试与 V4-T01 至 V4-T45 可执行测试矩阵。
+- 40-§7.2/§7.3：LEGACY 回归测试与 LEGACY-T01 至 LEGACY-T45 可执行测试矩阵。
 - 50-§3.3：最低必测集合、not_automated_with_reason 治理和模板扫描清单。
 - 50-§3.8：60_TEST_PLAN.md 输入材料。
 """
@@ -16,36 +16,36 @@ from typing import Any
 
 
 MINIMUM_REQUIRED_TEST_IDS = {
-    "V4-T04",
-    "V4-T08",
-    "V4-T09",
-    "V4-T16",
-    "V4-T16A",
-    "V4-T17",
-    "V4-T18",
-    "V4-T19",
-    "V4-T20",
-    "V4-T24",
-    "V4-T28",
-    "V4-T29",
-    "V4-T30",
-    "V4-T31",
-    "V4-T32",
-    "V4-T33",
-    "V4-T34",
-    "V4-T35",
-    "V4-T36",
-    "V4-T37",
-    "V4-T38",
-    "V4-T39",
-    "V4-T40",
-    "V4-T41",
-    "V4-T42",
-    "V4-T43",
-    "V4-T44",
-    "V4-T45",
+    "LEGACY-T04",
+    "LEGACY-T08",
+    "LEGACY-T09",
+    "LEGACY-T16",
+    "LEGACY-T16A",
+    "LEGACY-T17",
+    "LEGACY-T18",
+    "LEGACY-T19",
+    "LEGACY-T20",
+    "LEGACY-T24",
+    "LEGACY-T28",
+    "LEGACY-T29",
+    "LEGACY-T30",
+    "LEGACY-T31",
+    "LEGACY-T32",
+    "LEGACY-T33",
+    "LEGACY-T34",
+    "LEGACY-T35",
+    "LEGACY-T36",
+    "LEGACY-T37",
+    "LEGACY-T38",
+    "LEGACY-T39",
+    "LEGACY-T40",
+    "LEGACY-T41",
+    "LEGACY-T42",
+    "LEGACY-T43",
+    "LEGACY-T44",
+    "LEGACY-T45",
 }
-ALL_V4_TEST_IDS = {f"V4-T{index:02d}" for index in range(1, 46)} | {"V4-T16A"} | {f"V4-TS{index:02d}" for index in range(1, 11)}
+ALL_LEGACY_TEST_IDS = {f"LEGACY-T{index:02d}" for index in range(1, 46)} | {"LEGACY-T16A"} | {f"LEGACY-TS{index:02d}" for index in range(1, 11)}
 
 VERIFICATION_TYPES = {
     "static_scan",
@@ -93,34 +93,34 @@ class CoverageInput:
 
 
 CODE_011_REGRESSION_INPUTS: list[CoverageInput] = [
-    CoverageInput("V4-T04", "CODE-010A", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
-    CoverageInput("V4-T08", "CODE-011", "static_scan", "tests/validation/test_regression_coverage.py", True, "automated"),
-    CoverageInput("V4-T09", "CODE-011", "synthetic_fixture", "tests/validation/test_regression_coverage.py", True, "automated"),
-    CoverageInput("V4-T16", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
-    CoverageInput("V4-T16A", "CODE-006", "synthetic_fixture", "tests/validation/test_skill_result_io.py", True, "automated"),
-    CoverageInput("V4-T17", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
-    CoverageInput("V4-T18", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
-    CoverageInput("V4-T19", "CODE-001", "synthetic_fixture", "tests/validation/test_ensure_run_directories.py", True, "automated"),
-    CoverageInput("V4-T20", "CODE-007", "synthetic_fixture", "tests/validation/test_gate_predicates.py", True, "automated"),
-    CoverageInput("V4-T24", "CODE-011", "synthetic_fixture", "tests/validation/test_regression_coverage.py", True, "automated"),
-    CoverageInput("V4-T28", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
-    CoverageInput("V4-T29", "CODE-009", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
-    CoverageInput("V4-T30", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
-    CoverageInput("V4-T31", "CODE-010A", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
-    CoverageInput("V4-T32", "CODE-011", "static_scan", "tests/validation/test_regression_coverage.py", True, "automated"),
-    CoverageInput("V4-T33", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
-    CoverageInput("V4-T34", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
-    CoverageInput("V4-T35", "CODE-008A", "synthetic_fixture", "tests/validation/test_evidence_manifest.py", True, "automated"),
-    CoverageInput("V4-T36", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
-    CoverageInput("V4-T37", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
-    CoverageInput("V4-T38", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
-    CoverageInput("V4-T39", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
-    CoverageInput("V4-T40", "CODE-005", "schema_example", "tests/validation/test_schema_inventory_scan.py", True, "automated"),
-    CoverageInput("V4-T41", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
-    CoverageInput("V4-T42", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
-    CoverageInput("V4-T43", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
-    CoverageInput("V4-T44", "CODE-008A", "synthetic_fixture", "tests/validation/test_evidence_manifest.py", True, "automated"),
-    CoverageInput("V4-T45", "CODE-011", "synthetic_fixture", "tests/validation/test_v4_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T04", "CODE-010A", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
+    CoverageInput("LEGACY-T08", "CODE-011", "static_scan", "tests/validation/test_regression_coverage.py", True, "automated"),
+    CoverageInput("LEGACY-T09", "CODE-011", "synthetic_fixture", "tests/validation/test_regression_coverage.py", True, "automated"),
+    CoverageInput("LEGACY-T16", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
+    CoverageInput("LEGACY-T16A", "CODE-006", "synthetic_fixture", "tests/validation/test_skill_result_io.py", True, "automated"),
+    CoverageInput("LEGACY-T17", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
+    CoverageInput("LEGACY-T18", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T19", "CODE-001", "synthetic_fixture", "tests/validation/test_ensure_run_directories.py", True, "automated"),
+    CoverageInput("LEGACY-T20", "CODE-007", "synthetic_fixture", "tests/validation/test_gate_predicates.py", True, "automated"),
+    CoverageInput("LEGACY-T24", "CODE-011", "synthetic_fixture", "tests/validation/test_regression_coverage.py", True, "automated"),
+    CoverageInput("LEGACY-T28", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T29", "CODE-009", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
+    CoverageInput("LEGACY-T30", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
+    CoverageInput("LEGACY-T31", "CODE-010A", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
+    CoverageInput("LEGACY-T32", "CODE-011", "static_scan", "tests/validation/test_regression_coverage.py", True, "automated"),
+    CoverageInput("LEGACY-T33", "CODE-006A", "synthetic_fixture", "tests/validation/test_run_state_manager.py", True, "automated"),
+    CoverageInput("LEGACY-T34", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
+    CoverageInput("LEGACY-T35", "CODE-008A", "synthetic_fixture", "tests/validation/test_evidence_manifest.py", True, "automated"),
+    CoverageInput("LEGACY-T36", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T37", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
+    CoverageInput("LEGACY-T38", "CODE-010", "synthetic_fixture", "tests/validation/test_final_acceptance.py", True, "automated"),
+    CoverageInput("LEGACY-T39", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T40", "CODE-005", "schema_example", "tests/validation/test_schema_inventory_scan.py", True, "automated"),
+    CoverageInput("LEGACY-T41", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
+    CoverageInput("LEGACY-T42", "CODE-009A", "synthetic_fixture", "tests/validation/test_manual_review_repair.py", True, "automated"),
+    CoverageInput("LEGACY-T43", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
+    CoverageInput("LEGACY-T44", "CODE-008A", "synthetic_fixture", "tests/validation/test_evidence_manifest.py", True, "automated"),
+    CoverageInput("LEGACY-T45", "CODE-011", "synthetic_fixture", "tests/validation/test_legacy_required_fixtures.py", True, "automated"),
 ]
 
 
@@ -136,7 +136,7 @@ def validate_regression_inputs(items: list[CoverageInput] | None = None) -> list
     by_id = {item.test_id: item for item in rows}
     missing = sorted(MINIMUM_REQUIRED_TEST_IDS - by_id.keys())
     if missing:
-        errors.append(f"minimum required V4 tests missing: {missing}")
+        errors.append(f"minimum required LEGACY tests missing: {missing}")
     for item in rows:
         if item.verification_type not in VERIFICATION_TYPES:
             errors.append(f"{item.test_id}.verification_type is invalid: {item.verification_type}")
@@ -205,7 +205,7 @@ def scan_repair_log_filename_references(root: Path) -> list[str]:
     errors: list[str] = []
     allowed = "logs/repair_execution_log.json"
     forbidden_names = {"repair_log.json", "repair-execution-log.json", "repairExecutionLog.json"}
-    for base in (root / "docs" / "v4", root / "tests", root / "scripts"):
+    for base in (root / "contracts" / "format-helper", root / "tests", root / "scripts"):
         for path in base.rglob("*"):
             if path.is_file() and path.suffix in {".md", ".py", ".json", ".yaml", ".yml"}:
                 content = path.read_text(encoding="utf-8", errors="ignore")
@@ -274,8 +274,8 @@ def validate_coverage_matrix(matrix: dict[str, Any]) -> list[str]:
             errors.append(f"{field_name} is required")
     if matrix.get("schema_id") != "coverage-matrix":
         errors.append("schema_id must be coverage-matrix")
-    if matrix.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if matrix.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
     items = matrix.get("items")
     if not isinstance(items, list):
         return errors + ["items must be array"]
@@ -314,21 +314,21 @@ def validate_coverage_matrix(matrix: dict[str, Any]) -> list[str]:
                 errors.append(f"{test_id}.risk_acceptance_path is required")
         if item.get("status") == "automated" and not str(item.get("evidence_path", "")).startswith("tests/"):
             errors.append(f"{test_id}.automated evidence_path must point to tests/")
-    missing_all = sorted(ALL_V4_TEST_IDS - by_id.keys())
+    missing_all = sorted(ALL_LEGACY_TEST_IDS - by_id.keys())
     if missing_all:
-        errors.append(f"coverage matrix missing V4 tests: {missing_all}")
-    extra = sorted(set(by_id) - ALL_V4_TEST_IDS)
+        errors.append(f"coverage matrix missing LEGACY tests: {missing_all}")
+    extra = sorted(set(by_id) - ALL_LEGACY_TEST_IDS)
     if extra:
         errors.append(f"coverage matrix contains unknown tests: {extra}")
     missing_minimum = sorted(MINIMUM_REQUIRED_TEST_IDS - by_id.keys())
     if missing_minimum:
-        errors.append(f"minimum required V4 tests missing: {missing_minimum}")
+        errors.append(f"minimum required LEGACY tests missing: {missing_minimum}")
     return errors
 
 
 __all__ = [
     "CODE_011_REGRESSION_INPUTS",
-    "ALL_V4_TEST_IDS",
+    "ALL_LEGACY_TEST_IDS",
     "MINIMUM_REQUIRED_TEST_IDS",
     "SLOT_KEYWORD_CHECKS",
     "coverage_inputs_as_dicts",

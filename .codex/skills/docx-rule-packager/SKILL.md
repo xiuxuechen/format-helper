@@ -13,7 +13,7 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 
 - `semantic_rule_draft.json`
 - `role_format_slot_facts.json`（必选，来自 `semantic/role_format_slot_facts.json`）
-- `role_slot_contract.yaml`（必选，来自 `docs/v4/schemas/role_slot_contract.yaml`）
+- `role_slot_contract.yaml`（必选，来自 `contracts/format-helper/schemas/role_slot_contract.yaml`）
 - 规则输出目录，必须为 `format-rules/{rule_id}/`（参考 40-§5.2，禁止 `format_runs/*/rules` 或 `format_rules/`）
 - 用户确认过的规则名称、说明和适用范围
 

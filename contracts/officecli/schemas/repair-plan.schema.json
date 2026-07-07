@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/officecli/repair-plan.schema.json",
+  "title": "repair-plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "plan_id",
+    "plan_state",
+    "plan_revision",
+    "execution_backend",
+    "backend_version",
+    "created_at",
+    "extensions",
+    "snapshot_ref",
+    "capability_manifest_ref",
+    "source_audit_paths",
+    "source_audit_refs",
+    "risk_policy_path",
+    "risk_policy_ref",
+    "manual_review_items_ref",
+    "decision_snapshot",
+    "actions",
+    "manual_review_required",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": { "const": "repair-plan" },
+    "schema_version": { "const": "2.0.0" },
+    "contract_version": { "const": "officecli" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "plan_state": { "enum": ["draft", "finalized"] },
+    "plan_revision": { "type": "integer", "minimum": 0 },
+    "execution_backend": { "const": "officecli" },
+    "backend_version": { "const": "1.0.113" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "extensions": { "type": "object", "additionalProperties": false },
+    "snapshot_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "capability_manifest_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "source_audit_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source_audit_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "risk_policy_path": { "type": "string" },
+    "risk_policy_ref": {
+      "oneOf": [
+        { "$ref": "#/$defs/ArtifactRef" },
+        { "type": "null" }
+      ]
+    },
+    "manual_review_items_ref": { "$ref": "#/$defs/ManualReviewItemsRef" },
+    "decision_snapshot": { "$ref": "#/$defs/DecisionSnapshot" },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RepairAction" }
+    },
+    "manual_review_required": { "type": "boolean" },
+    "execution_order": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "post_repair": { "type": "object" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "finalized_from_plan_id": { "type": "string" },
+    "finalized_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["lock", "capability", "snapshot", "plan", "request", "result", "log", "review", "evidence", "toc_acceptance", "final_acceptance", "docx", "html", "png", "raw_xml", "executable", "license"]
+        },
+        "relative_path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string", "null"] },
+        "schema_version": { "type": ["string", "null"] }
+      }
+    },
+    "ManualReviewItemsRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref_state", "path"],
+      "properties": {
+        "ref_state": { "enum": ["absent", "draft", "finalized"] },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "pending_count": { "type": "integer", "minimum": 0 },
+        "blocking_count": { "type": "integer", "minimum": 0 },
+        "high_risk_unconfirmed_count": { "type": "integer", "minimum": 0 },
+        "total_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DecisionSnapshot": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "review_id", "decision_status", "allows_continue",
+              "selected_action", "selected_action_sha256"
+            ],
+            "properties": {
+              "review_id": { "type": "string", "minLength": 1 },
+              "decision_status": { "enum": ["approved", "modified", "rejected", "deferred_non_blocking", "not_applicable"] },
+              "allows_continue": { "type": "boolean" },
+              "selected_action": {
+                "oneOf": [
+                  { "$ref": "#/$defs/SelectedAction" },
+                  { "type": "null" }
+                ]
+              },
+              "selected_action_sha256": {
+                "type": ["string", "null"],
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "decided_by": { "type": ["string", "null"] },
+              "decided_at": { "type": ["string", "null"], "format": "date-time" },
+              "source_refs": { "type": "array" }
+            }
+          }
+        },
+        "allows_continue": { "type": "boolean" },
+        "decided_at": { "type": "string", "format": "date-time" },
+        "pending_count": { "type": "integer", "minimum": 0 },
+        "blocking_count": { "type": "integer", "minimum": 0 },
+        "unresolved_manual_review_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "SelectedAction": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "selected_action_id", "review_id", "decision_status",
+        "source_kind", "action_type", "operation", "target",
+        "parameters", "risk_level", "auto_fix_policy",
+        "requires_manual_review", "source_refs"
+      ],
+      "properties": {
+        "selected_action_id": { "type": "string", "minLength": 1 },
+        "review_id": { "type": "string", "minLength": 1 },
+        "decision_status": { "enum": ["approved", "modified"] },
+        "source_kind": { "enum": ["semantic_suggested_action", "format_suggested_action", "manual_review_proposal", "modified_action"] },
+        "action_type": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string", "minLength": 1 },
+        "target": { "type": "object" },
+        "parameters": { "type": "object" },
+        "risk_level": { "enum": ["low", "medium", "high"] },
+        "auto_fix_policy": { "enum": ["auto-fix", "manual-review", "audit-only"] },
+        "requires_manual_review": { "type": "boolean" },
+        "source_refs": { "type": "array" }
+      }
+    },
+    "TargetBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node_id", "path", "fingerprint"],
+      "properties": {
+        "node_id": { "type": "string", "pattern": "^N-[a-f0-9]{24}$" },
+        "path": { "type": "string", "pattern": "^/.*" },
+        "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "RiskClass": { "enum": ["L1", "L2", "L3_READ", "L3_WRITE"] },
+    "BackendAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "path"],
+      "properties": {
+        "command": { "enum": ["get", "query", "set", "add", "remove", "move", "swap", "raw-set"] },
+        "path": { "type": "string", "pattern": "^/.*" },
+        "element_type": { "type": ["string", "null"] },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": ["string", "number", "boolean", "null"]
+          }
+        },
+        "index": { "type": ["integer", "null"], "minimum": 0 },
+        "destination_path": { "type": ["string", "null"] },
+        "raw": {
+          "oneOf": [
+            { "$ref": "#/$defs/RawAction" },
+            { "type": "null" }
+          ]
+        }
+      }
+    },
+    "RawAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "part", "xpath", "action", "xml", "xml_sha256",
+        "expected_match_count", "precondition_raw_sha256",
+        "manual_review_id", "decision_snapshot_sha256"
+      ],
+      "properties": {
+        "part": { "type": "string", "minLength": 1 },
+        "xpath": { "type": "string", "minLength": 1 },
+        "action": { "enum": ["append", "prepend", "insertbefore", "insertafter", "replace", "remove", "setattr"] },
+        "xml": { "type": "string" },
+        "xml_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "expected_match_count": { "const": 1 },
+        "precondition_raw_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "manual_review_id": { "type": "string", "minLength": 1 },
+        "decision_snapshot_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "RepairAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id", "source_issue_ids", "action_type", "operation",
+        "target", "confidence", "auto_fix_policy", "risk_level",
+        "status", "risk_class"
+      ],
+      "properties": {
+        "action_id": { "type": "string", "minLength": 1 },
+        "source_issue_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "action_type": { "type": "string", "minLength": 1 },
+        "operation": { "type": "string", "minLength": 1 },
+        "format_write_strategy": { "type": "string" },
+        "target": { "type": "object" },
+        "target_binding": { "$ref": "#/$defs/TargetBinding" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "semantic_evidence": { "type": "array" },
+        "before": { "type": "object" },
+        "after": { "type": "object" },
+        "auto_fix_policy": { "enum": ["auto-fix", "manual-review", "audit-only"] },
+        "risk_level": { "enum": ["low", "medium", "high"] },
+        "risk_class": { "$ref": "#/$defs/RiskClass" },
+        "status": { "enum": ["pending", "executable", "skipped", "rejected", "blocked"] },
+        "backend_action": { "$ref": "#/$defs/BackendAction" },
+        "manual_confirmation_ref": { "$ref": "#/$defs/ArtifactRef" },
+        "allowed_by_policy": { "type": "boolean" },
+        "execution_status": { "enum": ["executable", "skipped", "rejected", "blocked", "not_applicable"] },
+        "policy_match_ref": { "type": "object" }
+      }
+    }
+  }
+}

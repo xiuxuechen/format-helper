@@ -1,0 +1,46 @@
+{
+  "schema_id": "manual-review-items",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "blocked",
+  "gate_check": {
+    "status": "failed",
+    "passed": false,
+    "blockers": [
+      {
+        "code": "CODE005-GATE-BLOCKED",
+        "message": "示例用于验证 Gate 阻断场景"
+      }
+    ]
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "gate_blocked",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "required": true,
+  "items_path": "plans/manual_review_items.json",
+  "summary_path": "reports/MANUAL_REVIEW.md",
+  "generated_at": "2026-05-07T09:00:00+08:00",
+  "items": [
+    {
+      "review_id": "MR-CODE005-001",
+      "status": "pending",
+      "decision": {
+        "status": "pending",
+        "allows_continue": false
+      }
+    }
+  ]
+}

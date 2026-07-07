@@ -1,0 +1,57 @@
+{
+  "schema_id": "toc-acceptance",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "blocked",
+  "gate_check": {
+    "status": "failed",
+    "passed": false,
+    "blockers": [
+      {
+        "code": "CODE005-GATE-BLOCKED",
+        "message": "示例用于验证 Gate 阻断场景"
+      }
+    ]
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "gate_blocked",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "artifact": {
+    "artifact_id": "ART-CODE005-001",
+    "kind": "toc_acceptance",
+    "path": "logs/example.json",
+    "path_kind": "run_relative",
+    "schema_id": "toc-acceptance",
+    "schema_version": "1.0.0",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 123,
+    "required": true,
+    "producer_result_id": "RESULT-CODE005-001"
+  },
+  "source_refs": [
+    {
+      "source_ref_id": "SRC-CODE005-001",
+      "artifact_id": "ART-CODE005-001",
+      "schema_id": "toc-acceptance",
+      "item_type": "schema_example",
+      "item_id": "ITEM-CODE005-001"
+    }
+  ],
+  "evidence_refs": [
+    "EV-CODE005-001"
+  ],
+  "generated_at": "2026-05-07T09:00:00+08:00"
+}

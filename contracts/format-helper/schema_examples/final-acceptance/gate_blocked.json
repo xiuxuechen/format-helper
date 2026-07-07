@@ -1,0 +1,55 @@
+{
+  "schema_id": "final-acceptance",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "blocked",
+  "gate_check": {
+    "status": "failed",
+    "passed": false,
+    "blockers": [
+      {
+        "code": "CODE005-GATE-BLOCKED",
+        "message": "示例用于验证 Gate 阻断场景"
+      }
+    ]
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": true,
+    "checked_path": "logs/example.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "gate_blocked",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "acceptance_type": "blocked_terminal",
+  "skill_results": [
+    "RESULT-CODE005-001"
+  ],
+  "evidence_manifest_path": "logs/evidence_manifest.pre_acceptance.json",
+  "evidence_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "evidence_manifest_size_bytes": 123,
+  "manual_review_summary": {
+    "pending_count": 0,
+    "blocking_count": 1
+  },
+  "warnings": [],
+  "blockers": [
+    {
+      "code": "CODE005-GATE-BLOCKED",
+      "message": "示例用于验证 Gate 阻断场景"
+    }
+  ],
+  "blocking_categories": [
+    "schema_invalid"
+  ],
+  "allowed_warning_categories": [],
+  "evaluated_at": "2026-05-07T09:00:00+08:00"
+}

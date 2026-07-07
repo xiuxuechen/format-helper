@@ -1,0 +1,58 @@
+{
+  "schema_id": "reporting-result",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "done",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": false,
+    "checked_path": "../outside-workspace.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "path_negative",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "reporting_id": "REPORTING-CODE005-001",
+  "final_acceptance_path": "logs/final_acceptance.json",
+  "final_acceptance_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "final_acceptance_size_bytes": 123,
+  "post_acceptance_manifest_ref": {
+    "path": "logs/evidence_manifest.post_acceptance.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 123
+  },
+  "reporting_manifest_ref": {
+    "path": "logs/evidence_manifest.reporting.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "size_bytes": 123
+  },
+  "report_artifacts": [
+    {
+      "artifact_id": "ART-CODE005-001",
+      "kind": "reporting_result",
+      "path": "logs/example.json",
+      "path_kind": "run_relative",
+      "schema_id": "reporting-result",
+      "schema_version": "1.0.0",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 123,
+      "required": true,
+      "producer_result_id": "RESULT-CODE005-001"
+    }
+  ],
+  "warnings": [],
+  "blockers": [],
+  "generated_at": "2026-05-07T09:00:00+08:00"
+}

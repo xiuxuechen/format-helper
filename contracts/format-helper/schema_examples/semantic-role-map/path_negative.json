@@ -1,0 +1,67 @@
+{
+  "schema_id": "semantic-role-map",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "done",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": false,
+    "checked_path": "../outside-workspace.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "path_negative",
+  "_trace_refs": [
+    "41-2",
+    "41-12",
+    "50-3.5"
+  ],
+  "artifact": {
+    "artifact_id": "ART-CODE005-001",
+    "kind": "semantic_role_map",
+    "path": "../outside-workspace.json",
+    "path_kind": "run_relative",
+    "schema_id": "semantic-role-map",
+    "schema_version": "1.0.0",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size_bytes": 123,
+    "required": true,
+    "producer_result_id": "RESULT-CODE005-001"
+  },
+  "roles": [
+    {
+      "role_id": "body-paragraph",
+      "slot_role_kind": "body-paragraph",
+      "role_name": "正文段落"
+    }
+  ],
+  "mappings": [
+    {
+      "fact_id": "F-00001",
+      "target_role_id": "body-paragraph",
+      "confidence": 0.95,
+      "mapping_kind": "direct"
+    }
+  ],
+  "source_refs": [
+    {
+      "source_ref_id": "SRC-CODE005-001",
+      "artifact_id": "ART-CODE005-001",
+      "schema_id": "semantic-role-map",
+      "item_type": "schema_example",
+      "item_id": "ITEM-CODE005-001"
+    }
+  ],
+  "evidence_refs": [
+    "EV-CODE005-001"
+  ],
+  "generated_at": "2026-05-07T09:00:00+08:00"
+}

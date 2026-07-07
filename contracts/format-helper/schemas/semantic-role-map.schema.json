@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/semantic-role-map.schema.json",
+  "title": "Semantic Role Map",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "run_id",
+    "status",
+    "artifact",
+    "roles",
+    "mappings",
+    "source_refs",
+    "evidence_refs",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "semantic-role-map"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "legacy"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "done",
+        "waiting_user",
+        "blocked",
+        "accepted",
+        "accepted_with_warnings",
+        "passed",
+        "passed_with_warnings",
+        "failed"
+      ]
+    },
+    "artifact": {
+      "$ref": "#/$defs/ArtifactRef"
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SemanticRole"
+      }
+    },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SemanticRoleMapping"
+      }
+    },
+    "source_refs": {
+      "type": "array"
+    },
+    "evidence_refs": {
+      "type": "array"
+    },
+    "generated_at": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "path_kind", "schema_id", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "path_kind": {
+          "const": "run_relative"
+        },
+        "schema_id": {
+          "const": "semantic-role-map"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        }
+      }
+    },
+    "SemanticRole": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["role_id", "slot_role_kind"],
+      "properties": {
+        "role_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "slot_role_kind": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "SemanticRoleMapping": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["fact_id", "target_role_id", "confidence", "mapping_kind"],
+      "properties": {
+        "fact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_role_id": {
+          "type": ["string", "null"],
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mapping_kind": {
+          "enum": [
+            "direct",
+            "inferred",
+            "user_confirmed",
+            "unresolved"
+          ]
+        }
+      }
+    }
+  },
+  "description": "CODE-014 semantic-role-map schema: semantic/semantic_role_map.before.json 是角色权威源，提供 roles[].role_id、roles[].slot_role_kind 与 mappings[] 的 fact_id 到 target_role_id 映射。"
+}

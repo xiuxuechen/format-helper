@@ -12,6 +12,8 @@ format-rules/
 # Local OS/editor noise.
 .DS_Store
 Thumbs.db
+.cache/officecli/
+artifacts/
 
 # Local analysis notes.
 WORD_FORMAT_SKILL_ANALYSIS*.md

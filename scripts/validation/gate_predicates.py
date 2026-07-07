@@ -17,7 +17,7 @@ from scripts.utils.simple_yaml import load_yaml
 from scripts.validation.validate_run_state import validate_run_state
 
 TARGET_ROLE_MAP_PATH = "semantic/semantic_role_map.before.json"
-ROLE_SLOT_CONTRACT_PATH = "docs/v4/schemas/role_slot_contract.yaml"
+ROLE_SLOT_CONTRACT_PATH = "contracts/format-helper/schemas/role_slot_contract.yaml"
 SHA256_HEX_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 ALLOWED_RESOLVER_REASON_CODES = {
     "ROLEMAP_CONSISTENT",

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/format-helper/schemas/skill-result.schema.json",
+  "title": "Skill Result",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "contract_version",
+    "result_id",
+    "run_id",
+    "order",
+    "attempt",
+    "idempotency_key",
+    "stage",
+    "status",
+    "schema_valid",
+    "gate_passed",
+    "gate_check",
+    "validation",
+    "artifacts",
+    "next_action",
+    "runtime"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "skill-result"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "contract_version": {
+      "const": "legacy"
+    },
+    "result_id": {},
+    "run_id": {},
+    "order": {},
+    "attempt": {},
+    "idempotency_key": {},
+    "stage": {},
+    "status": {
+      "enum": [
+        "done",
+        "waiting_user",
+        "blocked",
+        "accepted",
+        "accepted_with_warnings",
+        "passed",
+        "passed_with_warnings",
+        "failed"
+      ]
+    },
+    "schema_valid": {},
+    "gate_passed": {},
+    "gate_check": {
+      "type": "object",
+      "required": [
+        "status",
+        "passed"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "passed",
+            "passed_with_warnings",
+            "failed",
+            "not_applicable"
+          ]
+        },
+        "passed": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "validation": {},
+    "artifacts": {},
+    "next_action": {},
+    "runtime": {}
+  },
+  "description": "CODE-005 最小 schema 占位定义。字段级权威以 contracts/format-helper/schemas 为准。",
+  "x_code005_minimum_contract": {
+    "source": "41_SCHEMA_CONTRACTS.md + SCHEMA_MIN_STRATEGY.md",
+    "validates": [
+      "required",
+      "const",
+      "enum",
+      "semver",
+      "canonical_alias",
+      "unknown_enum_blocking",
+      "path_negative_examples"
+    ],
+    "trace_refs": [
+      "41-§2",
+      "41-§12",
+      "50-§3.5"
+    ]
+  }
+}

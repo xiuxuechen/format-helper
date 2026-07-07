@@ -1,0 +1,196 @@
+schema_id: "role-slot-contract"
+schema_version: "1.0.0"
+contract_version: "legacy"
+updated_at: "2026-05-09T00:00:00+08:00"
+role_slot_contracts:
+  cover-title:
+    role_kind: "cover-title"
+    semantic_role_kind_ref: "title"
+    category: "cover"
+    required_slots: ["font_east_asia","font_ascii","font_size_pt","bold","alignment"]
+    optional_slots: ["style_id","space_before_pt","space_after_pt","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","numbering_ref","toc_level"]
+    validation_rules: [{"rule_id":"RSC-COVER-TITLE-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"封面标题必需槽位缺失。","remediation":"重新抽取或人工确认封面标题格式。"},{"rule_id":"RSC-COVER-TITLE-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"封面标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-COVER-TITLE-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"封面标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-COVER-TITLE-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"封面标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-COVER-TITLE-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"封面标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-COVER-TITLE","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.cover-title","value":"cover-title","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  cover-subtitle:
+    role_kind: "cover-subtitle"
+    semantic_role_kind_ref: "title"
+    category: "cover"
+    required_slots: ["font_east_asia","font_ascii","font_size_pt","bold","alignment"]
+    optional_slots: ["style_id","space_before_pt","space_after_pt","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","numbering_ref","toc_level"]
+    validation_rules: [{"rule_id":"RSC-COVER-SUBTITLE-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"封面副标题必需槽位缺失。","remediation":"重新抽取或人工确认封面副标题格式。"},{"rule_id":"RSC-COVER-SUBTITLE-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"封面副标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-COVER-SUBTITLE-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"封面副标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-COVER-SUBTITLE-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"封面副标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-COVER-SUBTITLE-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"封面副标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-COVER-SUBTITLE","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.cover-subtitle","value":"cover-subtitle","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  cover-meta:
+    role_kind: "cover-meta"
+    semantic_role_kind_ref: "heading"
+    category: "cover"
+    required_slots: ["font_east_asia","font_size_pt","alignment"]
+    optional_slots: ["font_ascii","style_id","space_before_pt","space_after_pt"]
+    forbidden_slots: ["outline_level","numbering_ref","toc_level"]
+    validation_rules: [{"rule_id":"RSC-COVER-META-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"封面元信息必需槽位缺失。","remediation":"重新抽取或人工确认封面元信息格式。"},{"rule_id":"RSC-COVER-META-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"封面元信息存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-COVER-META-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"封面元信息槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-COVER-META-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"封面元信息槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-COVER-META-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"封面元信息出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-COVER-META","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.cover-meta","value":"cover-meta","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  revision-table-title:
+    role_kind: "revision-table-title"
+    semantic_role_kind_ref: "heading"
+    category: "heading"
+    required_slots: ["font_east_asia","font_size_pt","alignment"]
+    optional_slots: ["font_ascii","bold","style_id","space_before_pt","space_after_pt"]
+    forbidden_slots: ["numbering_ref","toc_level"]
+    validation_rules: [{"rule_id":"RSC-REVISION-TABLE-TITLE-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"修订表标题必需槽位缺失。","remediation":"重新抽取或人工确认修订表标题格式。"},{"rule_id":"RSC-REVISION-TABLE-TITLE-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"修订表标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-REVISION-TABLE-TITLE-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"修订表标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-REVISION-TABLE-TITLE-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"修订表标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-REVISION-TABLE-TITLE-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"修订表标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-REVISION-TABLE-TITLE","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.revision-table-title","value":"revision-table-title","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  toc-title:
+    role_kind: "toc-title"
+    semantic_role_kind_ref: "toc_entry"
+    category: "toc"
+    required_slots: ["font_east_asia","font_size_pt","bold","alignment"]
+    optional_slots: ["font_ascii","style_id","space_before_pt","space_after_pt"]
+    forbidden_slots: ["numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-TOC-TITLE-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"目录标题必需槽位缺失。","remediation":"重新抽取或人工确认目录标题格式。"},{"rule_id":"RSC-TOC-TITLE-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"目录标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-TOC-TITLE-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"目录标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-TOC-TITLE-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"目录标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-TOC-TITLE-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"目录标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-TOC-TITLE","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.toc-title","value":"toc-title","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  toc-level-1:
+    role_kind: "toc-level-1"
+    semantic_role_kind_ref: "toc_entry"
+    category: "toc"
+    required_slots: ["font_east_asia","font_size_pt","first_line_indent_cm","toc_level"]
+    optional_slots: ["font_ascii","style_id","alignment","left_indent_cm","right_indent_cm","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-TOC-LEVEL-1-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"一级目录条目必需槽位缺失。","remediation":"重新抽取或人工确认一级目录条目格式。"},{"rule_id":"RSC-TOC-LEVEL-1-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"一级目录条目存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-TOC-LEVEL-1-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"一级目录条目槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-TOC-LEVEL-1-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"一级目录条目槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-TOC-LEVEL-1-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"一级目录条目出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-TOC-LEVEL-1","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.toc-level-1","value":"toc-level-1","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  toc-level-2:
+    role_kind: "toc-level-2"
+    semantic_role_kind_ref: "toc_entry"
+    category: "toc"
+    required_slots: ["font_east_asia","font_size_pt","first_line_indent_cm","toc_level"]
+    optional_slots: ["font_ascii","style_id","alignment","left_indent_cm","right_indent_cm","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-TOC-LEVEL-2-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"二级目录条目必需槽位缺失。","remediation":"重新抽取或人工确认二级目录条目格式。"},{"rule_id":"RSC-TOC-LEVEL-2-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"二级目录条目存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-TOC-LEVEL-2-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"二级目录条目槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-TOC-LEVEL-2-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"二级目录条目槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-TOC-LEVEL-2-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"二级目录条目出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-TOC-LEVEL-2","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.toc-level-2","value":"toc-level-2","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  toc-level-3:
+    role_kind: "toc-level-3"
+    semantic_role_kind_ref: "toc_entry"
+    category: "toc"
+    required_slots: ["font_east_asia","font_size_pt","first_line_indent_cm","toc_level"]
+    optional_slots: ["font_ascii","style_id","alignment","left_indent_cm","right_indent_cm","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-TOC-LEVEL-3-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"三级目录条目必需槽位缺失。","remediation":"重新抽取或人工确认三级目录条目格式。"},{"rule_id":"RSC-TOC-LEVEL-3-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"三级目录条目存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-TOC-LEVEL-3-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"三级目录条目槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-TOC-LEVEL-3-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"三级目录条目槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-TOC-LEVEL-3-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"三级目录条目出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-TOC-LEVEL-3","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.toc-level-3","value":"toc-level-3","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  heading-level-1:
+    role_kind: "heading-level-1"
+    semantic_role_kind_ref: "heading"
+    category: "heading"
+    required_slots: ["style_id","font_east_asia","font_ascii","font_size_pt","bold","outline_level","line_spacing_multiple","space_before_pt","space_after_pt"]
+    optional_slots: ["alignment","first_line_indent_cm","left_indent_cm","right_indent_cm"]
+    forbidden_slots: ["toc_level"]
+    validation_rules: [{"rule_id":"RSC-HEADING-LEVEL-1-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"一级标题必需槽位缺失。","remediation":"重新抽取或人工确认一级标题格式。"},{"rule_id":"RSC-HEADING-LEVEL-1-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"一级标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-HEADING-LEVEL-1-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"一级标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-HEADING-LEVEL-1-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"一级标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-HEADING-LEVEL-1-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"一级标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-HEADING-LEVEL-1","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.heading-level-1","value":"heading-level-1","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  heading-level-2:
+    role_kind: "heading-level-2"
+    semantic_role_kind_ref: "heading"
+    category: "heading"
+    required_slots: ["style_id","font_east_asia","font_ascii","font_size_pt","bold","outline_level","line_spacing_multiple","space_before_pt","space_after_pt"]
+    optional_slots: ["alignment","first_line_indent_cm","left_indent_cm","right_indent_cm"]
+    forbidden_slots: ["toc_level"]
+    validation_rules: [{"rule_id":"RSC-HEADING-LEVEL-2-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"二级标题必需槽位缺失。","remediation":"重新抽取或人工确认二级标题格式。"},{"rule_id":"RSC-HEADING-LEVEL-2-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"二级标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-HEADING-LEVEL-2-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"二级标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-HEADING-LEVEL-2-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"二级标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-HEADING-LEVEL-2-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"二级标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-HEADING-LEVEL-2","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.heading-level-2","value":"heading-level-2","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  heading-level-3:
+    role_kind: "heading-level-3"
+    semantic_role_kind_ref: "heading"
+    category: "heading"
+    required_slots: ["style_id","font_east_asia","font_ascii","font_size_pt","bold","outline_level","line_spacing_multiple","space_before_pt","space_after_pt"]
+    optional_slots: ["alignment","first_line_indent_cm","left_indent_cm","right_indent_cm"]
+    forbidden_slots: ["toc_level"]
+    validation_rules: [{"rule_id":"RSC-HEADING-LEVEL-3-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"三级标题必需槽位缺失。","remediation":"重新抽取或人工确认三级标题格式。"},{"rule_id":"RSC-HEADING-LEVEL-3-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"三级标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-HEADING-LEVEL-3-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"三级标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-HEADING-LEVEL-3-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"三级标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-HEADING-LEVEL-3-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"三级标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-HEADING-LEVEL-3","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.heading-level-3","value":"heading-level-3","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  heading-level-4:
+    role_kind: "heading-level-4"
+    semantic_role_kind_ref: "heading"
+    category: "heading"
+    required_slots: ["style_id","font_east_asia","font_ascii","font_size_pt","bold","outline_level","line_spacing_multiple","space_before_pt","space_after_pt"]
+    optional_slots: ["alignment","first_line_indent_cm","left_indent_cm","right_indent_cm"]
+    forbidden_slots: ["toc_level"]
+    validation_rules: [{"rule_id":"RSC-HEADING-LEVEL-4-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"四级标题必需槽位缺失。","remediation":"重新抽取或人工确认四级标题格式。"},{"rule_id":"RSC-HEADING-LEVEL-4-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"四级标题存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-HEADING-LEVEL-4-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"四级标题槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-HEADING-LEVEL-4-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"四级标题槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-HEADING-LEVEL-4-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"四级标题出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-HEADING-LEVEL-4","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.heading-level-4","value":"heading-level-4","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  body-paragraph:
+    role_kind: "body-paragraph"
+    semantic_role_kind_ref: "body"
+    category: "text_content"
+    required_slots: ["style_id","font_east_asia","font_size_pt","alignment","first_line_indent_cm","left_indent_cm","right_indent_cm","space_before_pt","space_after_pt","line_spacing_multiple"]
+    optional_slots: ["font_ascii","bold","italic","underline"]
+    forbidden_slots: ["outline_level","toc_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-BODY-PARAGRAPH-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"正文段落必需槽位缺失。","remediation":"重新抽取或人工确认正文段落格式。"},{"rule_id":"RSC-BODY-PARAGRAPH-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"正文段落存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-BODY-PARAGRAPH-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"正文段落槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-BODY-PARAGRAPH-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"正文段落槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-BODY-PARAGRAPH-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"正文段落出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-BODY-PARAGRAPH","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.body-paragraph","value":"body-paragraph","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  list-paragraph:
+    role_kind: "list-paragraph"
+    semantic_role_kind_ref: "list_item"
+    category: "text_content"
+    required_slots: ["style_id","font_east_asia","font_size_pt","alignment","first_line_indent_cm","left_indent_cm","right_indent_cm","space_before_pt","space_after_pt","line_spacing_multiple","numbering_ref"]
+    optional_slots: ["font_ascii","bold","italic","underline"]
+    forbidden_slots: ["outline_level","toc_level"]
+    validation_rules: [{"rule_id":"RSC-LIST-PARAGRAPH-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"列表段落必需槽位缺失。","remediation":"重新抽取或人工确认列表段落格式。"},{"rule_id":"RSC-LIST-PARAGRAPH-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"列表段落存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-LIST-PARAGRAPH-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"列表段落槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-LIST-PARAGRAPH-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"列表段落槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-LIST-PARAGRAPH-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"列表段落出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-LIST-PARAGRAPH","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.list-paragraph","value":"list-paragraph","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  table-content:
+    role_kind: "table-content"
+    semantic_role_kind_ref: "body"
+    category: "table"
+    required_slots: ["font_east_asia","font_size_pt","alignment","vertical_alignment","line_spacing_multiple","first_line_indent_cm","left_indent_cm","right_indent_cm","space_before_pt","space_after_pt"]
+    optional_slots: ["font_ascii","bold","style_id"]
+    forbidden_slots: ["outline_level","toc_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-TABLE-CONTENT-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"表格内容必需槽位缺失。","remediation":"重新抽取或人工确认表格内容格式。"},{"rule_id":"RSC-TABLE-CONTENT-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"表格内容存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-TABLE-CONTENT-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"表格内容槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-TABLE-CONTENT-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"表格内容槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-TABLE-CONTENT-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"表格内容出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-TABLE-CONTENT","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.table-content","value":"table-content","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  header-footer:
+    role_kind: "header-footer"
+    semantic_role_kind_ref: "header_footer"
+    category: "header_footer"
+    required_slots: ["font_east_asia","font_size_pt","alignment","page_number_format"]
+    optional_slots: ["font_ascii","style_id","line_spacing_multiple"]
+    forbidden_slots: ["outline_level","toc_level","numbering_ref"]
+    validation_rules: [{"rule_id":"RSC-HEADER-FOOTER-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"页眉页脚必需槽位缺失。","remediation":"重新抽取或人工确认页眉页脚格式。"},{"rule_id":"RSC-HEADER-FOOTER-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"页眉页脚存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-HEADER-FOOTER-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"页眉页脚槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-HEADER-FOOTER-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"页眉页脚槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-HEADER-FOOTER-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"页眉页脚出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-HEADER-FOOTER","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.header-footer","value":"header-footer","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+  section-page-setup:
+    role_kind: "section-page-setup"
+    semantic_role_kind_ref: null
+    category: "page"
+    required_slots: ["page_orientation","page_width_twips","page_height_twips","margin_top_cm","margin_bottom_cm","margin_left_cm","margin_right_cm","header_distance_cm","footer_distance_cm"]
+    optional_slots: ["page_number_format"]
+    forbidden_slots: ["font_east_asia","font_size_pt","outline_level","numbering_ref","toc_level"]
+    validation_rules: [{"rule_id":"RSC-SECTION-PAGE-SETUP-MISSING-REQUIRED","condition":"required_slot_missing","severity":"error","blocks_confirmation_gate":true,"message":"分节页面设置必需槽位缺失。","remediation":"重新抽取或人工确认分节页面设置。"},{"rule_id":"RSC-SECTION-PAGE-SETUP-UNRESOLVED","condition":"required_slot_unresolved","severity":"error","blocks_confirmation_gate":true,"message":"分节页面设置存在未解析槽位。","remediation":"人工确认未解析格式。"},{"rule_id":"RSC-SECTION-PAGE-SETUP-LOW-CONFIDENCE","condition":"required_slot_confidence_lt_0_85","severity":"warning","blocks_confirmation_gate":false,"message":"分节页面设置槽位置信度偏低。","remediation":"保留警示或人工确认。"},{"rule_id":"RSC-SECTION-PAGE-SETUP-CONFLICT","condition":"required_slot_conflict","severity":"error","blocks_confirmation_gate":true,"message":"分节页面设置槽位存在冲突。","remediation":"从候选值中选择权威值。"},{"rule_id":"RSC-SECTION-PAGE-SETUP-FORBIDDEN-PRESENT","condition":"forbidden_slot_present","severity":"error","blocks_confirmation_gate":true,"message":"分节页面设置出现禁止槽位。","remediation":"移除错误槽位映射。"}]
+    source_refs: [{"source_ref_id":"SRC-RSC-SECTION-PAGE-SETUP","artifact_id":"ART-SLOT-DESIGN","artifact_kind":"design_doc","schema_id":null,"item_type":"design_section","item_id":"SLOT-3.6","attribute":"role_slot_contracts.section-page-setup","value":"section-page-setup","unit":null,"source_rule_ref":null,"source_fact_ref":null,"source_role_ref":null,"locator":null,"evidence_refs":[]}]
+slot_type_registry:
+  font_east_asia: {"slot_name":"font_east_asia","data_type":"string","unit":null,"nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:rFonts","attribute":"w:eastAsia"},"description":"中文字体"}
+  font_ascii: {"slot_name":"font_ascii","data_type":"string","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:rFonts","attribute":"w:ascii"},"description":"西文字体"}
+  font_size_pt: {"slot_name":"font_size_pt","data_type":"number","unit":"pt","nullable":false,"enum_values":null,"range":{"min":5,"max":72},"ooxml_source":{"element":"w:sz","attribute":"w:val"},"description":"字号，单位磅"}
+  bold: {"slot_name":"bold","data_type":"boolean","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:b","attribute":"present"},"description":"是否加粗"}
+  italic: {"slot_name":"italic","data_type":"boolean","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:i","attribute":"present"},"description":"是否斜体"}
+  underline: {"slot_name":"underline","data_type":"boolean","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:u","attribute":"w:val"},"description":"下划线"}
+  alignment: {"slot_name":"alignment","data_type":"enum","unit":null,"nullable":false,"enum_values":["left","right","center","both","distribute"],"range":null,"ooxml_source":{"element":"w:jc","attribute":"w:val"},"description":"水平对齐方式"}
+  vertical_alignment: {"slot_name":"vertical_alignment","data_type":"enum","unit":null,"nullable":true,"enum_values":["top","center","bottom"],"range":null,"ooxml_source":{"element":"w:vAlign","attribute":"w:val"},"description":"单元格垂直对齐方式"}
+  outline_level: {"slot_name":"outline_level","data_type":"number","unit":null,"nullable":true,"enum_values":null,"range":{"min":0,"max":9},"ooxml_source":{"element":"w:outlineLvl","attribute":"w:val"},"description":"大纲级别"}
+  first_line_indent_cm: {"slot_name":"first_line_indent_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:ind","attribute":"w:firstLine"},"description":"首行缩进"}
+  left_indent_cm: {"slot_name":"left_indent_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:ind","attribute":"w:left"},"description":"左缩进"}
+  right_indent_cm: {"slot_name":"right_indent_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:ind","attribute":"w:right"},"description":"右缩进"}
+  space_before_pt: {"slot_name":"space_before_pt","data_type":"number","unit":"pt","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:spacing","attribute":"w:before"},"description":"段前间距"}
+  space_after_pt: {"slot_name":"space_after_pt","data_type":"number","unit":"pt","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:spacing","attribute":"w:after"},"description":"段后间距"}
+  line_spacing_multiple: {"slot_name":"line_spacing_multiple","data_type":"number","unit":"multiple","nullable":false,"enum_values":null,"range":{"min":0.5,"max":3.0},"ooxml_source":{"element":"w:spacing","attribute":"w:line","rule_attribute":"w:lineRule"},"description":"倍数行距"}
+  style_id: {"slot_name":"style_id","data_type":"string","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pStyle","attribute":"w:val"},"description":"Word 样式 ID"}
+  toc_level: {"slot_name":"toc_level","data_type":"number","unit":null,"nullable":false,"enum_values":null,"range":{"min":1,"max":9},"ooxml_source":{"element":"w:instrText","attribute":"TOC-level"},"description":"目录级别"}
+  numbering_ref: {"slot_name":"numbering_ref","data_type":"string","unit":null,"nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:numPr","attribute":"w:numId"},"description":"编号引用"}
+  page_orientation: {"slot_name":"page_orientation","data_type":"enum","unit":null,"nullable":false,"enum_values":["portrait","landscape"],"range":null,"ooxml_source":{"element":"w:pgSz","attribute":"w:orient"},"description":"页面方向"}
+  page_width_twips: {"slot_name":"page_width_twips","data_type":"number","unit":"twip","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgSz","attribute":"w:w"},"description":"页面宽度"}
+  page_height_twips: {"slot_name":"page_height_twips","data_type":"number","unit":"twip","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgSz","attribute":"w:h"},"description":"页面高度"}
+  margin_top_cm: {"slot_name":"margin_top_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:top"},"description":"上页边距"}
+  margin_bottom_cm: {"slot_name":"margin_bottom_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:bottom"},"description":"下页边距"}
+  margin_left_cm: {"slot_name":"margin_left_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:left"},"description":"左页边距"}
+  margin_right_cm: {"slot_name":"margin_right_cm","data_type":"number","unit":"cm","nullable":false,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:right"},"description":"右页边距"}
+  header_distance_cm: {"slot_name":"header_distance_cm","data_type":"number","unit":"cm","nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:header"},"description":"页眉距边界距离"}
+  footer_distance_cm: {"slot_name":"footer_distance_cm","data_type":"number","unit":"cm","nullable":true,"enum_values":null,"range":null,"ooxml_source":{"element":"w:pgMar","attribute":"w:footer"},"description":"页脚距边界距离"}
+  page_number_format: {"slot_name":"page_number_format","data_type":"enum","unit":null,"nullable":true,"enum_values":["decimal","upperRoman","lowerRoman","upperLetter","lowerLetter","chineseCounting","none"],"range":null,"ooxml_source":{"element":"w:pgNumType","attribute":"w:fmt"},"description":"页码格式"}
+common_validation_rules:
+  - rule_id: "RSC-COMMON-ZERO-CONFIDENCE"
+    condition: "required_slot_confidence_eq_0"
+    severity: "error"
+    blocks_confirmation_gate: true
+    message: "槽位值置信度为0，无法自动确定，必须人工确认。"
+    remediation: "人工确认该槽位的正确值，或从标准文档中重新抽取。"
+    applies_to: "all_roles"
+    applies_to_slots: "required_slots"

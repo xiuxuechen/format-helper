@@ -1,0 +1,98 @@
+{
+  "schema_id": "role-format-slot-facts",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "rule_20260509_example",
+  "facts_id": "RFSF-rule_20260509_example-001",
+  "source_snapshot_path": "snapshots/officecli-document-snapshot.standard.json",
+  "source_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_snapshot_artifact_id": "officecli-snapshot-standard",
+  "source_snapshot_schema_version": "2.0.0",
+  "contract_ref": {
+    "contract_path": "contracts/format-helper/schemas/role_slot_contract.yaml",
+    "contract_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "contract_version": "1.0.0",
+    "path_kind": "workspace_relative"
+  },
+  "roles": [
+    {
+      "role_kind": "body-paragraph",
+      "role_id": "body-paragraph",
+      "target_role_ref": {
+        "path": "semantic/semantic_role_map.before.json",
+        "path_kind": "run_relative",
+        "role_id": "body-paragraph",
+        "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "semantic_role_kind_ref": "body",
+      "category": "text_content",
+      "sample_count": 1,
+      "samples": [
+        {
+          "fact_id": "N-111111111111111111111111",
+          "locator": {
+            "officecli_path": "/body/p[1]",
+            "node_id": "N-111111111111111111111111",
+            "part_name": "document",
+            "content_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "element_id_legacy": null,
+          "fact_kind": "paragraph",
+          "text_preview": "正文",
+          "extracted_slots": {
+            "line_spacing_multiple": {
+              "value": 1.5,
+              "source": "direct",
+              "confidence": 0.98,
+              "evidence_refs": [],
+              "notes": ""
+            }
+          }
+        }
+      ],
+      "slot_summary": {
+        "line_spacing_multiple": {
+          "slot_name": "line_spacing_multiple",
+          "unit": "multiple",
+          "status": "resolved",
+          "mode_value": 1.5,
+          "mode_coverage": 1.0,
+          "confidence": 0.98,
+          "total_samples": 1,
+          "value_histogram": [
+            {
+              "value": 1.5,
+              "count": 1,
+              "ratio": 1.0,
+              "sample_fact_ids": ["N-111111111111111111111111"]
+            }
+          ],
+          "conflicts": [],
+          "primary_source": "direct",
+          "source_fact_refs": ["N-111111111111111111111111"],
+          "source_rule_refs": [],
+          "requires_confirmation": false,
+          "confirmation_prompt": "",
+          "triggered_rule_ids": []
+        }
+      },
+      "role_confidence": 1.0,
+      "requires_confirmation": false,
+      "confirmation_reasons": [],
+      "reasons": [
+        {
+          "reason_code": "ROLEMAP_CONSISTENT",
+          "message": "采用 role-map 可信映射。",
+          "source": "role-map",
+          "evidence_ref": "N-111111111111111111111111"
+        }
+      ]
+    }
+  ],
+  "gate_status": "passed",
+  "gate_blockers": [],
+  "manual_review_proposals": [],
+  "source_refs": [],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}

@@ -1,7 +1,7 @@
-"""V4 必测子集的最小自动化 fixture/validator。
+"""LEGACY 必测子集的最小自动化 fixture/validator。
 
 覆盖条款：
-- 40-§7.3 V4-T18/V4-T28/V4-T36/V4-T39/V4-T43/V4-T45。
+- 40-§7.3 LEGACY-T18/LEGACY-T28/LEGACY-T36/LEGACY-T39/LEGACY-T43/LEGACY-T45。
 - 41-§3.4 路径策略、§3.13 ReviewCheck Object、§11.10 repair-execution-log、
   §11.12 semantic-audit、§11.14 review-result。
 """
@@ -92,8 +92,8 @@ def validate_repair_execution_log_minimal(log: dict[str, Any]) -> list[str]:
             errors.append(f"{field_name} is required")
     if log.get("schema_id") != "repair-execution-log":
         errors.append("schema_id must be repair-execution-log")
-    if log.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if log.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
     for size_field in ("repair_plan_size_bytes", "working_docx_size_bytes"):
         if not isinstance(log.get(size_field), int) or log.get(size_field) <= 0:
             errors.append(f"{size_field} must be positive integer")

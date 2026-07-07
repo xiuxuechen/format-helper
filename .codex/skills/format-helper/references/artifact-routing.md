@@ -22,6 +22,6 @@ format_runs/{run_id}/
 - `plans/PLAN.yaml`
 - `snapshots/*.json`
 - `semantic/*.json`
-- 修复模式下必查 `plans/repair_plan.yaml` 和 `output/*.docx`
+- 【OFFICECLI】修复模式下必查 `plans/repair_plan.finalized.r*.yaml`（非 `repair_plan.yaml`）和 `output/*.docx`
 
 缺失关键产物时，恢复任务必须列出阻塞项，不得跳过 Gate。

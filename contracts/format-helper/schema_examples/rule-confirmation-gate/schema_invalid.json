@@ -1,0 +1,20 @@
+{
+  "schema_id": "rule-confirmation-gate",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code016-example",
+  "gate_id": "RCG-invalid",
+  "status": "approved",
+  "slot_facts_ref": {
+    "path": "semantic/role_format_slot_facts.json",
+    "path_kind": "run_relative",
+    "facts_id": "RFSF-run-code016-example-001",
+    "schema_id": "role-format-slot-facts"
+  },
+  "manual_review_items_path": "plans/manual_review_items.json",
+  "unresolved_slots": [],
+  "conflicts": [],
+  "manual_review_item_refs": [],
+  "evidence_refs": [],
+  "generated_at": "2026-05-09T00:00:00+08:00"
+}

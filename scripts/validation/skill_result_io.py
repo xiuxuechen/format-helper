@@ -245,7 +245,7 @@ def build_synthetic_failure(
     return {
         "schema_id": "skill-result",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "result_id": result_id,
         "run_id": run_id,
         "order": order,

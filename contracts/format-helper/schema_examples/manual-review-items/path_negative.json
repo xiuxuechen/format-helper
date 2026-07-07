@@ -1,0 +1,41 @@
+{
+  "schema_id": "manual-review-items",
+  "schema_version": "1.0.0",
+  "contract_version": "legacy",
+  "run_id": "run-code005-example",
+  "status": "done",
+  "gate_check": {
+    "status": "passed",
+    "passed": true,
+    "blockers": []
+  },
+  "path_policy": {
+    "path_kind": "run_relative",
+    "path_valid": false,
+    "checked_path": "../outside-workspace.json"
+  },
+  "validation": {
+    "schema_valid": true,
+    "errors": []
+  },
+  "_code005_example_category": "path_negative",
+  "_trace_refs": [
+    "41-§2",
+    "41-§12",
+    "50-§3.5"
+  ],
+  "required": true,
+  "items_path": "plans/manual_review_items.json",
+  "summary_path": "reports/MANUAL_REVIEW.md",
+  "generated_at": "2026-05-07T09:00:00+08:00",
+  "items": [
+    {
+      "review_id": "MR-CODE005-001",
+      "status": "pending",
+      "decision": {
+        "status": "pending",
+        "allows_continue": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+OfficeCLI
+=========
+
+项目：iOfficeAI/OfficeCLI
+版本：v1.0.113
+固定提交：8e5b17977493de1b46536561a50971799c4fc665
+许可证：Apache License 2.0
+上游地址：https://github.com/iOfficeAI/OfficeCLI
+固定 Release：https://github.com/iOfficeAI/OfficeCLI/releases/tag/v1.0.113
+
+format-helper 将 OfficeCLI 作为独立第三方可执行程序使用。下载器不得修改 OfficeCLI 二进制，运行时必须按 tools/officecli/officecli.lock.json 校验资产名、大小、SHA-256 和版本。
+
+Apache License 2.0 正文以 OfficeCLI 上游仓库 LICENSE 文件为准；发布包必须随附该许可证文本或可审计引用。

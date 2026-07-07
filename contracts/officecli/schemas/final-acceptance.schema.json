@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/officecli/final-acceptance.schema.json",
+  "title": "final-acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "acceptance_id", "run_id",
+    "contract_version", "status", "source_docx_ref", "lock_ref",
+    "capability_ref", "before_snapshot_ref", "after_snapshot_ref",
+    "plan_ref", "request_ref", "result_refs", "repair_log_ref",
+    "review_ref", "evidence_manifest_ref", "toc_acceptance_ref",
+    "source_hash_unchanged", "all_actions_reviewed", "all_gates_passed",
+    "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "final-acceptance" },
+    "schema_version": { "const": "2.0.0" },
+    "contract_version": { "const": "officecli" },
+    "acceptance_id": { "type": "string" },
+    "run_id": { "type": "string" },
+    "status": { "enum": ["accepted", "blocked", "rejected"] },
+    "source_docx_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "final_docx_ref": {
+      "oneOf": [{ "$ref": "#/$defs/ArtifactRef" }, { "type": "null" }]
+    },
+    "lock_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "capability_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "before_snapshot_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "after_snapshot_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "plan_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "request_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "result_refs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "repair_log_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "review_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "evidence_manifest_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "toc_acceptance_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "source_hash_unchanged": { "type": "boolean" },
+    "all_actions_reviewed": { "type": "boolean" },
+    "all_gates_passed": { "type": "boolean" },
+    "accepted_at": { "type": ["string", "null"], "format": "date-time" },
+    "blocking_codes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "gate_check": { "$ref": "#/$defs/GateCheck" }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id","kind","relative_path","sha256","size_bytes"],
+      "properties": {
+        "artifact_id": { "type": "string" },
+        "kind": { "enum": ["lock","capability","snapshot","plan","request","result","log","review","evidence","toc_acceptance","final_acceptance","docx","html","png","raw_xml","executable","license"] },
+        "relative_path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string","null"] },
+        "schema_version": { "type": ["string","null"] }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id","status","checked_at","predicate_version","evidence_refs","failed_codes"],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "status": { "enum": ["passed","failed","blocked"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "failed_codes": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

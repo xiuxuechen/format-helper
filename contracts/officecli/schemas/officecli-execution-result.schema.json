@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/officecli/officecli-execution-result.schema.json",
+  "title": "officecli-execution-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "result_id", "run_id",
+    "request_ref", "created_at", "extensions",
+    "officecli_version", "runtime_id", "executable_sha256",
+    "started_at", "finished_at", "duration_ms",
+    "status", "working_docx_before_ref", "working_docx_after_ref",
+    "failed_batch_id", "failed_operation_id", "retryable", "error",
+    "batch_results", "stdout_artifacts", "stderr_artifacts", "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "officecli-execution-result" },
+    "schema_version": { "const": "2.0.0" },
+    "result_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "request_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "extensions": { "type": "object", "additionalProperties": false },
+    "officecli_version": { "const": "1.0.113" },
+    "runtime_id": {
+      "enum": ["win-x64","win-arm64","linux-x64-gnu","linux-arm64-gnu","linux-x64-musl","linux-arm64-musl","osx-x64","osx-arm64"]
+    },
+    "executable_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "status": { "enum": ["done", "failed", "blocked"] },
+    "working_docx_before_ref": { "$ref": "#/$defs/ArtifactRef" },
+    "working_docx_after_ref": { "oneOf": [{"$ref": "#/$defs/ArtifactRef"}, {"type": "null"}] },
+    "batch_results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/BatchResult" }
+    },
+    "failed_batch_id": { "type": ["string", "null"] },
+    "failed_operation_id": { "type": ["string", "null"] },
+    "retryable": { "type": "boolean" },
+    "error": { "$ref": "#/$defs/ExecutionError" },
+    "stdout_artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "stderr_artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "gate_check": { "$ref": "#/$defs/GateCheck" }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "done"}}},
+      "then": {
+        "properties": {
+          "working_docx_after_ref": {"$ref": "#/$defs/ArtifactRef"},
+          "failed_batch_id": {"type": "null"},
+          "failed_operation_id": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"status": {"const": "failed"}}},
+      "then": {
+        "properties": {
+          "working_docx_after_ref": {"type": "null"},
+          "failed_batch_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "kind", "relative_path", "sha256", "size_bytes", "schema_id", "schema_version"],
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["lock","capability","snapshot","plan","request","result","log","review","evidence","toc_acceptance","final_acceptance","docx","html","png","raw_xml","executable","license"] },
+        "relative_path": { "type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:|[.][.])"} },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string", "null"] },
+        "schema_version": { "type": ["string", "null"] }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes"],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "status": { "enum": ["passed", "failed", "blocked"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "failed_codes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "ExecutionError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "reason_code", "message", "stage", "retryable", "failed_artifact_ref", "native_exit_code", "native_error", "stderr_artifact_ref"],
+      "properties": {
+        "code": { "type": "string" },
+        "reason_code": { "type": "string" },
+        "message": { "type": "string" },
+        "stage": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "failed_artifact_ref": {
+          "oneOf": [{"$ref": "#/$defs/ArtifactRef"}, {"type": "null"}]
+        },
+        "native_exit_code": { "type": ["integer", "null"] },
+        "native_error": { "type": ["string", "null"] },
+        "stderr_artifact_ref": {
+          "oneOf": [{"$ref": "#/$defs/ArtifactRef"}, {"type": "null"}]
+        }
+      }
+    },
+    "OperationResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "source_action_id", "index", "status", "native_success", "native_output", "native_error", "before_target_fingerprint", "after_target_fingerprint", "postconditions_passed", "duration_ms"],
+      "properties": {
+        "operation_id": { "type": "string" },
+        "source_action_id": { "type": "string" },
+        "index": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["executed", "already_applied", "failed", "not_run"] },
+        "native_success": { "type": ["boolean", "null"] },
+        "native_output": {},
+        "native_error": { "type": ["string", "null"] },
+        "before_target_fingerprint": { "type": ["string", "null"] },
+        "after_target_fingerprint": { "type": ["string", "null"] },
+        "postconditions_passed": { "type": "boolean" },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "BatchResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batch_id", "sequence", "started_at", "finished_at", "duration_ms", "exit_code", "native_success", "status", "stdout_artifact_ref", "stderr_artifact_ref", "working_before_sha256", "working_after_sha256", "operation_results"],
+      "properties": {
+        "batch_id": { "type": "string" },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "exit_code": { "type": "integer" },
+        "native_success": { "type": "boolean" },
+        "status": { "enum": ["done", "failed", "blocked"] },
+        "stdout_artifact_ref": { "$ref": "#/$defs/ArtifactRef" },
+        "stderr_artifact_ref": { "$ref": "#/$defs/ArtifactRef" },
+        "working_before_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "working_after_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "operation_results": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/OperationResult" }
+        }
+      }
+    }
+  }
+}

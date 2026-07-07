@@ -1,4 +1,4 @@
-"""v4 final_acceptance 与 reporting_result 最小生成和校验工具。
+"""legacy final_acceptance 与 reporting_result 最小生成和校验工具。
 
 覆盖条款：
 - 40-§7.4 final_acceptance 生成后不可变，reporting_result 只能后置引用。
@@ -13,6 +13,7 @@ import json
 import os
 import re
 from copy import deepcopy
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,8 @@ from scripts.validation.skill_result_io import canonical_json, compute_file_sha2
 FINAL_ACCEPTANCE_PATH = "logs/final_acceptance.json"
 REPORTING_RESULT_PATH = "logs/reporting_result.json"
 PRE_ACCEPTANCE_MANIFEST_PATH = GENERATION_PATHS["pre_acceptance"]
+ROOT = Path(__file__).resolve().parents[2]
+TOC_ACCEPTANCE_OFFICECLI_SCHEMA_PATH = ROOT / "contracts" / "officecli" / "schemas" / "toc-acceptance.schema.json"
 
 ACCEPTANCE_TYPES = {
     "final_delivery",
@@ -117,9 +120,108 @@ REPORT_ARTIFACT_REQUIRED_FIELDS = {
     "language",
 }
 
+OFFICECLI_ARTIFACT_KINDS = {
+    "lock", "capability", "snapshot", "plan", "request", "result", "log",
+    "review", "evidence", "toc_acceptance", "final_acceptance", "docx",
+    "html", "png", "raw_xml", "executable", "license",
+}
+OFFICECLI_ARTIFACT_REQUIRED_FIELDS = {"artifact_id", "kind", "relative_path", "sha256", "size_bytes"}
+OFFICECLI_ARTIFACT_ALLOWED_FIELDS = OFFICECLI_ARTIFACT_REQUIRED_FIELDS | {"schema_id", "schema_version"}
+OFFICECLI_GATE_REQUIRED_FIELDS = {
+    "gate_id", "status", "checked_at", "predicate_version", "evidence_refs", "failed_codes",
+}
+OFFICECLI_FINAL_REQUIRED_FIELDS = {
+    "schema_id", "schema_version", "contract_version", "acceptance_id", "run_id", "status",
+    "source_docx_ref", "lock_ref", "capability_ref", "before_snapshot_ref", "after_snapshot_ref",
+    "plan_ref", "request_ref", "result_refs", "repair_log_ref", "review_ref",
+    "evidence_manifest_ref", "toc_acceptance_ref", "source_hash_unchanged",
+    "all_actions_reviewed", "all_gates_passed", "gate_check",
+}
+OFFICECLI_FINAL_ALLOWED_FIELDS = OFFICECLI_FINAL_REQUIRED_FIELDS | {
+    "final_docx_ref", "accepted_at", "blocking_codes",
+}
+
 
 class FinalAcceptanceError(ValueError):
     """final_acceptance/reporting_result 契约错误。"""
+
+
+def _validate_officecli_artifact_ref(value: Any, field_name: str) -> list[str]:
+    """严格校验 officecli ArtifactRef，阻断空对象、路径逃逸和伪造 hash。"""
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"{field_name} must be ArtifactRef object"]
+    missing = sorted(OFFICECLI_ARTIFACT_REQUIRED_FIELDS - set(value))
+    unknown = sorted(set(value) - OFFICECLI_ARTIFACT_ALLOWED_FIELDS)
+    if missing:
+        errors.append(f"{field_name} missing fields: {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{field_name} has unknown fields: {', '.join(unknown)}")
+    if not isinstance(value.get("artifact_id"), str) or not value.get("artifact_id"):
+        errors.append(f"{field_name}.artifact_id must be non-empty string")
+    if value.get("kind") not in OFFICECLI_ARTIFACT_KINDS:
+        errors.append(f"{field_name}.kind is not allowed: {value.get('kind')}")
+    relative_path = value.get("relative_path")
+    if not isinstance(relative_path, str) or not relative_path:
+        errors.append(f"{field_name}.relative_path must be non-empty string")
+    else:
+        normalized = relative_path.replace("\\", "/")
+        if Path(relative_path).is_absolute() or normalized.startswith("../") or "/../" in normalized:
+            errors.append(f"{field_name}.relative_path must not escape: {relative_path}")
+    if not isinstance(value.get("sha256"), str) or re.fullmatch(r"[a-f0-9]{64}", value.get("sha256", "")) is None:
+        errors.append(f"{field_name}.sha256 must be lowercase sha256")
+    size_bytes = value.get("size_bytes")
+    if not isinstance(size_bytes, int) or isinstance(size_bytes, bool) or size_bytes < 0:
+        errors.append(f"{field_name}.size_bytes must be non-negative integer")
+    for optional in ("schema_id", "schema_version"):
+        if optional in value and value[optional] is not None and not isinstance(value[optional], str):
+            errors.append(f"{field_name}.{optional} must be string or null")
+    return errors
+
+
+def _validate_officecli_gate_check(value: Any, field_name: str = "gate_check") -> list[str]:
+    """严格校验 officecli GateCheck。"""
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [f"{field_name} must be GateCheck object"]
+    missing = sorted(OFFICECLI_GATE_REQUIRED_FIELDS - set(value))
+    unknown = sorted(set(value) - OFFICECLI_GATE_REQUIRED_FIELDS)
+    if missing:
+        errors.append(f"{field_name} missing fields: {', '.join(missing)}")
+    if unknown:
+        errors.append(f"{field_name} has unknown fields: {', '.join(unknown)}")
+    for key in ("gate_id", "checked_at", "predicate_version"):
+        if not isinstance(value.get(key), str) or not value.get(key):
+            errors.append(f"{field_name}.{key} must be non-empty string")
+    if value.get("status") not in {"passed", "failed", "blocked"}:
+        errors.append(f"{field_name}.status is not allowed: {value.get('status')}")
+    for key in ("evidence_refs", "failed_codes"):
+        items = value.get(key)
+        if not isinstance(items, list) or any(not isinstance(item, str) for item in items):
+            errors.append(f"{field_name}.{key} must be string array")
+    return errors
+
+
+def _validate_toc_acceptance_officecli_payload(payload: Any) -> list[str]:
+    """使用 officecli toc-acceptance JSON Schema 校验引用产物。"""
+    if not isinstance(payload, dict):
+        return ["toc_acceptance_ref must be toc-acceptance object"]
+    try:
+        from jsonschema import Draft202012Validator, FormatChecker
+    except ImportError:
+        return ["jsonschema is required to validate toc_acceptance_ref"]
+    schema = json.loads(TOC_ACCEPTANCE_OFFICECLI_SCHEMA_PATH.read_text(encoding="utf-8"))
+    errors = [
+        f"toc_acceptance_ref schema error: {error.message}"
+        for error in Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(payload)
+    ]
+    checked_at = payload.get("gate_check", {}).get("checked_at") if isinstance(payload.get("gate_check"), dict) else None
+    if isinstance(checked_at, str):
+        try:
+            datetime.fromisoformat(checked_at.replace("Z", "+00:00"))
+        except ValueError:
+            errors.append("toc_acceptance_ref schema error: gate_check.checked_at must be date-time")
+    return errors
 
 
 def _resolve_run_relative_path(run_dir: Path, rel_path: str) -> Path:
@@ -318,11 +420,11 @@ def _validate_toc_acceptance(final_acceptance: dict[str, Any], run_dir: Path | N
     except json.JSONDecodeError as exc:
         errors.append(f"toc_acceptance_path invalid json: {exc}")
         return
-    toc_errors = validate_toc_acceptance_v4(toc, final_acceptance=final_acceptance)
+    toc_errors = validate_toc_acceptance_legacy(toc, final_acceptance=final_acceptance)
     errors.extend(toc_errors)
 
 
-def validate_toc_acceptance_v4(
+def validate_toc_acceptance_legacy(
     toc_acceptance: dict[str, Any],
     *,
     final_acceptance: dict[str, Any] | None = None,
@@ -336,8 +438,8 @@ def validate_toc_acceptance_v4(
             errors.append(f"toc_acceptance.{field_name} is required")
     if toc_acceptance.get("schema_id") != "toc-acceptance":
         errors.append("toc_acceptance.schema_id must be toc-acceptance")
-    if toc_acceptance.get("contract_version") != "v4":
-        errors.append("toc_acceptance.contract_version must be v4")
+    if toc_acceptance.get("contract_version") != "legacy":
+        errors.append("toc_acceptance.contract_version must be legacy")
     if toc_acceptance.get("acceptance_status") not in TOC_ACCEPTANCE_STATUSES:
         errors.append("toc_acceptance.acceptance_status is not allowed")
     mode = toc_acceptance.get("toc_mode")
@@ -514,8 +616,8 @@ def _validate_common_final_acceptance(
             errors.append(f"{field_name} is required")
     if final_acceptance.get("schema_id") != "final-acceptance":
         errors.append("schema_id must be final-acceptance")
-    if final_acceptance.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if final_acceptance.get("contract_version") not in {"legacy", "officecli"}:
+        errors.append("contract_version must be legacy or officecli")
     if final_acceptance.get("acceptance_type") not in ACCEPTANCE_TYPES:
         errors.append(f"acceptance_type is not allowed: {final_acceptance.get('acceptance_type')}")
     if final_acceptance.get("status") not in FINAL_ACCEPTANCE_STATUSES:
@@ -685,8 +787,8 @@ def _validate_blocked_terminal(final_acceptance: dict[str, Any], errors: list[st
     _validate_terminal_without_final_delivery_fields(final_acceptance, errors)
 
 
-def validate_final_acceptance_v4(final_acceptance: dict[str, Any], *, run_dir: Path | None = None) -> list[str]:
-    """校验 v4 final_acceptance.json；返回错误列表。"""
+def validate_final_acceptance_legacy(final_acceptance: dict[str, Any], *, run_dir: Path | None = None) -> list[str]:
+    """校验 legacy final_acceptance.json；返回错误列表。"""
     errors: list[str] = []
     if not isinstance(final_acceptance, dict):
         return ["final_acceptance must be object"]
@@ -725,15 +827,40 @@ def build_final_acceptance(
     allowed_warning_categories: list[str] | None = None,
     evaluated_at: str = "2026-05-08T00:00:00+08:00",
     branch_fields: dict[str, Any] | None = None,
+    contract_version: str = "officecli",
 ) -> dict[str, Any]:
-    """构造 final_acceptance，并复算 pre_acceptance manifest 的真实 hash/size。"""
+    """构造 final_acceptance。contract_version='officecli' 时委托 build_final_acceptance_officecli 并立即校验。"""
+    if contract_version == "officecli":
+        bf = branch_fields or {}
+        fa = build_final_acceptance_officecli(
+            run_id=run_id, status=status,
+            source_docx_ref=bf.get("source_docx_ref"),
+            final_docx_ref=bf.get("final_docx_ref"),
+            lock_ref=bf.get("lock_ref"), capability_ref=bf.get("capability_ref"),
+            before_snapshot_ref=bf.get("before_snapshot_ref"),
+            after_snapshot_ref=bf.get("after_snapshot_ref"),
+            plan_ref=bf.get("plan_ref"), request_ref=bf.get("request_ref"),
+            result_refs=bf.get("result_refs", []),
+            repair_log_ref=bf.get("repair_log_ref"),
+            review_ref=bf.get("review_ref"),
+            evidence_manifest_ref=bf.get("evidence_manifest_ref"),
+            toc_acceptance_ref=bf.get("toc_acceptance_ref"),
+            source_hash_unchanged=bf.get("source_hash_unchanged", False),
+            all_actions_reviewed=bf.get("all_actions_reviewed", False),
+            all_gates_passed=bf.get("all_gates_passed", False),
+            blocking_codes=blocking_categories,
+        )
+        errors = validate_final_acceptance_officecli(fa, run_dir=run_dir)
+        if errors:
+            raise FinalAcceptanceError(f"officecli final_acceptance validation failed: {'; '.join(errors)}")
+        return fa
     manifest_path = _resolve_run_relative_path(run_dir, PRE_ACCEPTANCE_MANIFEST_PATH)
     if not manifest_path.exists():
         raise FinalAcceptanceError("pre_acceptance evidence manifest is required before final_acceptance")
     final_acceptance: dict[str, Any] = {
         "schema_id": "final-acceptance",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": contract_version,
         "run_id": run_id,
         "acceptance_type": acceptance_type,
         "status": status,
@@ -765,7 +892,8 @@ def build_final_acceptance(
         "evaluated_at": evaluated_at,
     }
     final_acceptance.update(deepcopy(branch_fields or {}))
-    errors = validate_final_acceptance_v4(final_acceptance, run_dir=run_dir)
+    cv = final_acceptance.get("contract_version")
+    errors = (validate_final_acceptance_officecli(final_acceptance, run_dir=run_dir) if cv == "officecli" else validate_final_acceptance_legacy(final_acceptance, run_dir=run_dir))
     if errors:
         raise FinalAcceptanceError(f"final_acceptance validation failed: {errors}")
     return final_acceptance
@@ -773,7 +901,8 @@ def build_final_acceptance(
 
 def write_final_acceptance(run_dir: Path, final_acceptance: dict[str, Any]) -> dict[str, Any]:
     """写入 logs/final_acceptance.json；存在不同内容时阻断不可变边界。"""
-    errors = validate_final_acceptance_v4(final_acceptance, run_dir=run_dir)
+    cv = final_acceptance.get("contract_version")
+    errors = (validate_final_acceptance_officecli(final_acceptance, run_dir=run_dir) if cv == "officecli" else validate_final_acceptance_legacy(final_acceptance, run_dir=run_dir))
     if errors:
         raise FinalAcceptanceError(f"final_acceptance validation failed: {errors}")
     path = _resolve_run_relative_path(run_dir, FINAL_ACCEPTANCE_PATH)
@@ -816,8 +945,8 @@ def validate_reporting_result(reporting_result: dict[str, Any], *, run_dir: Path
             errors.append(f"{field_name} is required")
     if reporting_result.get("schema_id") != "reporting-result":
         errors.append("schema_id must be reporting-result")
-    if reporting_result.get("contract_version") != "v4":
-        errors.append("contract_version must be v4")
+    if reporting_result.get("contract_version") != "legacy":
+        errors.append("contract_version must be legacy")
     if reporting_result.get("status") not in REPORTING_STATUSES:
         errors.append(f"status is not allowed: {reporting_result.get('status')}")
     if reporting_result.get("status") == "done":
@@ -909,7 +1038,7 @@ def build_reporting_result(
     reporting_result = {
         "schema_id": "reporting-result",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "run_id": run_id,
         "reporting_id": reporting_id,
         "status": status,
@@ -949,6 +1078,161 @@ def write_reporting_result(run_dir: Path, reporting_result: dict[str, Any]) -> d
     }
 
 
+def build_final_acceptance_officecli(
+    run_id: str, status: str, *,
+    source_docx_ref: dict, lock_ref: dict, capability_ref: dict,
+    before_snapshot_ref: dict, after_snapshot_ref: dict,
+    plan_ref: dict, request_ref: dict, result_refs: list,
+    repair_log_ref: dict, review_ref: dict,
+    evidence_manifest_ref: dict, toc_acceptance_ref: dict | None = None,
+    final_docx_ref: dict | None = None,
+    source_hash_unchanged: bool = False,
+    all_actions_reviewed: bool = False, all_gates_passed: bool = False,
+    blocking_codes: list | None = None,
+) -> dict[str, Any]:
+    """OFFICECLI-011: 构建 officecli final_acceptance (contract_version=officecli, schema_version=2.0.0)。"""
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "schema_id": "final-acceptance",
+        "schema_version": "2.0.0",
+        "contract_version": "officecli",
+        "acceptance_id": f"FA-{run_id}",
+        "run_id": run_id,
+        "status": status,
+        "source_docx_ref": source_docx_ref,
+        "final_docx_ref": final_docx_ref,
+        "lock_ref": lock_ref, "capability_ref": capability_ref,
+        "before_snapshot_ref": before_snapshot_ref,
+        "after_snapshot_ref": after_snapshot_ref,
+        "plan_ref": plan_ref, "request_ref": request_ref,
+        "result_refs": result_refs, "repair_log_ref": repair_log_ref,
+        "review_ref": review_ref, "evidence_manifest_ref": evidence_manifest_ref,
+        "toc_acceptance_ref": toc_acceptance_ref,
+        "source_hash_unchanged": source_hash_unchanged,
+        "all_actions_reviewed": all_actions_reviewed,
+        "all_gates_passed": all_gates_passed,
+        "accepted_at": now if status == "accepted" else None,
+        "blocking_codes": blocking_codes or [],
+        "gate_check": {
+            "gate_id": "final-acceptance-officecli", "status": "passed" if status == "accepted" else "blocked",
+            "checked_at": now, "predicate_version": "1.0.0",
+            "evidence_refs": [], "failed_codes": blocking_codes or [],
+        },
+    }
+
+
+def validate_final_acceptance_officecli(final_acceptance: dict[str, Any], run_dir: Path | None = None) -> list[str]:
+    """OFFICECLI-011: 校验 officecli final_acceptance (contract_version=officecli, schema_version=2.0.0)。"""
+    errors: list[str] = []
+    if not isinstance(final_acceptance, dict):
+        return ["final_acceptance must be object"]
+    missing = sorted(OFFICECLI_FINAL_REQUIRED_FIELDS - set(final_acceptance))
+    unknown = sorted(set(final_acceptance) - OFFICECLI_FINAL_ALLOWED_FIELDS)
+    if missing:
+        errors.append(f"missing required fields: {', '.join(missing)}")
+    if unknown:
+        errors.append(f"unknown fields: {', '.join(unknown)}")
+    if final_acceptance.get("schema_id") != "final-acceptance":
+        errors.append("schema_id must be final-acceptance")
+    if final_acceptance.get("schema_version") != "2.0.0":
+        errors.append("schema_version must be 2.0.0")
+    if final_acceptance.get("contract_version") != "officecli":
+        errors.append("contract_version must be officecli")
+    if not isinstance(final_acceptance.get("acceptance_id"), str) or not final_acceptance.get("acceptance_id"):
+        errors.append("acceptance_id must be non-empty string")
+    if not isinstance(final_acceptance.get("run_id"), str) or not final_acceptance.get("run_id"):
+        errors.append("run_id must be non-empty string")
+    if final_acceptance.get("status") not in {"accepted", "blocked", "rejected"}:
+        errors.append(f"status is not allowed: {final_acceptance.get('status')}")
+    required_refs = (
+        "source_docx_ref", "lock_ref", "capability_ref",
+        "before_snapshot_ref", "after_snapshot_ref",
+        "plan_ref", "request_ref", "repair_log_ref", "review_ref",
+        "evidence_manifest_ref", "toc_acceptance_ref",
+    )
+    for ref_key in required_refs:
+        errors.extend(_validate_officecli_artifact_ref(final_acceptance.get(ref_key), ref_key))
+    result_refs = final_acceptance.get("result_refs")
+    if not isinstance(result_refs, list):
+        errors.append("result_refs must be array")
+    else:
+        for index, ref in enumerate(result_refs):
+            errors.extend(_validate_officecli_artifact_ref(ref, f"result_refs[{index}]"))
+    final_docx_ref = final_acceptance.get("final_docx_ref")
+    if final_docx_ref is not None:
+        errors.extend(_validate_officecli_artifact_ref(final_docx_ref, "final_docx_ref"))
+    errors.extend(_validate_officecli_gate_check(final_acceptance.get("gate_check")))
+    if not isinstance(final_acceptance.get("blocking_codes"), list):
+        errors.append("blocking_codes must be array")
+    elif any(not isinstance(code, str) for code in final_acceptance["blocking_codes"]):
+        errors.append("blocking_codes must be string array")
+    for key in ("source_hash_unchanged", "all_actions_reviewed", "all_gates_passed"):
+        if not isinstance(final_acceptance.get(key), bool):
+            errors.append(f"{key} must be boolean")
+    if final_acceptance.get("status") == "accepted":
+        if final_docx_ref is None:
+            errors.append("final_docx_ref is required for accepted")
+        if not final_acceptance.get("source_hash_unchanged"):
+            errors.append("source_hash_unchanged must be true for accepted")
+        if not final_acceptance.get("all_actions_reviewed"):
+            errors.append("all_actions_reviewed must be true for accepted")
+        if not final_acceptance.get("all_gates_passed"):
+            errors.append("all_gates_passed must be true for accepted")
+        if final_acceptance.get("blocking_codes"):
+            errors.append("blocking_codes must be empty for accepted")
+        if final_acceptance.get("gate_check", {}).get("status") != "passed":
+            errors.append("gate_check must be passed for accepted")
+        if run_dir is None:
+            errors.append("run_dir is required to verify accepted artifact refs")
+        else:
+            refs = [(key, final_acceptance.get(key)) for key in required_refs]
+            refs.extend((f"result_refs[{index}]", ref) for index, ref in enumerate(result_refs or []))
+            refs.append(("final_docx_ref", final_docx_ref))
+            for key, ref in refs:
+                if not isinstance(ref, dict):
+                    continue
+                artifact_path = _resolve_run_relative_path(run_dir, str(ref.get("relative_path", "")))
+                if not artifact_path.is_file():
+                    errors.append(f"{key} file is missing")
+                    continue
+                if compute_file_sha256(artifact_path) != ref.get("sha256") or artifact_path.stat().st_size != ref.get("size_bytes"):
+                    errors.append(f"{key} hash/size mismatch")
+                    continue
+                if artifact_path.suffix.lower() == ".json" and key not in {"source_docx_ref", "final_docx_ref"}:
+                    try:
+                        payload = _load_json(artifact_path)
+                    except (OSError, json.JSONDecodeError):
+                        errors.append(f"{key} is not valid JSON")
+                        continue
+                    gate = payload.get("gate_check")
+                    if isinstance(gate, dict) and gate.get("status") != "passed":
+                        errors.append(f"{key} referenced gate is not passed")
+                    if key == "toc_acceptance_ref":
+                        errors.extend(_validate_toc_acceptance_officecli_payload(payload))
+                        if payload.get("status") != "passed":
+                            errors.append("toc_acceptance_ref status must be passed for accepted")
+                        error_payload = payload.get("error")
+                        if isinstance(error_payload, dict) and error_payload.get("reason_code") != "none":
+                            errors.append("toc_acceptance_ref passed result must not contain blocking reason_code")
+                        if isinstance(error_payload, dict) and error_payload.get("code") != "NONE":
+                            errors.append("toc_acceptance_ref passed result must use code NONE")
+                        if isinstance(error_payload, dict) and error_payload.get("message") != "":
+                            errors.append("toc_acceptance_ref passed result must use empty error message")
+            review_path = _resolve_run_relative_path(run_dir, str(final_acceptance.get("review_ref", {}).get("relative_path", "")))
+            if review_path.is_file() and _load_json(review_path).get("gate_check", {}).get("status") != "passed":
+                errors.append("review_ref gate must be passed")
+            repair_path = _resolve_run_relative_path(run_dir, str(final_acceptance.get("repair_log_ref", {}).get("relative_path", "")))
+            if repair_path.is_file() and _load_json(repair_path).get("current_status") not in {"review_ready", "accepted"}:
+                errors.append("repair_log_ref current_status must be review_ready or accepted")
+            before_path = _resolve_run_relative_path(run_dir, str(final_acceptance.get("before_snapshot_ref", {}).get("relative_path", "")))
+            if before_path.is_file():
+                before_payload = _load_json(before_path)
+                source_hash = before_payload.get("source_docx_ref", {}).get("sha256")
+                if source_hash and source_hash != final_acceptance.get("source_docx_ref", {}).get("sha256"):
+                    errors.append("source_docx_ref does not match before snapshot source")
+    return errors
+
+
 __all__ = [
     "FINAL_ACCEPTANCE_PATH",
     "REPORTING_RESULT_PATH",
@@ -956,9 +1240,10 @@ __all__ = [
     "FinalAcceptanceError",
     "build_final_acceptance",
     "build_reporting_result",
-    "validate_final_acceptance_v4",
+    "validate_final_acceptance_legacy",
+    "validate_final_acceptance_officecli",
     "validate_reporting_result",
-    "validate_toc_acceptance_v4",
+    "validate_toc_acceptance_legacy",
     "write_final_acceptance",
     "write_reporting_result",
 ]

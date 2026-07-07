@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://format-helper.local/schemas/officecli/evidence-manifest.schema.json",
+  "title": "evidence-manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id", "schema_version", "contract_version",
+    "run_id", "status", "manifest_id", "generated_at",
+    "artifacts", "relations", "completeness", "gate_check"
+  ],
+  "properties": {
+    "schema_id": { "const": "evidence-manifest" },
+    "schema_version": { "const": "2.0.0" },
+    "contract_version": { "const": "officecli" },
+    "run_id": { "type": "string" },
+    "status": { "enum": ["complete", "complete_with_warnings", "broken"] },
+    "manifest_id": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "manifest_sha256": { "type": ["string", "null"] },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ArtifactRef" }
+    },
+    "relations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Relation" }
+    },
+    "completeness": { "$ref": "#/$defs/Completeness" },
+    "gate_check": { "$ref": "#/$defs/GateCheck" },
+    "warnings": { "type": "array" },
+    "blockers": { "type": "array" }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id","kind","relative_path","sha256","size_bytes"],
+      "properties": {
+        "artifact_id": { "type": "string" },
+        "kind": { "enum": ["lock","capability","snapshot","plan","request","result","log","review","evidence","toc_acceptance","final_acceptance","docx","html","png","raw_xml","executable","license"] },
+        "relative_path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "schema_id": { "type": ["string","null"] },
+        "schema_version": { "type": ["string","null"] }
+      }
+    },
+    "Relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_artifact_id","to_artifact_id","relation"],
+      "properties": {
+        "from_artifact_id": { "type": "string" },
+        "to_artifact_id": { "type": "string" },
+        "relation": { "enum": ["derived_from","executes","verifies","renders","refreshes","accepts"] }
+      }
+    },
+    "Completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_kinds","present_kinds","missing_kinds"],
+      "properties": {
+        "required_kinds": { "type": "array", "items": { "type": "string" } },
+        "present_kinds": { "type": "array", "items": { "type": "string" } },
+        "missing_kinds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "GateCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id","status","checked_at","predicate_version","evidence_refs","failed_codes"],
+      "properties": {
+        "gate_id": { "type": "string" },
+        "status": { "enum": ["passed","failed","blocked"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "predicate_version": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "failed_codes": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

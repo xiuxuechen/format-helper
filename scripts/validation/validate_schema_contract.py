@@ -1,4 +1,4 @@
-"""v4 schema inventory 最小契约 validator（CODE-005）。
+"""legacy schema inventory 最小契约 validator（CODE-005）。
 
 该模块只负责 CODE-005 的横向 schema inventory 准出校验，不替代后续
 CODE-006 之后的业务级 validator。字段级权威仍以 41_SCHEMA_CONTRACTS.md 为准。
@@ -20,10 +20,10 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_DIR = ROOT / "docs" / "v4" / "schemas"
+SCHEMA_DIR = ROOT / "contracts" / "format-helper" / "schemas"
 
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
-CONTRACT_VERSION = "v4"
+CONTRACT_VERSION = "legacy"
 SEMVER_PATTERN = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 CANONICAL_ALIASES = {
@@ -147,7 +147,7 @@ def validate_schema_contract(data: dict[str, Any], expected_schema_id: str | Non
         result.add_error(
             CODE005_SCHEMA_NOT_FOUND,
             "schema_id",
-            f"未找到 canonical schema 定义：docs/v4/schemas/{schema_id}.schema.json",
+            f"未找到 canonical schema 定义：contracts/format-helper/schemas/{schema_id}.schema.json",
         )
         return result
 

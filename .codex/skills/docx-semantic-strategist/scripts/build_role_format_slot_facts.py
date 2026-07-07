@@ -15,10 +15,12 @@ from scripts.utils.simple_yaml import load_yaml
 
 
 TZ = timezone(timedelta(hours=8))
-CONTRACT_RELATIVE_PATH = "docs/v4/schemas/role_slot_contract.yaml"
+CONTRACT_RELATIVE_PATH = "contracts/format-helper/schemas/role_slot_contract.yaml"
 ROLE_MAP_RELATIVE_PATH = "semantic/semantic_role_map.before.json"
 RESOLVED_STATUS = {"resolved", "resolved_with_conflicts", "not_applicable", "user_confirmed"}
 ROLE_MAP_CONFIDENCE_THRESHOLD = 0.85
+OFFICECLI_SNAPSHOT_SCHEMA_ID = "officecli-document-snapshot"
+OFFICECLI_SNAPSHOT_SCHEMA_VERSION = "2.0.0"
 SUPPORTED_COMMON_CONDITIONS = {"required_slot_confidence_eq_0"}
 STRUCTURE_ROLE_BY_FACT_KIND = {
     "table_cell_paragraph": "table-content",
@@ -52,71 +54,144 @@ def unwrap_slot(value: Any) -> tuple[Any, str, float]:
     return value, "legacy", 0.5
 
 
-def fact_id_for(item: dict[str, Any], index: int) -> tuple[str, str | None]:
-    """返回 v4 fact_id，并保留 legacy element_id。"""
-    fact_id = item.get("fact_id")
-    legacy = item.get("element_id")
-    if fact_id:
-        return str(fact_id), str(legacy) if legacy else None
-    if legacy:
-        return f"legacy-{legacy}", str(legacy)
-    return f"generated-fact-{index:05d}", None
+def is_officecli_snapshot_v2(snapshot: dict[str, Any]) -> bool:
+    """判断输入是否为 OfficeCLI snapshot v2。"""
+    return (
+        snapshot.get("schema_id") == OFFICECLI_SNAPSHOT_SCHEMA_ID
+        and snapshot.get("schema_version") == OFFICECLI_SNAPSHOT_SCHEMA_VERSION
+        and snapshot.get("contract_version") == "officecli"
+    )
 
 
-def snapshot_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
-    """抽取本期支持的 snapshot 事实。"""
+def ensure_officecli_snapshot_v2(snapshot: dict[str, Any]) -> None:
+    """生产 CLI 只允许消费 OfficeCLI snapshot v2。"""
+    if not is_officecli_snapshot_v2(snapshot):
+        raise ValueError("生产入口只允许 officecli-document-snapshot schema_version=2.0.0")
+    gate = snapshot.get("gate_check") if isinstance(snapshot.get("gate_check"), dict) else {}
+    if gate.get("status") != "passed":
+        raise ValueError("officecli-document-snapshot gate_check 未通过，语义层不得消费")
+
+
+def slot_value_from_officecli_node(node: dict[str, Any], slot_name: str) -> dict[str, Any] | None:
+    """从 OfficeCLI 节点 effective_format/attributes 中抽取槽位值。"""
+    effective_format = node.get("effective_format") if isinstance(node.get("effective_format"), dict) else {}
+    attributes = node.get("attributes") if isinstance(node.get("attributes"), dict) else {}
+    effective_sources = node.get("effective_sources") if isinstance(node.get("effective_sources"), dict) else {}
+    if slot_name in effective_format:
+        return {
+            "value": effective_format.get(slot_name),
+            "source": str(effective_sources.get(slot_name) or "officecli-effective-format"),
+            "confidence": 1.0,
+        }
+    if slot_name in attributes:
+        return {
+            "value": attributes.get(slot_name),
+            "source": "officecli-attributes",
+            "confidence": 0.95,
+        }
+    return None
+
+
+def officecli_fact_kind(node: dict[str, Any]) -> str:
+    """把 OfficeCLI node_type/part 映射为 slot facts 使用的事实类型。"""
+    node_type = str(node.get("node_type") or "")
+    part_name = str(node.get("part_name") or "")
+    parent_path = str(node.get("parent_path") or "")
+    officecli_path = str(node.get("officecli_path") or "")
+    if node_type == "section":
+        return "page_setup"
+    if part_name.startswith("header"):
+        return "header_paragraph"
+    if part_name.startswith("footer"):
+        return "footer_paragraph"
+    if node_type == "paragraph" and any(token in parent_path or token in officecli_path for token in ("/table", "/row", "/cell")):
+        return "table_cell_paragraph"
+    return node_type or "unknown"
+
+
+def officecli_snapshot_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+    """从 OfficeCLI snapshot v2 抽取 slot facts 支持的事实。"""
+    nodes = snapshot.get("nodes", [])
+    cell_index: dict[str, dict[str, Any]] = {}
+    for node in nodes:
+        if isinstance(node, dict) and node.get("node_type") == "cell":
+            cell_path = node.get("officecli_path")
+            if cell_path:
+                cell_index[str(cell_path)] = node
     items: list[dict[str, Any]] = []
-    for index, paragraph in enumerate(snapshot.get("paragraphs", []), start=1):
-        fact_id, legacy = fact_id_for(paragraph, index)
-        item = dict(paragraph)
-        item["fact_id"] = fact_id
-        item["element_id_legacy"] = legacy
-        item["fact_kind"] = item.get("fact_kind") or "paragraph"
-        items.append(item)
-    item_index = len(items)
-    for table_index, table in enumerate(snapshot.get("tables", []), start=1):
-        for cell in table.get("cells", []):
-            for paragraph in cell.get("paragraphs", []):
-                item_index += 1
-                item = dict(paragraph)
-                fact_id = item.get("fact_id") or (
-                    f"table-{table_index:04d}-r{cell.get('row_index', 0):03d}-"
-                    f"c{cell.get('column_index', 0):03d}-p{item_index:05d}"
-                )
-                item["fact_id"] = str(fact_id)
-                item["element_id_legacy"] = item.get("element_id")
-                item["fact_kind"] = "table_cell_paragraph"
-                item["table_index"] = table_index
-                item["cell_id"] = cell.get("cell_id")
-                item["row_index"] = cell.get("row_index")
-                item["column_index"] = cell.get("column_index")
-                item["cell_format_summary"] = cell.get("format_summary") if isinstance(cell.get("format_summary"), dict) else {}
-                if cell.get("vertical_alignment") is not None:
-                    item["cell_format_summary"]["vertical_alignment"] = cell.get("vertical_alignment")
-                items.append(item)
-    for section_index, section in enumerate(snapshot.get("sections", []), start=1):
-        page_setup = section.get("page_setup") if isinstance(section.get("page_setup"), dict) else section
+    for index, node in enumerate(nodes, start=1):
+        if not isinstance(node, dict):
+            continue
+        node_type = node.get("node_type")
+        if node_type not in {"paragraph", "section"}:
+            continue
+        fact_id = str(node.get("node_id") or f"officecli-node-{index:05d}")
+        fact_kind = officecli_fact_kind(node)
+        resolved_paragraph_format: dict[str, Any] = {}
+        resolved_page_setup: dict[str, Any] = {}
+        for source in (node.get("effective_format"), node.get("attributes")):
+            if not isinstance(source, dict):
+                continue
+            for slot_name in source:
+                slot_value = slot_value_from_officecli_node(node, str(slot_name))
+                if slot_value is None:
+                    continue
+                if fact_kind == "page_setup":
+                    resolved_page_setup[str(slot_name)] = slot_value
+                else:
+                    resolved_paragraph_format[str(slot_name)] = slot_value
+        cell_format_summary: dict[str, Any] = {}
+        if fact_kind == "table_cell_paragraph":
+            cell_path = _parent_cell_path(str(node.get("officecli_path") or ""))
+            cell_node = cell_index.get(cell_path) if cell_path else None
+            if isinstance(cell_node, dict):
+                for slot_name in ("vertical_alignment",):
+                    slot_val = slot_value_from_officecli_node(cell_node, slot_name)
+                    if slot_val is not None:
+                        cell_format_summary[slot_name] = slot_val
+        stable_selector = node.get("stable_selector")
+        content_fingerprint = (
+            stable_selector.get("content_fingerprint")
+            if isinstance(stable_selector, dict)
+            else None
+        )
         item = {
-            "fact_id": section.get("fact_id") or f"section-{section_index:04d}-page-setup",
+            "fact_id": fact_id,
             "element_id_legacy": None,
-            "fact_kind": "page_setup",
-            "locator": {"section_index": section.get("section_index", section_index)},
-            "text_preview": "",
-            "resolved_page_setup": {
-                "page_orientation": page_setup.get("page_orientation") or page_setup.get("orientation"),
-                "page_width_twips": page_setup.get("page_width_twips"),
-                "page_height_twips": page_setup.get("page_height_twips"),
-                "margin_top_cm": page_setup.get("margin_top_cm"),
-                "margin_bottom_cm": page_setup.get("margin_bottom_cm"),
-                "margin_left_cm": page_setup.get("margin_left_cm"),
-                "margin_right_cm": page_setup.get("margin_right_cm"),
-                "header_distance_cm": page_setup.get("header_distance_cm"),
-                "footer_distance_cm": page_setup.get("footer_distance_cm"),
-                "page_number_format": page_setup.get("page_number_format") or page_setup.get("pg_num_type") or "none",
+            "fact_kind": fact_kind,
+            "locator": {
+                "officecli_path": node.get("officecli_path"),
+                "node_id": node.get("node_id"),
+                "part_name": node.get("part_name"),
+                "content_fingerprint": content_fingerprint,
             },
+            "text_preview": str(node.get("text") or "")[:120],
+            "resolved_paragraph_format": resolved_paragraph_format,
+            "resolved_run_format": {},
+            "resolved_page_setup": resolved_page_setup,
+            "cell_format_summary": cell_format_summary,
+            "raw_evidence_ref": node.get("raw_evidence_ref"),
         }
         items.append(item)
     return items
+
+
+def _parent_cell_path(paragraph_path: str) -> str | None:
+    """从 paragraph officecli_path 推导所属 cell path。
+
+    注意：此函数假设 paragraph 路径严格以 ``/p[N]`` 结尾（OPC 规范保证）。
+    若路径退化为 cell 自身路径（如 ``/body/tbl[1]/row[1]/cell[1]``），
+    将错误推导为 ``/body/tbl[1]/row[1]``，无法匹配 cell_index。
+    """
+    if not paragraph_path or "/" not in paragraph_path:
+        return None
+    parts = paragraph_path.rsplit("/", 1)
+    return parts[0] if len(parts) > 1 else None
+
+
+def snapshot_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+    """从 OfficeCLI snapshot v2 抽取 slot facts 支持的事实。"""
+    return officecli_snapshot_items(snapshot)
 
 
 def role_map_roles(semantic_role_map: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
@@ -551,12 +626,13 @@ def build_slot_facts(
     return {
         "schema_id": "role-format-slot-facts",
         "schema_version": "1.0.0",
-        "contract_version": "v4",
+        "contract_version": "legacy",
         "run_id": run_id,
         "facts_id": f"RFSF-{run_id}-001",
         "source_snapshot_path": source_snapshot_path,
         "source_snapshot_sha256": source_snapshot_sha256,
         "source_snapshot_artifact_id": source_snapshot_artifact_id,
+        "source_snapshot_schema_version": "2.0.0",
         "contract_ref": {
             "contract_path": CONTRACT_RELATIVE_PATH,
             "contract_sha256": contract_sha256,
@@ -590,6 +666,7 @@ def main() -> int:
     parser = build_arg_parser()
     args = parser.parse_args()
     snapshot = json.loads(args.snapshot.read_text(encoding="utf-8"))
+    ensure_officecli_snapshot_v2(snapshot)
     contract = load_yaml(args.contract)
     semantic_role_map = json.loads(args.role_map.read_text(encoding="utf-8")) if args.role_map else None
     facts = build_slot_facts(

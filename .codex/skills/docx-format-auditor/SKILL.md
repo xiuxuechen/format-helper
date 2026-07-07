@@ -1,6 +1,6 @@
 ---
 name: docx-format-auditor
-description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helper 需要基于 document_snapshot.json、semantic_role_map.before.json 和已确认规则包执行真实格式审计，或基于 before/after snapshot 做二轮结构化复核时使用；只输出审计或复核 JSON，不修改 Word 文件。
+description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helper 需要基于 officecli-document-snapshot v2、semantic_role_map.before.json 和已确认规则包执行格式审计或二轮复核时使用；只输出审计或复核 JSON，不修改 Word 文件。
 ---
 
 # DOCX Format Auditor
@@ -12,7 +12,7 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
 ## 输入
 
 - `PLAN.yaml`
-- `document_snapshot.before.json` 或 `document_snapshot.after.json`
+- `officecli-document-snapshot.before.json` 或 `officecli-document-snapshot.after.json`
 - `semantic_role_map.before.json`
 - 已确认规则包
 - 任务范围，例如标题、正文、目录、表格、页面或样式治理
@@ -148,4 +148,4 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
 python .codex/skills/docx-format-auditor/scripts/build_second_round_review.py --run-dir format_runs/code005-fixture
 ```
 
-脚本生成 T01-T06 二轮复核 JSON：OOXML 完整性、快照完整性、执行日志、自动动作追溯、人工确认留痕和渲染证据。
+脚本生成 T01-T06 二轮复核 JSON：OfficeCLI validate、snapshot v2 完整性、执行日志、自动动作追溯、人工确认留痕和渲染证据。
