@@ -64,7 +64,7 @@ def compute_file_sha256(path: Path) -> str:
 
 
 def compute_result_chain_head(previous_head: str | None, result: dict[str, Any], result_sha256: str | None = None) -> str:
-    """按 41-§11.1 复算 result chain head。"""
+    """按 run-state schema 复算 result chain head。"""
     payload = {
         "previous_head": previous_head,
         "result_id": result.get("result_id"),
@@ -245,7 +245,7 @@ def build_synthetic_failure(
     return {
         "schema_id": "skill-result",
         "schema_version": "1.0.0",
-        "contract_version": "legacy",
+        "contract_version": "format-helper",
         "result_id": result_id,
         "run_id": run_id,
         "order": order,

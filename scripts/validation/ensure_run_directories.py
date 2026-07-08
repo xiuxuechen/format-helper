@@ -1,6 +1,6 @@
 """运行目录预创建工具。
 
-实现 40_DESIGN_FINAL.md §5.1 的目录预创建流程：
+实现 format-helper 当前运行目录预创建流程：
 - 在确定 run_id 后立即执行
 - 幂等创建（重复执行不得删除或覆盖已有产物）
 - 覆盖必需子目录：input, snapshots, semantic, plans, output,
@@ -13,13 +13,13 @@ import re
 from pathlib import Path
 from typing import Optional
 
-# 错误码（参考 40-§3.4）
+# 错误码（参考 format-helper-workflow）
 FH_RUN_ID_INVALID = "FH-RUN-ID-INVALID"
 FH_DIR_CREATE_FAILED = "FH-DIR-CREATE-FAILED"
 FH_PATH_ESCAPE = "FH-PATH-ESCAPE"
 
 
-# run_id 正则（参考 40-§3.4, 41-§3.1）
+# run_id 正则（参考 format-helper-workflow, format-helper-schema）
 RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
 
 
@@ -32,7 +32,7 @@ class RunDirError(Exception):
         super().__init__(f"[{code}] {message}")
 
 
-# 运行目录必需子目录清单（参考 40-§5.1）
+# 运行目录必需子目录清单（参考 format-helper-workflow）
 REQUIRED_RUN_DIRS = [
     "input",
     "snapshots",
@@ -48,7 +48,7 @@ REQUIRED_RUN_DIRS = [
 
 
 def validate_run_id(run_id: str) -> None:
-    """校验 run_id 合法性（参考 40-§3.4, 41-§3.1）。
+    """校验 run_id 合法性（参考 format-helper-workflow, format-helper-schema）。
 
     Args:
         run_id: 运行 ID
@@ -80,7 +80,7 @@ def ensure_run_directories(
     workspace_root: Optional[Path] = None,
     dry_run: bool = False,
 ) -> dict:
-    """幂等创建运行目录（参考 40-§5.1）。
+    """幂等创建运行目录（参考 format-helper-workflow）。
 
     Args:
         run_id: 运行 ID
@@ -167,7 +167,7 @@ def ensure_run_directories(
 def scan_legacy_paths(workspace_root: Optional[Path] = None) -> dict:
     """扫描历史路径（format_runs/*/rules、format_rules/）。
 
-    实现 40-§5.2 和 50 §6 风险控制中的"规则路径残留旧目录"检查。
+    实现 format-helper-workflow 和 format-helper-test-plan 风险控制中的"规则路径残留旧目录"检查。
 
     Args:
         workspace_root: 工作区根目录（默认为当前目录）

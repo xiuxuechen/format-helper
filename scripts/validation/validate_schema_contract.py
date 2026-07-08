@@ -1,12 +1,12 @@
-"""legacy schema inventory 最小契约 validator（CODE-005）。
+"""format-helper schema inventory 最小契约 validator（CODE-005）。
 
 该模块只负责 CODE-005 的横向 schema inventory 准出校验，不替代后续
-CODE-006 之后的业务级 validator。字段级权威仍以 41_SCHEMA_CONTRACTS.md 为准。
+CODE-006 之后的业务级 validator。字段级权威以 contracts/format-helper/schemas/ 为准。
 
 覆盖：
-- 41-§2 canonical schema_id 与 schema 文件一致
-- 41-§12 / 50-§3.5 examples 的 required 字段、const、enum
-- SCHEMA_MIN_STRATEGY.md §3.1 的 semver、canonical alias、unknown enum blocking
+- canonical schema_id 与 schema 文件一致
+- schema_examples 的 required 字段、const、enum
+- schema 最小契约中的 semver、canonical alias、unknown enum blocking
 - CODE-005 path_negative 示例的路径逃逸阻断
 """
 
@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_DIR = ROOT / "contracts" / "format-helper" / "schemas"
 
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
-CONTRACT_VERSION = "legacy"
+CONTRACT_VERSION = "format-helper"
 SEMVER_PATTERN = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 CANONICAL_ALIASES = {

@@ -1,7 +1,7 @@
 {
   "schema_id": "style-map",
   "schema_version": "2.0.0",
-  "contract_version": "legacy",
+  "contract_version": "format-helper",
   "run_id": "run-code005-example",
   "status": "unknown_status_for_negative_example",
   "gate_check": {
@@ -26,9 +26,9 @@
   },
   "_code005_example_category": "schema_invalid",
   "_trace_refs": [
-    "41-§2",
-    "41-§12",
-    "50-§3.5"
+    "format-helper-schema",
+    "format-helper-schema",
+    "format-helper-test-plan"
   ],
   "artifact": {
     "artifact_id": "ART-CODE005-001",

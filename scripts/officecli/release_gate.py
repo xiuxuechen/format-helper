@@ -21,7 +21,6 @@ from scripts.officecli.runtime_resolver import EXPECTED_RUNTIME_IDS, load_lock, 
 
 FORBIDDEN_PYTHON_TOKENS = ("import zipfile", "xml.etree", "from lxml", "python-docx", "from docx")
 REQUIRED_SMOKE_COMMANDS = ["version", "create", "add", "get", "set", "validate", "screenshot"]
-RETIRED_SKILLS = {"docx-format-repairer"}
 REQUIRED_RELEASE_RUNTIME_IDS = {"win-x64", "osx-arm64"}
 REQUIRED_NATIVE_TOC_VIEWERS = {"word", "wps"}
 TOC_ACCEPTANCE_SCHEMA = ROOT / "contracts" / "officecli" / "schemas" / "toc-acceptance.schema.json"
@@ -67,12 +66,12 @@ def _sha256_utf8_lf_file(path: Path) -> str:
 
 
 def scan_production_paths(root: Path) -> list[str]:
-    """扫描活跃 OfficeCLI Python/Skill，退役目录不计入生产路径。"""
+    """扫描 OfficeCLI 生产路径，并确认退役 skill 不保留旧后端实现。"""
     errors: list[str] = []
     python_files = list((root / "scripts" / "officecli").glob("*.py"))
     skill_root = root / ".codex" / "skills"
     for skill_dir in skill_root.iterdir():
-        if not skill_dir.is_dir() or skill_dir.name in RETIRED_SKILLS:
+        if not skill_dir.is_dir():
             continue
         python_files.extend(skill_dir.glob("scripts/*.py"))
         skill_file = skill_dir / "SKILL.md"

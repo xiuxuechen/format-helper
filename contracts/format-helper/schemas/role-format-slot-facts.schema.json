@@ -26,7 +26,7 @@
   "properties": {
     "schema_id": {"const": "role-format-slot-facts"},
     "schema_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
-    "contract_version": {"const": "legacy"},
+    "contract_version": {"const": "format-helper"},
     "run_id": {"type": "string"},
     "facts_id": {"type": "string"},
     "source_snapshot_path": {"type": "string"},
@@ -125,11 +125,11 @@
     "SampleExtraction": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["fact_id", "locator", "element_id_legacy", "fact_kind", "text_preview", "extracted_slots"],
+      "required": ["fact_id", "locator", "element_id", "fact_kind", "text_preview", "extracted_slots"],
       "properties": {
         "fact_id": {"type": "string"},
         "locator": {"type": ["object", "null"]},
-        "element_id_legacy": {"type": ["string", "null"]},
+        "element_id": {"type": ["string", "null"]},
         "fact_kind": {"type": "string"},
         "text_preview": {"type": "string"},
         "extracted_slots": {"type": "object", "additionalProperties": {"$ref": "#/$defs/SlotExtraction"}}

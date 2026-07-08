@@ -1,9 +1,9 @@
 """CODE-011B Phase 5 Gate 证据包生成与校验工具。
 
 覆盖条款：
-- 50-§3.7 Phase 5 Gate 证据包目录规范。
-- 50-§3.3 覆盖矩阵、not_automated_with_reason 和 pending_implementation 治理。
-- 50-§5.1 L1/L2 Gate 分层证据。
+- format-helper-test-plan Phase 5 Gate 证据包目录规范。
+- format-helper-test-plan 覆盖矩阵、not_automated_with_reason 和 pending_implementation 治理。
+- format-helper-test-plan L1/L2 Gate 分层证据。
 """
 
 from __future__ import annotations
@@ -148,7 +148,7 @@ def _write_scans(root: Path, package_root: Path, matrix: dict[str, Any]) -> None
             "checked_skills": 8,
             "errors": skill_errors,
             "markdown_gate_errors": markdown_gate_errors,
-            "clauses": ["50-§3.3", "40-§7.3"],
+            "clauses": ["format-helper-test-plan", "format-helper-workflow"],
         },
     )
     _write_json(
@@ -161,7 +161,7 @@ def _write_scans(root: Path, package_root: Path, matrix: dict[str, Any]) -> None
             "covered_schema_total": 24,
             "coverage": "100%",
             "evidence_path": "tests/validation/test_schema_inventory_scan.py",
-            "clauses": ["40-§7.3", "50-§5.1"],
+            "clauses": ["format-helper-workflow", "format-helper-test-plan"],
         },
     )
     _write_json(
@@ -172,7 +172,7 @@ def _write_scans(root: Path, package_root: Path, matrix: dict[str, Any]) -> None
             "status": "passed" if not path_errors else "failed",
             "errors": path_errors,
             "coverage_matrix_items": len(matrix["items"]),
-            "clauses": ["50-§3.7", "40-§7.3"],
+            "clauses": ["format-helper-test-plan", "format-helper-workflow"],
         },
     )
 
@@ -198,7 +198,7 @@ def _write_risk_acceptance(package_root: Path, item: dict[str, Any]) -> None:
 
 ## 双签记录
 
-- 独立评审员：CODE-011B evidence reviewer，签字日期：2026-05-08，同意理由：符合 50-§3.3 的真实渲染限制。
+- 独立评审员：CODE-011B evidence reviewer，签字日期：2026-05-08，同意理由：符合 format-helper-test-plan 的真实渲染限制。
 - 测试负责人：Phase 5 test owner，签字日期：2026-05-08，同意理由：保留撤销条件，CI 具备渲染能力后升级为自动化。
 """
     _write_text(package_root / "risk_acceptance" / f"{item['test_id']}_acceptance.md", text)

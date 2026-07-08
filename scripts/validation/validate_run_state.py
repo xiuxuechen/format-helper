@@ -1,7 +1,7 @@
 """run-state 最小 validator（CODE-006）。
 
-实现 41_SCHEMA_CONTRACTS.md §11.1 的最小 validator，覆盖：
-- Required 字段检查（按 SCHEMA_MIN_STRATEGY.md §3.2.2）
+实现 contracts/format-helper/schemas/run-state.schema.json 的最小 validator，覆盖：
+- Required 字段检查（按 contracts/format-helper/schemas/run-state.schema.json）
 - Enum 闭合校验（mode、workflow_mode、stage、status）
 - Nullable-but-required 逻辑
 - Semver 兼容校验
@@ -9,10 +9,10 @@
 - 一致性约束
 
 参考：
-- 41-§11.1: run-state 字段契约
-- 41-§4: Enum 定义
-- 41-§7: Semver 兼容算法
-- SCHEMA_MIN_STRATEGY.md §3.2.2: run-state 最小字段集
+- contracts/format-helper/schemas/run-state.schema.json: run-state 字段契约
+- contracts/format-helper/schemas: Enum 定义
+- schema_version: Semver 兼容算法
+- contracts/format-helper/schemas/run-state.schema.json: run-state 最小字段集
 """
 
 from __future__ import annotations
@@ -31,11 +31,11 @@ RS_CONSISTENCY_ERROR = "RS-CONSISTENCY-ERROR"
 RS_SCHEMA_ID_MISMATCH = "RS-SCHEMA-ID-MISMATCH"
 
 
-# legacy 支持的 schema_version
+# format-helper 支持的 schema_version
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
-CONTRACT_VERSION = "legacy"
+CONTRACT_VERSION = "format-helper"
 
-# Required 字段最小子集（参考 41-§11.1, SCHEMA_MIN_STRATEGY.md §3.2.2）
+# Required 字段最小子集（参考 run-state schema）
 REQUIRED_FIELDS = [
     "schema_id",
     "schema_version",
@@ -63,7 +63,7 @@ REQUIRED_FIELDS = [
     "updated_at",
 ]
 
-# Enum 枚举（参考 41-§4）
+# Enum 枚举（参考 run-state schema）
 ALLOWED_MODE = {"build_rules", "audit_only", "repair", "resume"}
 ALLOWED_WORKFLOW_MODE = {"build_rules", "audit_only", "repair"}
 ALLOWED_NEXT_ACTION_KIND = {"run_skill", "wait_user", "retry", "manual_recover", "finalize", "stop"}
@@ -90,7 +90,7 @@ NEXT_ACTION_REQUIRED_FIELDS = [
     "user_message",
 ]
 
-# Canonical alias 映射（参考 41-§2）
+# Canonical alias 映射（参考 schema inventory）
 SCHEMA_ID_ALIAS = {
     "state": "run-state",
 }
@@ -126,7 +126,7 @@ def parse_semver(version: str) -> tuple[int, int, int] | None:
 
 
 def semver_compatible(actual: str, supported: str) -> tuple[bool, str]:
-    """semver 兼容性检查（参考 41-§7）。
+    """semver 兼容性检查。
 
     Returns:
         (compatible, reason): 是否兼容 + 兼容原因
@@ -194,7 +194,7 @@ def validate_run_state(state: dict[str, Any]) -> ValidationResult:
     if not validation.valid:
         return validation
 
-    # 3. contract_version 必须为 legacy
+    # 3. contract_version 必须为 format-helper
     if state.get("contract_version") != CONTRACT_VERSION:
         validation.add_error(
             RS_INVALID_ENUM,
@@ -251,7 +251,7 @@ def validate_run_state(state: dict[str, Any]) -> ValidationResult:
             f"status='{status}' 不在允许集合 {sorted(ALLOWED_STATUS)} 中",
         )
 
-    # 6. Nullable-but-required 逻辑（参考 41-§11.1）
+    # 6. Nullable-but-required 逻辑（参考 run-state schema）
     # rule_id 可为 null；当本次运行使用或生成规则包时必须非 null
     # 这里只做基本检查，业务逻辑由 Gate 层处理
 

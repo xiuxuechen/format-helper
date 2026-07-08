@@ -1,7 +1,7 @@
 {
   "schema_id": "repair-plan",
   "schema_version": "1.0.0",
-  "contract_version": "legacy",
+  "contract_version": "format-helper",
   "run_id": "run-code005-example",
   "status": "done",
   "gate_check": {
@@ -20,9 +20,9 @@
   },
   "_code005_example_category": "success",
   "_trace_refs": [
-    "41-§2",
-    "41-§12",
-    "50-§3.5"
+    "format-helper-schema",
+    "format-helper-schema",
+    "format-helper-test-plan"
   ],
   "plan_id": "RP-CODE005-001",
   "plan_state": "draft",

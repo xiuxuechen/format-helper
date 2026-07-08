@@ -1,6 +1,6 @@
 """规则包路径校验工具。
 
-根据 40-§5.2, 40-§3.4, 41-§11.2, 41-§11.3 实施路径约束：
+根据 format-helper-workflow, format-helper-workflow, format-helper-schema, format-helper-schema 实施路径约束：
 - 规则包只能写入 format-rules/{rule_id}/
 - 禁止写入 format_runs/*/rules
 - 禁止写入 format_rules/（历史别名）
@@ -22,7 +22,7 @@ RP_PATH_FORBIDDEN = "RP-PATH-FORBIDDEN"
 RP_PATH_ESCAPE = "RP-PATH-ESCAPE"
 
 
-# 规则 ID 正则（参考 41-§3.1 路径安全规则）
+# 规则 ID 正则（参考 format-helper-schema 路径安全规则）
 RULE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
 
 
@@ -36,7 +36,7 @@ class RulePackagePathError(Exception):
 
 
 def validate_rule_id(rule_id: str) -> None:
-    """校验 rule_id 合法性（参考 40-§3.4, 41-§3.1）。
+    """校验 rule_id 合法性（参考 format-helper-workflow, format-helper-schema）。
 
     Args:
         rule_id: 规则 ID
@@ -67,11 +67,11 @@ def validate_rule_package_path(
     target_path: str | Path,
     workspace_root: Optional[Path] = None,
 ) -> Path:
-    """校验规则包目标路径是否符合 40-§5.2 约束。
+    """校验规则包目标路径是否符合 format-helper-workflow 约束。
 
     规则：
     - 必须位于 format-rules/{rule_id}/ 下
-    - 禁止位于 format_runs/*/rules（参考 40-§5.2）
+    - 禁止位于 format_runs/*/rules（参考 format-helper-workflow）
     - 禁止位于 format_rules/（历史别名）
     - 禁止路径穿越（.. 或绝对路径）
 
@@ -88,7 +88,7 @@ def validate_rule_package_path(
     path = Path(target_path)
     path_str = str(path).replace("\\", "/")
 
-    # 禁止 format_runs/*/rules（参考 40-§5.2）
+    # 禁止 format_runs/*/rules（参考 format-helper-workflow）
     # 匹配模式：format_runs/ 开头或 /format_runs/ 包含，且路径片段中存在 "rules"
     path_parts = path.parts
     if len(path_parts) >= 3 and path_parts[0] == "format_runs" and "rules" in path_parts[2:]:
@@ -114,10 +114,10 @@ def validate_rule_package_path(
         raise RulePackagePathError(
             RP_PATH_FORBIDDEN,
             f"规则包路径使用了历史别名 format_rules/：{path_str}。"
-            f"legacy 规则库目录必须为 format-rules/（参考 40-§5.2）",
+            f"legacy 规则库目录必须为 format-rules/（参考 format-helper-workflow）",
         )
 
-    # 禁止路径穿越（参考 40-§3.4）
+    # 禁止路径穿越（参考 format-helper-workflow）
     if ".." in path.parts:
         raise RulePackagePathError(
             RP_PATH_ESCAPE,

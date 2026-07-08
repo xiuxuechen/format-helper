@@ -1,7 +1,7 @@
 {
   "schema_id": "rule-confirmation-gate",
   "schema_version": "1.0.0",
-  "contract_version": "legacy",
+  "contract_version": "format-helper",
   "run_id": "run-code016-example",
   "gate_id": "RCG-RFSF-run-code016-example-002",
   "status": "cleared",

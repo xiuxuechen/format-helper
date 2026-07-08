@@ -1,7 +1,7 @@
 """skill-result 最小 validator（CODE-005 / CODE-006A 核心闭环）。
 
-实现 41_SCHEMA_CONTRACTS.md §5 的最小 validator，覆盖：
-- Required 字段检查（按 SCHEMA_MIN_STRATEGY.md §3.2.1）
+实现 contracts/format-helper/schemas/skill-result.schema.json 的最小 validator，覆盖：
+- Required 字段检查（按 contracts/format-helper/schemas/skill-result.schema.json）
 - Enum 闭合校验（closed enum）
 - Nullable-but-required 逻辑
 - Semver 兼容校验
@@ -9,10 +9,10 @@
 - Unknown enum blocking
 
 参考：
-- 41-§5.1: Required 字段
-- 41-§5.3: Nullable 字段
-- 41-§6: 状态组合规则
-- 41-§7: Semver 兼容算法
+- contracts/format-helper/schemas/skill-result.schema.json: Required 字段
+- skill-result schema: Nullable 字段
+- skill-result schema: 状态组合规则
+- schema_version: Semver 兼容算法
 """
 
 from __future__ import annotations
@@ -31,11 +31,11 @@ SR_CONSISTENCY_ERROR = "SR-CONSISTENCY-ERROR"
 SR_SCHEMA_ID_MISMATCH = "SR-SCHEMA-ID-MISMATCH"
 
 
-# legacy 支持的 schema_version（simple semver: MAJOR.MINOR.PATCH）
+# format-helper 支持的 schema_version（simple semver: MAJOR.MINOR.PATCH）
 SUPPORTED_SCHEMA_VERSION = "1.0.0"
-CONTRACT_VERSION = "legacy"
+CONTRACT_VERSION = "format-helper"
 
-# Required 字段最小子集（参考 41-§5.1, SCHEMA_MIN_STRATEGY.md §3.2.1）
+# Required 字段最小子集（参考 skill-result schema）
 REQUIRED_FIELDS = [
     "schema_id",
     "schema_version",
@@ -56,7 +56,7 @@ REQUIRED_FIELDS = [
     "runtime",
 ]
 
-# Enum 枚举（参考 41-§4）
+# Enum 枚举（参考 skill-result schema）
 ALLOWED_STATUS = {"done", "waiting_user", "blocked", "synthetic_failure"}
 ALLOWED_STAGE = {
     "init", "rule_selection", "fact_extraction", "semantic_strategy",
@@ -103,7 +103,7 @@ def parse_semver(version: str) -> tuple[int, int, int] | None:
 
 
 def semver_compatible(actual: str, supported: str) -> tuple[bool, str]:
-    """semver 兼容性检查（参考 41-§7）。
+    """semver 兼容性检查。
 
     Returns:
         (compatible, reason): 是否兼容 + 兼容原因
@@ -171,7 +171,7 @@ def validate_skill_result(result: dict[str, Any]) -> ValidationResult:
     if not validation.valid:
         return validation
 
-    # 3. contract_version 必须为 legacy
+    # 3. contract_version 必须为 format-helper
     if result.get("contract_version") != CONTRACT_VERSION:
         validation.add_error(
             SR_INVALID_ENUM,
@@ -230,7 +230,7 @@ def validate_skill_result(result: dict[str, Any]) -> ValidationResult:
             f"next_action.kind='{next_kind}' 不在允许集合 {sorted(ALLOWED_NEXT_ACTION_KIND)} 中",
         )
 
-    # 6. Nullable-but-required 逻辑（参考 41-§5.3, §6）
+    # 6. Nullable-but-required 逻辑（参考 skill-result schema）
     error_obj = result.get("error", {})
     error_code = error_obj.get("code") if isinstance(error_obj, dict) else None
 
@@ -242,7 +242,7 @@ def validate_skill_result(result: dict[str, Any]) -> ValidationResult:
                 f"status={status} 时 error.code 必须非 null",
             )
 
-    # 7. 一致性约束（参考 41-§5.1）
+    # 7. 一致性约束（参考 skill-result schema）
     if result.get("schema_valid") != result.get("validation", {}).get("schema_valid"):
         validation.add_error(
             SR_CONSISTENCY_ERROR,

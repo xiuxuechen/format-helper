@@ -26,7 +26,7 @@ from scripts.validation.human_readable_report import (
 
 TZ = timezone(timedelta(hours=8))
 TEMPLATE_PATH = Path(__file__).resolve().parents[1] / "templates" / "FINAL_REPORT.template.md"
-LEGACY_REPAIR_PLAN_WARNING = "未发现 repair_plan.yaml，已按现有执行产物兼容渲染。"
+FORMAT_HELPER_CONTRACT_VERSION = "format-helper"
 
 
 def _find_latest_plan(run_dir: Path) -> Path:
@@ -107,9 +107,7 @@ def collect_blockers(reviews: list[dict[str, Any]]) -> list[str]:
 
 
 def execution_log_path(run_dir: Path, final_acceptance: dict[str, Any] | None = None) -> Path:
-    """officecli 只读取规范日志名；仅明确 legacy 产物允许旧别名。"""
-    if (final_acceptance or {}).get("contract_version") == "legacy":
-        return run_dir / "logs" / "repair_execution.json"
+    """返回 OfficeCLI 规范执行日志路径。"""
     return run_dir / "logs" / "repair_execution_log.json"
 
 
@@ -138,9 +136,8 @@ def detect_mode_details(run_dir: Path, final_acceptance: dict[str, Any] | None =
     current_execution_log = execution_log_path(run_dir, final_acceptance)
     if (run_dir / "semantic").exists() and not current_execution_log.exists():
         return "extract-rule", True
-    legacy_contract = final_acceptance.get("contract_version") == "legacy"
-    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
-    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    after_name = "officecli-document-snapshot.after.json"
+    before_name = "officecli-document-snapshot.before.json"
     if current_execution_log.exists() or (run_dir / "snapshots" / after_name).exists():
         return "repair", True
     if (run_dir / "snapshots" / before_name).exists():
@@ -257,9 +254,8 @@ def build_final_report_view_model(
     """从运行目录和 final_acceptance 构建最终交付报告 view model。"""
     execution_log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
     repair_plan = load_yaml_if_exists(_find_latest_plan(run_dir))
-    legacy_contract = final_acceptance.get("contract_version") == "legacy"
-    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
-    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before_name = "officecli-document-snapshot.before.json"
+    after_name = "officecli-document-snapshot.after.json"
     before_snapshot = load_json_if_exists(run_dir / "snapshots" / before_name)
     after_snapshot = load_json_if_exists(run_dir / "snapshots" / after_name)
     reviews = load_reviews(run_dir)
@@ -274,6 +270,8 @@ def build_final_report_view_model(
             missing_items.append(f"repair 模式缺少 snapshots/{before_name}")
         if after_snapshot is None:
             missing_items.append(f"repair 模式缺少 snapshots/{after_name}")
+        if repair_plan is None:
+            missing_items.append("repair 模式缺少 plans/repair_plan.finalized.r*.yaml")
         if not reviews:
             missing_items.append("repair 模式缺少 review_results/T*.review.json")
         if missing_items:
@@ -383,7 +381,7 @@ def build_final_report_view_model(
         for item in open_blockers:
             risk_lines.append(safe_markdown_text(item, max_length=120))
     if mode == "repair" and repair_plan is None:
-        risk_lines.append(LEGACY_REPAIR_PLAN_WARNING)
+        risk_lines.append("repair 模式缺少 finalized repair_plan，报告仅能展示已登记执行产物。")
     if mode == "repair" and not mode_recognized:
         risk_lines.append("未识别流程模式，已按 repair 模式验收。")
     if not reviews and mode == "audit-only":
@@ -434,21 +432,20 @@ def build_final_report_view_model(
     }
 
 
-def _snapshot_count(snapshot: dict[str, Any], node_type: str, legacy_field: str) -> int:
-    """读取 snapshot v2 类型索引数量；legacy 历史 run 使用显式旧字段。"""
+def _snapshot_count(snapshot: dict[str, Any], node_type: str, fallback_field: str) -> int:
+    """读取 snapshot v2 类型索引数量。"""
     if snapshot.get("schema_id") == "officecli-document-snapshot":
         by_type = snapshot.get("indexes", {}).get("by_type", {})
         values = by_type.get(node_type, []) if isinstance(by_type, dict) else []
         return len(values) if isinstance(values, list) else 0
-    return int(snapshot.get(legacy_field, 0) or 0)
+    return int(snapshot.get(fallback_field, 0) or 0)
 
 
 def render_diff_summary(run_dir: Path) -> str:
     """渲染内部差异摘要。"""
     final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
-    legacy_contract = final_acceptance.get("contract_version") == "legacy"
-    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
-    after_name = "document_snapshot.after.json" if legacy_contract else "officecli-document-snapshot.after.json"
+    before_name = "officecli-document-snapshot.before.json"
+    after_name = "officecli-document-snapshot.after.json"
     before = load_json_if_exists(run_dir / "snapshots" / before_name)
     after = load_json_if_exists(run_dir / "snapshots" / after_name)
     if before is None or after is None:
@@ -492,8 +489,7 @@ def write_optional_reports(run_dir: Path) -> None:
     final_acceptance = load_json_if_exists(run_dir / "logs" / "final_acceptance.json") or {}
     if execution_log_path(run_dir, final_acceptance).exists():
         (reports_dir / "REPAIR_LOG.md").write_text("# 修复日志\n\n" + render_repair_log(run_dir).rstrip() + "\n", encoding="utf-8")
-    legacy_contract = final_acceptance.get("contract_version") == "legacy"
-    before_name = "document_snapshot.before.json" if legacy_contract else "officecli-document-snapshot.before.json"
+    before_name = "officecli-document-snapshot.before.json"
     if (run_dir / "snapshots" / before_name).exists():
         (reports_dir / "DIFF_SUMMARY.md").write_text("# 差异摘要\n\n" + render_diff_summary(run_dir).rstrip() + "\n", encoding="utf-8")
 
@@ -509,14 +505,14 @@ def write_blocked_state(run_dir: Path, final_acceptance: dict[str, Any], *, erro
     blocked["open_blockers"] = open_blockers
 
     final_path = run_dir / "logs" / "final_acceptance.json"
-    if final_acceptance.get("contract_version") != "legacy":
-        write_json_atomic(run_dir / "logs" / "reporting_result.json", {
-            "schema_id": "reporting-result", "schema_version": "2.0.0",
-            "created_at": datetime.now(TZ).isoformat(), "extensions": {},
-            "run_id": run_dir.name, "status": "reporting_incomplete",
-            "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
-            "blockers": open_blockers,
-        })
+    write_json_atomic(run_dir / "logs" / "reporting_result.json", {
+        "schema_id": "reporting-result", "schema_version": "2.0.0",
+        "contract_version": FORMAT_HELPER_CONTRACT_VERSION,
+        "created_at": datetime.now(TZ).isoformat(), "extensions": {},
+        "run_id": run_dir.name, "status": "reporting_incomplete",
+        "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
+        "blockers": open_blockers,
+    })
 
     execution_log = load_json_if_exists(execution_log_path(run_dir, final_acceptance))
     output_docx = execution_log.get("output_docx") if execution_log else None
@@ -574,15 +570,15 @@ def render_reports(run_dir: Path) -> dict[str, Any]:
 
     updated_final = dict(final_acceptance)
     final_path = run_dir / "logs" / "final_acceptance.json"
-    if final_acceptance.get("contract_version") != "legacy":
-        write_json_atomic(run_dir / "logs" / "reporting_result.json", {
-            "schema_id": "reporting-result", "schema_version": "2.0.0",
-            "created_at": datetime.now(TZ).isoformat(), "extensions": {},
-            "run_id": run_dir.name, "status": "done",
-            "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
-            "report_artifacts": [str(final_report_path.relative_to(run_dir)).replace("\\", "/")],
-            "blockers": [],
-        })
+    write_json_atomic(run_dir / "logs" / "reporting_result.json", {
+        "schema_id": "reporting-result", "schema_version": "2.0.0",
+        "contract_version": FORMAT_HELPER_CONTRACT_VERSION,
+        "created_at": datetime.now(TZ).isoformat(), "extensions": {},
+        "run_id": run_dir.name, "status": "done",
+        "final_acceptance_ref": str(final_path.relative_to(run_dir)).replace("\\", "/") if final_path.exists() else None,
+        "report_artifacts": [str(final_report_path.relative_to(run_dir)).replace("\\", "/")],
+        "blockers": [],
+    })
 
     execution_log = load_json_if_exists(execution_log_path(run_dir, updated_final))
     output_docx = execution_log.get("output_docx") if execution_log else None

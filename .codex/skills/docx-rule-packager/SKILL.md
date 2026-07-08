@@ -14,12 +14,12 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 - `semantic_rule_draft.json`
 - `role_format_slot_facts.json`（必选，来自 `semantic/role_format_slot_facts.json`）
 - `role_slot_contract.yaml`（必选，来自 `contracts/format-helper/schemas/role_slot_contract.yaml`）
-- 规则输出目录，必须为 `format-rules/{rule_id}/`（参考 40-§5.2，禁止 `format_runs/*/rules` 或 `format_rules/`）
+- 规则输出目录，必须为 `format-rules/{rule_id}/`
 - 用户确认过的规则名称、说明和适用范围
 
 ## 输出
 
-所有输出必须位于 `format-rules/{rule_id}/`（参考 41-§11.2, 41-§11.3）：
+所有输出必须位于 `format-rules/{rule_id}/`：
 
 - `profile.yaml`
 - `style-map.yaml`
@@ -56,7 +56,7 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 
 - `scripts/render_rule_summary.py`：只能从 `role_format_slot_facts.json` + `role_slot_contract.yaml` 生成用户可读 `RULE_SUMMARY.md`，并返回 `resolved_slot_count`、`unresolved_slot_count`、`conflict_slot_count`、`user_confirmed_slot_count`、`resolved_rule_row_count`、`blocking_conflict_count`、`warning_conflict_count`、`gate_blocker_count`；禁止使用 `semantic_rule_draft.json` 直出规则摘要。
 
-## 固定执行步骤（参考 40-§6.12）
+## 固定执行步骤
 
 1. 读取并校验 semantic_rule_draft.json
 2. 读取并校验 role_format_slot_facts.json 与 role_slot_contract.yaml
@@ -67,7 +67,7 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
    - 业务产物：`format-rules/{rule_id}/*.yaml` + `RULE_SUMMARY.md`
    - 状态信封：`logs/skill_results/{seq}_docx-rule-packager.result.json`
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -87,11 +87,11 @@ description: 使用时机：内部 DOCX 规则打包技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-rule-packager.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
    - `metrics` 必须包含：`resolved_slot_count`、`unresolved_slot_count`、`conflict_slot_count`、`user_confirmed_slot_count`、`resolved_rule_row_count`、`blocking_conflict_count`、`warning_conflict_count`、`gate_blocker_count`
 
-## 成功输出模板（参考 40-§6.12）
+## 成功输出模板
 
 ```text
 任务清单
@@ -146,7 +146,7 @@ rule_packaging
 - [x] 新规则默认 status: draft（不自动升级为 active）
 ```
 
-## 失败输出模板（参考 40-§6.12）
+## 失败输出模板
 
 ```text
 任务清单

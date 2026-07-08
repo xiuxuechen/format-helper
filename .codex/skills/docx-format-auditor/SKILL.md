@@ -38,7 +38,7 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
 4. 输出结构化问题或复核项。
 5. 对低置信度、高风险或复杂结构标记人工确认。
 
-## 固定执行步骤（参考 40-§6.13）
+## 固定执行步骤
 
 1. 读取规则引用
 2. 读取文档快照
@@ -49,7 +49,7 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
    - 业务产物：`audit_results/*.audit.json` 或 `review_results/*.review.json`
    - 状态信封：`logs/skill_results/{seq}_docx-format-auditor.result.json`
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -60,10 +60,10 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-format-auditor.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
 
-## 成功输出模板（参考 40-§6.13）
+## 成功输出模板
 
 ```text
 任务清单
@@ -106,7 +106,7 @@ description: 使用时机：内部 DOCX 格式审计技能。仅当 format-helpe
 - [x] 表格检查完成
 ```
 
-## 失败输出模板（参考 40-§6.13）
+## 失败输出模板
 
 ```text
 任务清单

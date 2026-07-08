@@ -29,6 +29,39 @@ class TestOfficeCliReleaseGate(unittest.TestCase):
     def test_repository_production_paths_are_officecli_only(self):
         self.assertEqual(scan_production_paths(ROOT), [])
 
+    def test_retired_skill_scripts_are_still_scanned_for_forbidden_backend(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scripts" / "officecli").mkdir(parents=True)
+            skill_scripts = root / ".codex" / "skills" / "docx-format-repairer" / "scripts"
+            skill_scripts.mkdir(parents=True)
+            (skill_scripts / "old_backend.py").write_text("import zipfile\n", encoding="utf-8")
+            reporter_dir = root / ".codex" / "skills" / "docx-format-reporter" / "scripts"
+            reporter_dir.mkdir(parents=True)
+            (reporter_dir / "render_final_reports.py").write_text(
+                "officecli-document-snapshot.before.json",
+                encoding="utf-8",
+            )
+            workflow = root / ".github" / "workflows" / "officecli-platform-evidence.yml"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(
+                "\n".join(
+                    [
+                        "win-x64",
+                        "osx-arm64",
+                        "native-toc-evidence",
+                        "run_native_toc_dedicated",
+                        "officecli-windows-word",
+                        "officecli-windows-wps",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            errors = scan_production_paths(root)
+            self.assertTrue(
+                any("docx-format-repairer" in error and "import zipfile" in error for error in errors)
+            )
+
     def test_required_win_mac_platform_evidence_passes_and_missing_required_blocks(self):
         runner_by_runtime = {
             "win-x64": ("Windows", "AMD64"), "win-arm64": ("Windows", "ARM64"),

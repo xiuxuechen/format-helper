@@ -31,7 +31,7 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
     "contract_version": {
-      "const": "legacy"
+      "const": "format-helper"
     },
     "run_id": {},
     "acceptance_type": {},
@@ -60,7 +60,7 @@
   },
   "description": "CODE-005 最小 schema 占位定义。字段级权威以 contracts/format-helper/schemas 为准。",
   "x_code005_minimum_contract": {
-    "source": "41_SCHEMA_CONTRACTS.md + SCHEMA_MIN_STRATEGY.md",
+    "source": "contracts/format-helper/schemas + contracts/officecli/schemas",
     "validates": [
       "required",
       "const",
@@ -71,9 +71,9 @@
       "path_negative_examples"
     ],
     "trace_refs": [
-      "41-§2",
-      "41-§12",
-      "50-§3.5"
+      "format-helper-schema",
+      "format-helper-schema",
+      "format-helper-test-plan"
     ]
   }
 }

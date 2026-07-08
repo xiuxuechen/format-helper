@@ -1,10 +1,10 @@
 """legacy final_acceptance 与 reporting_result 最小生成和校验工具。
 
 覆盖条款：
-- 40-§7.4 final_acceptance 生成后不可变，reporting_result 只能后置引用。
-- 41-§11.8 final_acceptance 四类 acceptance_type 与 pre_acceptance manifest 绑定。
-- 41-§11.8.1 reporting_result 独立记录报告阶段结果。
-- 50-§5.1 CODE-010 final acceptance 分支、不可变边界和报告后置引用。
+- format-helper-workflow final_acceptance 生成后不可变，reporting_result 只能后置引用。
+- format-helper-schema final_acceptance 四类 acceptance_type 与 pre_acceptance manifest 绑定。
+- format-helper-schema reporting_result 独立记录报告阶段结果。
+- format-helper-test-plan CODE-010 final acceptance 分支、不可变边界和报告后置引用。
 """
 
 from __future__ import annotations

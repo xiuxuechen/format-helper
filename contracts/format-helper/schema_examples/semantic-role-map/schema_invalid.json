@@ -1,7 +1,7 @@
 {
   "schema_id": "semantic-role-map-invalid",
   "schema_version": "1.0.0",
-  "contract_version": "legacy",
+  "contract_version": "format-helper",
   "run_id": "run-code005-example",
   "status": "done",
   "gate_check": {

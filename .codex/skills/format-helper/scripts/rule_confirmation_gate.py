@@ -18,6 +18,7 @@ from scripts.validation.skill_result_io import compute_file_sha256, resolve_run_
 
 
 RULE_CONFIRMATION_GATE_PATH = "logs/rule_confirmation_gate.json"
+FORMAT_HELPER_CONTRACT_VERSION = "format-helper"
 
 
 def write_json_atomic(path: Path, data: dict[str, Any]) -> None:
@@ -212,7 +213,7 @@ def build_rule_confirmation_gate(
     return {
         "schema_id": "rule-confirmation-gate",
         "schema_version": "1.0.0",
-        "contract_version": "legacy",
+        "contract_version": FORMAT_HELPER_CONTRACT_VERSION,
         "run_id": slot_facts.get("run_id", "unknown"),
         "gate_id": f"RCG-{slot_facts.get('facts_id', slot_facts.get('run_id', 'unknown'))}",
         "status": gate_status_from_manual_items(slot_facts, manual_review_items),
@@ -399,8 +400,8 @@ def validate_rule_confirmation_gate(gate: dict[str, Any]) -> list[str]:
         errors.append(f"{field_name} is required")
     if gate.get("schema_id") != "rule-confirmation-gate":
         errors.append("schema_id must be rule-confirmation-gate")
-    if gate.get("contract_version") != "legacy":
-        errors.append("contract_version must be legacy")
+    if gate.get("contract_version") != FORMAT_HELPER_CONTRACT_VERSION:
+        errors.append(f"contract_version must be {FORMAT_HELPER_CONTRACT_VERSION}")
     if gate.get("status") not in {"pending", "cleared", "blocked"}:
         errors.append("status is not allowed")
     if gate.get("manual_review_items_path") != "plans/manual_review_items.json":

@@ -57,7 +57,7 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
 
 基于语义角色、规则包和快照生成语义审计问题。建议动作必须能映射到后续白名单动作或人工确认，不得直接声明已修复。
 
-## 固定执行步骤（参考 40-§6.11）
+## 固定执行步骤
 
 1. 读取 OfficeCLI snapshot v2 事实快照
 2. 读取规则上下文（如适用）
@@ -68,7 +68,7 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
    - 业务产物：`semantic/*.json`
    - 状态信封：`logs/skill_results/{seq}_docx-semantic-strategist.result.json`
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -80,14 +80,14 @@ description: 使用时机：内部 DOCX 语义策略技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-semantic-strategist.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
 
 3. **人工确认候选**（只输出 proposals，不直接写权威清单）：
    - 在业务产物中输出 `manual_review_proposals[]`
    - 不得直接写 `plans/manual_review_items.json`（由 format-helper 主控唯一写入）
 
-## 成功输出模板（参考 40-§6.11）
+## 成功输出模板
 
 ```text
 任务清单
@@ -129,7 +129,7 @@ semantic_strategy
 - [x] 只输出 manual_review_proposals[]，未直接写 manual_review_items.json
 ```
 
-## 失败输出模板（参考 40-§6.11）
+## 失败输出模板
 
 ```text
 任务清单
@@ -168,5 +168,6 @@ semantic_strategy
 
 - `references/semantic-output-contract.md`：三种语义产物的字段契约、阈值规则和安全边界。
 - `../../../schemas/semantic_rule_draft.schema.json`：`semantic_rule_draft.json` 机器校验契约。
-- `contracts/format-helper/40_DESIGN_FINAL.md`：legacy 设计文档。
-- `contracts/format-helper/41_SCHEMA_CONTRACTS.md`：legacy schema 契约。
+- `contracts/officecli/schemas/officecli-document-snapshot.schema.json`：OfficeCLI snapshot v2 契约。
+- `contracts/format-helper/schemas/semantic-rule-draft.schema.json`：语义规则草案契约。
+- `contracts/format-helper/schemas/semantic-role-map.schema.json`：语义角色映射契约。

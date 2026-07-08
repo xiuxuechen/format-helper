@@ -1,8 +1,8 @@
 """LEGACY 必测子集的最小自动化 fixture/validator。
 
 覆盖条款：
-- 40-§7.3 LEGACY-T18/LEGACY-T28/LEGACY-T36/LEGACY-T39/LEGACY-T43/LEGACY-T45。
-- 41-§3.4 路径策略、§3.13 ReviewCheck Object、§11.10 repair-execution-log、
+- format-helper-workflow LEGACY-T18/LEGACY-T28/LEGACY-T36/LEGACY-T39/LEGACY-T43/LEGACY-T45。
+- format-helper-schema 路径策略、§3.13 ReviewCheck Object、§11.10 repair-execution-log、
   §11.12 semantic-audit、§11.14 review-result。
 """
 

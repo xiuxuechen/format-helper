@@ -16,6 +16,7 @@ from scripts.utils.simple_yaml import load_yaml
 
 TZ = timezone(timedelta(hours=8))
 CONTRACT_RELATIVE_PATH = "contracts/format-helper/schemas/role_slot_contract.yaml"
+FORMAT_HELPER_CONTRACT_VERSION = "format-helper"
 ROLE_MAP_RELATIVE_PATH = "semantic/semantic_role_map.before.json"
 RESOLVED_STATUS = {"resolved", "resolved_with_conflicts", "not_applicable", "user_confirmed"}
 ROLE_MAP_CONFIDENCE_THRESHOLD = 0.85
@@ -48,10 +49,10 @@ def sha256_file(path: Path) -> str:
 def unwrap_slot(value: Any) -> tuple[Any, str, float]:
     """兼容读取裸值和 {value, source, confidence}。"""
     if isinstance(value, dict) and "value" in value:
-        return value.get("value"), str(value.get("source", "legacy")), float(value.get("confidence", 0.5))
+        return value.get("value"), str(value.get("source", "untyped-source")), float(value.get("confidence", 0.5))
     if value is None:
         return None, "unresolved", 0.0
-    return value, "legacy", 0.5
+    return value, "untyped-source", 0.5
 
 
 def is_officecli_snapshot_v2(snapshot: dict[str, Any]) -> bool:
@@ -157,7 +158,7 @@ def officecli_snapshot_items(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         )
         item = {
             "fact_id": fact_id,
-            "element_id_legacy": None,
+            "element_id": None,
             "fact_kind": fact_kind,
             "locator": {
                 "officecli_path": node.get("officecli_path"),
@@ -303,7 +304,7 @@ def build_sample(item: dict[str, Any], slots: list[str]) -> dict[str, Any]:
     return {
         "fact_id": item["fact_id"],
         "locator": item.get("locator"),
-        "element_id_legacy": item.get("element_id_legacy"),
+        "element_id": item.get("element_id"),
         "fact_kind": item.get("fact_kind") or "paragraph",
         "text_preview": str(item.get("text_preview") or "")[:60],
         "extracted_slots": {slot: read_slot(item, slot) for slot in slots},
@@ -626,7 +627,7 @@ def build_slot_facts(
     return {
         "schema_id": "role-format-slot-facts",
         "schema_version": "1.0.0",
-        "contract_version": "legacy",
+        "contract_version": FORMAT_HELPER_CONTRACT_VERSION,
         "run_id": run_id,
         "facts_id": f"RFSF-{run_id}-001",
         "source_snapshot_path": source_snapshot_path,

@@ -1,9 +1,9 @@
 """CODE-011 回归覆盖输入与扫描工具。
 
 覆盖条款：
-- 40-§7.2/§7.3：LEGACY 回归测试与 LEGACY-T01 至 LEGACY-T45 可执行测试矩阵。
-- 50-§3.3：最低必测集合、not_automated_with_reason 治理和模板扫描清单。
-- 50-§3.8：60_TEST_PLAN.md 输入材料。
+- format-helper-workflow/§7.3：LEGACY 回归测试与 LEGACY-T01 至 LEGACY-T45 可执行测试矩阵。
+- format-helper-test-plan：最低必测集合、not_automated_with_reason 治理和模板扫描清单。
+- format-helper-test-plan：60_TEST_PLAN.md 输入材料。
 """
 
 from __future__ import annotations

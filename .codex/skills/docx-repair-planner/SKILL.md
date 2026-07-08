@@ -41,7 +41,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 
 首阶段白名单包括标题原生样式映射、正文格式、表格单元格格式、表格边框、目录内容审计、自动目录插入或替换。具体动作集合以 schema 和风险策略为准。
 
-## 固定执行步骤（参考 40-§6.14）
+## 固定执行步骤
 
 1. 读取审计结果
 2. 读取风险策略
@@ -52,7 +52,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
    - 业务产物：`plans/repair_plan.draft.yaml` 和 `plans/repair_plan.finalized.r{plan_revision}.yaml`
    - 状态信封：`logs/skill_results/{seq}_docx-repair-planner.result.json`
 
-## draft/finalized 分离（参考 40-§5.3, 41-§11.9）
+## draft/finalized 分离
 
 **重要**：repair-plan 分为两个阶段，draft 不可执行，finalized 才能写回：
 
@@ -66,7 +66,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 - finalized 必须绑定决策快照、manual review hash、风险策略 hash 和白名单复算证据
 - `plan_revision` 必须由输入 hash 集合确定性派生（禁止随机数/时间戳）
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -77,14 +77,14 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-repair-planner.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
 
 3. **人工确认候选**（只输出 proposals，不直接写权威清单）：
    - 在 draft plan 中输出 `manual_review_proposals[]`
    - 不得直接写 `plans/manual_review_items.json`（由 format-helper 主控唯一写入）
 
-## 成功输出模板（参考 40-§6.14）
+## 成功输出模板
 
 ```text
 任务清单
@@ -132,7 +132,7 @@ description: 使用时机：内部 DOCX 修复计划技能。仅当 format-helpe
 - [x] finalized 使用 revisioned canonical 路径
 ```
 
-## 失败输出模板（参考 40-§6.14）
+## 失败输出模板
 
 ```text
 任务清单

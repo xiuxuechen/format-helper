@@ -115,7 +115,7 @@ def can_advance(
     *,
     run_dir: Path | None = None,
 ) -> bool:
-    """41-§6.5 最小推进谓词。"""
+    """format-helper-schema 最小推进谓词。"""
     return evaluate_gate(result, state, manifest, run_dir=run_dir).can_advance
 
 
@@ -126,7 +126,7 @@ def evaluate_gate(
     *,
     run_dir: Path | None = None,
 ) -> GateDecision:
-    """按 40-§5.8 真值表和 41-§6.5 判定是否允许进入 next_action。"""
+    """按 format-helper-workflow 真值表和 format-helper-schema 判定是否允许进入 next_action。"""
     blockers: list[str] = []
     schema_errors = validate_common_skill_result_contract(result, run_dir=run_dir)
     state_validation = validate_run_state(state)

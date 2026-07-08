@@ -40,7 +40,7 @@ description: 使用时机：内部 DOCX 事实抽取技能。仅当 format-helpe
 4. 写入 snapshot v2，并保留输入文件 hash、raw ArtifactRef 和 GateCheck。
 5. 若遍历不完整、路径冲突或 blocking warning，返回阻塞项给 `format-helper`。
 
-## 固定执行步骤（参考 40-§6.10）
+## 固定执行步骤
 
 1. 确认运行环境和文本文件编码
 2. 通过 OfficeCLI 读取工作副本
@@ -50,7 +50,7 @@ description: 使用时机：内部 DOCX 事实抽取技能。仅当 format-helpe
    - 业务产物：`snapshots/*.json`
    - 状态信封：`logs/skill_results/{seq}_docx-fact-extractor.result.json`
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -61,10 +61,10 @@ description: 使用时机：内部 DOCX 事实抽取技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-fact-extractor.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
 
-## 成功输出模板（参考 40-§6.10）
+## 成功输出模板
 
 ```text
 任务清单
@@ -102,7 +102,7 @@ fact_extraction
 - [x] 未修改 Word 文件
 ```
 
-## 失败输出模板（参考 40-§6.10）
+## 失败输出模板
 
 ```text
 任务清单

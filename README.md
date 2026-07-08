@@ -218,7 +218,7 @@ format_runs/{run_id}/reports/FINAL_ACCEPTANCE_REPORT.md
 │   ├── docx-rule-packager/          # 打包规则包并渲染规则摘要
 │   ├── docx-format-auditor/         # 执行格式审计和二轮复核
 │   ├── docx-repair-planner/         # 生成修复计划和人工确认项
-│   ├── docx-format-repairer/        # 对工作副本执行白名单修复
+│   ├── docx-format-repairer/        # 退役历史写回说明，不作为生产执行入口
 │   └── docx-format-reporter/        # 生成中文报告和验收说明
 ├── scripts/
 │   ├── ooxml/                       # DOCX/OOXML 解析能力
@@ -226,7 +226,7 @@ format_runs/{run_id}/reports/FINAL_ACCEPTANCE_REPORT.md
 │   ├── reporting/                   # 人类可读报告工具
 │   └── utils/                       # 通用工具
 ├── schemas/                         # 运行期核心 schema
-├── contracts/format-helper/                         # legacy 设计、契约、测试和验收材料
+├── contracts/format-helper/                         # format-helper 结构化产物 schema 与示例
 ├── tests/                           # 回归测试与 fixture
 ├── format-rules/                    # 规则库：按 rule_id 保存可复用规则包
 └── format_runs/                     # 运行目录：按 run_id 保存每次处理产物

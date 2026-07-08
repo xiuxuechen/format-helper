@@ -49,12 +49,12 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 - 不把内部 JSON/YAML 原样堆到报告正文。
 - 未完成二轮复核时，不输出最终通过结论。
 - 报告必须解释剩余风险、人工确认项和阻塞原因。
-- **不得反向驱动或改写最终验收状态**（参考 40-§6.16, 41-§11.8）。
+- **不得反向驱动或改写最终验收状态**。
 - **只读 `logs/final_acceptance.json`，不得修改其内容或追加 `report_refs`**。
-- **报告引用只写入 `logs/reporting_result.json`**（参考 41-§11.8.1）。
+- **报告引用只写入 `logs/reporting_result.json`**。
 - 报告失败不得改变 `final_acceptance.status`（即使报告失败，最终验收状态仍保持）。
 
-## 固定执行步骤（参考 40-§6.16）
+## 固定执行步骤
 
 1. 读取最终验收 JSON（`logs/final_acceptance.json`）
 2. 按 acceptance_type/workflow_mode 选择报告分支（`final_delivery`/`audit_only_terminal`/`build_rules_terminal`/`blocked_terminal`）
@@ -65,7 +65,7 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
    - 业务产物：`reports/REVIEW_REPORT.md`（唯一综合报告） + `logs/reporting_result.json`
    - 状态信封：`logs/skill_results/{seq}_docx-format-reporter.result.json`
 
-## final_acceptance 不可变边界（参考 40-§6.16, 41-§11.8, 41-§11.8.1）
+## final_acceptance 不可变边界
 
 **关键约束**：
 - `logs/final_acceptance.json` 一经生成即不可变
@@ -78,7 +78,7 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
   - 但 final_acceptance 状态保持不变
   - 用户输出必须区分"最终 Word 已验收"和"报告阶段失败"
 
-## acceptance_type 分支规则（参考 40-§6.16, 41-§11.8）
+## acceptance_type 分支规则
 
 | acceptance_type | 必需输入 | 不适用产物 |
 |-----------------|---------|-----------|
@@ -87,7 +87,7 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 | `build_rules_terminal` | 规则包摘要、规则引用、规则包 manifest | 不要求最终 Word |
 | `blocked_terminal` | 阻断报告、可恢复入口和 blockers | 不要求补齐非适用分支产物 |
 
-## 双通道输出协议（参考 40-§6.4）
+## 双通道输出协议
 
 每次执行必须同时输出：
 
@@ -98,11 +98,11 @@ description: 使用时机：内部 DOCX 报告生成技能。仅当 format-helpe
 
 2. **状态信封**（机器权威）：
    - 路径：`logs/skill_results/{seq}_docx-format-reporter.result.json`
-   - Schema：`skill-result`（参考 41-§5）
+   - Schema：`skill-result`
    - 必须包含：`result_id`、`status`、`schema_valid`、`gate_passed`、`artifacts`、`next_action`
    - **status 只能为 `done` 或 `blocked`**（不得使用 accepted 类状态）
 
-## 成功输出模板（参考 40-§6.16）
+## 成功输出模板
 
 ```text
 任务清单
@@ -158,7 +158,7 @@ reporting
 - [x] 报告引用只写入 logs/reporting_result.json
 ```
 
-## 失败输出模板（参考 40-§6.16）
+## 失败输出模板
 
 ```text
 任务清单
@@ -207,7 +207,7 @@ python .codex/skills/docx-format-reporter/scripts/render_final_reports.py --run-
 
 脚本读取 `logs/final_acceptance.json`、`logs/repair_execution_log.json`、before/after 快照和 `review_results/*.review.json`，生成全部 Markdown 报告和 `logs/reporting_result.json`。
 
-**路径约束**（参考 41-§11.8, 41-§11.8.1）：
+**路径约束**：
 - 脚本**只读** `logs/final_acceptance.json`，不得修改
 - 脚本**写入** `logs/reporting_result.json` 作为后置引用
 - 报告 artifact 登记在 `logs/evidence_manifest.reporting.json`
